@@ -302,9 +302,9 @@ st.markdown(f"""
 
 _hdr_left, _hdr_right = st.columns([12, 1])
 with _hdr_right:
-    _jp = st.toggle("JP", value=False, key="lang_toggle",
-                    help="日本語 / English")
-lang = "jp" if _jp else "en"
+    _lang = st.radio("lang", ["EN", "JP"], horizontal=True,
+                     label_visibility="collapsed", key="lang_toggle")
+lang = "jp" if _lang == "JP" else "en"
 S = STRINGS[lang]
 
 with _hdr_left:
