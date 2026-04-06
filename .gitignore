@@ -1,0 +1,58 @@
+# Beauty-ConsumerPulse — .gitignore
+
+# Credentials — NEVER commit
+.env
+*.key
+*.pem
+
+# Data — may be large; raw scraped data not in repo
+data/raw/
+data/interim/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Outputs — generated; optionally commit selected charts
+outputs/
+!outputs/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+*.nbconvert.ipynb
+
+# SQLite WAL files
+data/*.db-shm
+data/*.db-wal
+
+# Company-specific analysis — private, not for public repo
+notebooks/NB04a_*.ipynb
+notebooks/NB04b_*.ipynb
+notebooks/NB04c_*.ipynb
+notebooks/NB05a_*.ipynb
+notebooks/NB05b_*.ipynb
+notebooks/NB05c_*.ipynb
+
+# Company-specific outputs — private
+outputs/nb05a_*.png
+outputs/nb05b_*.png
+outputs/nb05c_*.png
+outputs/wordcloud_skincare_*.png
+outputs/wordcloud_cosmetics_*.png
