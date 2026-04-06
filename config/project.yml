@@ -1,0 +1,103 @@
+# Signal/Pulse — Project Configuration
+# ──────────────────────────────────────
+# All notebooks read from this file — no hardcoding in notebooks.
+#
+# ARCHITECTURE NOTE:
+#   Ingestion is category-driven (see config/categories.xlsx).
+#   Brands are a post-hoc lens applied in NB04+ and NB07.
+#   To retarget the dashboard for a specific company, change
+#   lens.active_group below — no re-ingestion required.
+
+project:
+  name: "Signal/Pulse"
+  version: "2.0"
+  description: "Consumer trend discovery engine — Japanese beauty & FMCG"
+  author: "Stan"
+
+market:
+  geo: "JP"
+  language: "ja-JP"
+  timezone: "Asia/Tokyo"
+
+time_range:
+  start: "2020-01-01"
+  end: "2025-12-31"
+  baseline_start: "2019-01-01"   # pre-COVID baseline for NB04
+
+# ── Ingestion ──────────────────────────────────────────────────────────────
+# Categories and layers defined in config/categories.xlsx.
+# layer1_metadata = product count sweep (all products, lightweight)
+# layer2_reviews  = full review corpus (top N products per category)
+
+ingestion:
+  layer1_metadata: true
+  layer2_reviews: true
+  layer2_top_n: 50
+
+scraping:
+  cosme_max_pages_per_product: 50      # ~500 reviews per product
+  cosme_delay_seconds: 2.0
+  amazon_asin_limit: 30                # top N ASINs to scrape per category
+  amazon_delay_seconds: 10.0
+  rakuten_delay_seconds: 1.5
+
+youtube:
+  max_videos_per_search: 25
+  max_comments_per_video: 500
+  target_video_count: 30
+
+google_trends:
+  anchor_term: "スキンケア"              # included in every payload for normalisation
+  max_terms_per_call: 4                # anchor + 3 terms (5 is API limit, leave margin)
+  delay_seconds: 2.0
+
+# ── Brand lens ─────────────────────────────────────────────────────────────
+# Brands are NOT ingestion targets. This section controls which brand groups
+# are highlighted in NB04 analysis and the NB07 dashboard.
+#
+# Change active_group to retarget the entire presentation layer:
+#   kao          — Bioré, Curél, freeplus, KATE, Kanebo, Sofina iP, suisai,
+#                  ALLIE, Primavista, LUNASOL, RMK, SUQQU
+#   shiseido     — Anessa, ELIXIR, d program, Shiseido, Clé de Peau, NARS
+#   kose         — Decorté, Sekkisei, Visée, Kosé parent
+#   rohto        — Hada Labo, Melano CC
+#   loreal_japan — La Roche-Posay, Vichy, Lancôme, Shu Uemura, Maybelline
+#   jp_indie     — Cézanne, Canmake
+#   estee_lauder — Estée Lauder, Clinique, La Mer, MAC, Bobbi Brown, Tom Ford Beauty
+#   lvmh_beauty  — Dior Beauty, Givenchy, Guerlain, Benefit, Fresh, Fenty Beauty
+#   all          — all is_target=1 brands across all groups
+
+lens:
+  active_group: "kao"
+  benchmark_groups:
+    - "shiseido"    # direct competitor across skincare + sun protection
+    - "rohto"       # Hada Labo is the mass skincare reference point
+    - "jp_indie"    # Cézanne + Canmake = プチプラ cosmetics benchmark
+    - "kose"        # Decorté competes with Kanebo/Sofina at prestige
+
+# ── NLP settings ───────────────────────────────────────────────────────────
+nlp:
+  tokenizer: "sudachipy"               # primary: sudachipy | fallback: mecab
+  min_review_chars: 20                 # filter stub reviews below this length
+  tfidf_time_windows: "6M"            # 6-month windows for NB06 TF-IDF
+  min_term_frequency: 5               # ignore terms below this count
+
+# ── Exclusions ─────────────────────────────────────────────────────────────
+# Source of truth: config/keywords.xlsx → exclusions sheet.
+# Duplicated here for runtime convenience (avoid Excel read on every call).
+# Keep in sync with keywords.xlsx.
+
+exclusions:
+  celebrity_noise:
+    - "リージュ"         # number_i idol group brand
+    - "大谷翔平"         # Shohei Ohtani endorsement
+    - "megumi"          # celebrity association
+  commercial_noise:
+    - "送料無料"         # free shipping
+    - "クーポン"         # coupon
+    - "ポイント"         # points/rewards
+    - "半額"             # half price
+    - "マラソン"         # Rakuten Marathon sale event
+  sponsored:
+    - "PR"              # paid promotion
+    - "案件"             # sponsored content

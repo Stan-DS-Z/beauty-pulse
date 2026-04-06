@@ -1,0 +1,11 @@
+﻿tier_group,category,sku_count,avg_reviews,avg_rating,avg_price,min_price,max_price
+cosmetics,korean_cosmetics,2718,16.0,4.5,2989.0,73.0,374000.0
+cosmetics,cosmetics,2638,94.0,4.47,3061.0,121.0,41940.0
+skincare,sun_protection,2771,19.1,4.56,3334.0,110.0,29000.0
+skincare,face_cream,2650,16.0,4.6,5841.0,220.0,88550.0
+skincare,all_in_one,2627,7.0,4.53,5583.0,100.0,111902.0
+skincare,face_wash,2614,20.1,4.65,2939.0,110.0,70686.0
+skincare,emulsion,2589,7.3,4.61,4085.0,290.0,52800.0
+skincare,serum_essence,2584,58.3,4.56,6336.0,88.0,199584.0
+skincare,toner_lotion,2529,27.2,4.65,4297.0,200.0,105000.0
+skincare,skincare,2187,175.0,4.57,4188.0,100.0,55000.0

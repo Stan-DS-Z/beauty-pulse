@@ -1,19 +1,47 @@
-# Beauty-ConsumerPulse — .gitignore
+# Beauty Pulse — .gitignore
 
-# Credentials — NEVER commit
+# ── Credentials — NEVER commit ────────────────────────────────────────────
 .env
 *.key
 *.pem
 
-# Data — may be large; raw scraped data not in repo
+# ── Data ──────────────────────────────────────────────────────────────────
 data/raw/
 data/interim/
+dashboard/assets/signal_pulse.db
 
-# Notebook checkpoints
-.ipynb_checkpoints/
-**/.ipynb_checkpoints/
+# Private DB — contains product_name and raw_json
+data/*.db
+# Public DB exception — needed for dashboard
+!dashboard/assets/signal_pulse_public.db
 
-# Python
+# SQLite WAL artefacts
+data/*.db-shm
+data/*.db-wal
+
+# ── Notebooks — scraping / reconnaissance (not part of public pipeline) ───
+notebooks/NB01*.ipynb
+
+# Company-specific analysis — private
+notebooks/NB05a_*.ipynb
+notebooks/NB05b_*.ipynb
+notebooks/NB05c_*.ipynb
+
+# ── Outputs — generated; not in repo ──────────────────────────────────────
+outputs/
+!outputs/.gitkeep
+
+# Company-specific chart outputs — private
+outputs/nb05a_*.png
+outputs/nb05b_*.png
+outputs/nb05c_*.png
+outputs/wordcloud_skincare_*.png
+outputs/wordcloud_cosmetics_*.png
+
+# ── Fonts ─────────────────────────────────────────────────────────────────
+dashboard/assets/fonts/
+
+# ── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.egg-info/
@@ -23,36 +51,13 @@ build/
 venv/
 env/
 
-# Outputs — generated; optionally commit selected charts
-outputs/
-!outputs/.gitkeep
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Jupyter
+# ── Jupyter ───────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 *.nbconvert.ipynb
 
-# SQLite WAL files
-data/*.db-shm
-data/*.db-wal
-
-# Company-specific analysis — private, not for public repo
-notebooks/NB04a_*.ipynb
-notebooks/NB04b_*.ipynb
-notebooks/NB04c_*.ipynb
-notebooks/NB05a_*.ipynb
-notebooks/NB05b_*.ipynb
-notebooks/NB05c_*.ipynb
-
-# Company-specific outputs — private
-outputs/nb05a_*.png
-outputs/nb05b_*.png
-outputs/nb05c_*.png
-outputs/wordcloud_skincare_*.png
-outputs/wordcloud_cosmetics_*.png
+# ── OS / IDE ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
