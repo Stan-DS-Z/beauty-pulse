@@ -12,6 +12,7 @@ Five independent sources — review corpus, search behaviour, commercial catalog
 ![NLP](https://img.shields.io/badge/NLP-SudachiPy%20%7C%20TF--IDF%20%7C%20UMAP-violet)
 ![Status](https://img.shields.io/badge/Status-Deployed-brightgreen)
 ![Markets](https://img.shields.io/badge/Market-Japan-white)
+[![Live Dashboard](https://img.shields.io/badge/Dashboard-Live%20↗-brightgreen)](https://beauty-pulse.streamlit.app/)
 
 ---
 
