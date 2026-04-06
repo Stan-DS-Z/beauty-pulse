@@ -300,10 +300,10 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-_hdr_left, _hdr_right = st.columns([10, 1])
+_hdr_left, _hdr_right = st.columns([12, 1])
 with _hdr_right:
-    _jp = st.toggle("EN/JP", value=False, key="lang_toggle",
-                help="日本語 / English")
+    _jp = st.toggle("JP", value=False, key="lang_toggle",
+                    help="日本語 / English")
 lang = "jp" if _jp else "en"
 S = STRINGS[lang]
 
