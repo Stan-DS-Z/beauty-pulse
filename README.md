@@ -126,6 +126,7 @@ All data self-sourced and self-collected. No Kaggle datasets.
 |---|---|---|
 | @cosme | Consumer reviews (skincare + cosmetics) | 22,451 reviews |
 | Rakuten Ichiba API | Product catalog, prices, review counts | 31,202 SKUs |
+| Amazon API | Name, price, aggregate rating, review count | 111 ASINs・1,089 reviews |
 | Google Trends JP | Weekly search interest (2019–2026) | 4,635 rows |
 | YouTube Data API v3 | Beauty video comments | 248 videos · 60,676 comments |
 
