@@ -260,10 +260,7 @@ This project forms one half of a data analytics portfolio targeting Japanese bea
 It demonstrates self-sourced data construction, Japanese NLP, SQL architecture, and deployed dashboard work —  
 built as a complement to [The Masstige Moment](https://github.com/Stan-DS-Z/the-masstige-moment), which analyses the same market from a top-down revenue perspective.
 
-**Built with free, public APIs only — imagine what's possible with proprietary data.**
-
-JLPT N1 · DALF C1 — 分析資産として日英仏3言語での納品が可能。  
-JLPT N1 · DALF C1 — trilingual analytical delivery across EN / JP / FR.
+**Built with free, public APIs.**
 
 ---
 
