@@ -13,7 +13,11 @@ Five independent sources — consumer reviews, search behaviour, product catalog
 ![Status](https://img.shields.io/badge/Status-Deployed-brightgreen)
 ![Markets](https://img.shields.io/badge/Market-Japan-white)
 
-**[→ Live Dashboard](https://ss-beauty-pulse.streamlit.app/)**
+<p align="center">
+  <a href="https://ss-beauty-pulse.streamlit.app/">
+    <img src="https://img.shields.io/badge/%E2%9C%A8_ダッシュボード-ss--beauty--pulse.streamlit.app-4A90B8?style=for-the-badge" alt="Dashboard">
+  </a>
+</p>
 
 ---
 
