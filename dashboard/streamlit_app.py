@@ -54,8 +54,8 @@ def compute_headline():
 
     # Rakuten SKU counts
     df_sku = pd.read_csv(ASSETS / "nb07_sku_treemap.csv")
-    skin_skus = int(df_sku[df_sku["tier"] == "skincare"]["sku_count"].sum())
-    cosm_skus = int(df_sku[df_sku["tier"] == "cosmetics"]["sku_count"].sum())
+    skin_skus = int(df_sku[df_sku["tier_group"] == "skincare"]["sku_count"].sum())
+    cosm_skus = int(df_sku[df_sku["tier_group"] == "cosmetics"]["sku_count"].sum())
     sku_ratio = round(skin_skus / max(cosm_skus, 1), 1)
 
     # Google Trends crossover year
