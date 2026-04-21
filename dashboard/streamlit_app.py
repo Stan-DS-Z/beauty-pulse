@@ -1274,6 +1274,10 @@ with tab3:
             "cosm": co_tf.reindex(all_terms_yt, fill_value=0),
         })
         df_div["delta"] = df_div["skin"] - df_div["cosm"]
+        # Exclude generic Japanese verbs that appear in all YouTube comments
+        # regardless of topic — these are not register-specific signals
+        YT_EXCL = {'使う', '思う', 'する', 'なる', 'いる', 'ある', 'くれる', 'もらう'}
+        df_div = df_div[~df_div.index.isin(YT_EXCL)]
         # Take top 12 each direction, exclude near-zero shared terms
         skin_terms = df_div[df_div["delta"] > 0].nlargest(12, "delta")
         cosm_terms = df_div[df_div["delta"] < 0].nsmallest(12, "delta")
