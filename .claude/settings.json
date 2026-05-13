@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(conda run *)",
+      "PowerShell(conda run -n beauty-pulse python \"c:\\\\Users\\\\stanl\\\\OneDrive\\\\Desktop\\\\VSCode_Projects\\\\6. Beauty_ConsumerPulse\\\\seo_keywords.py\" 2>&1)",
+      "PowerShell(Get-Command python 2>&1)",
+      "PowerShell(python --version 2>&1)",
+      "PowerShell(& \"C:\\\\Users\\\\stanl\\\\miniconda3\\\\Scripts\\\\conda.exe\" run -n beauty-pulse python \"c:\\\\Users\\\\stanl\\\\OneDrive\\\\Desktop\\\\VSCode_Projects\\\\6. Beauty_ConsumerPulse\\\\seo_keywords.py\" 2>&1)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\stanl\" -Directory | Select-Object Name; Get-ChildItem \"C:\\\\ProgramData\" -Directory | Where-Object {$_.Name -match \"conda|anaconda|miniforge\"} | Select-Object Name)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\stanl\\\\\" -Force | Select-Object Name | Where-Object {$_.Name -match \"conda|anaconda|miniforge|mamba\"})",
+      "PowerShell($env:PATH -split \";\" | Where-Object {$_ -match \"conda|anaconda|python|miniforge\"})",
+      "PowerShell(& \"C:\\\\Users\\\\stanl\\\\anaconda3\\\\envs\\\\beauty-pulse\\\\python.exe\" \"c:\\\\Users\\\\stanl\\\\OneDrive\\\\Desktop\\\\VSCode_Projects\\\\6. Beauty_ConsumerPulse\\\\seo_keywords.py\" 2>&1)",
+      "Bash(\"C:\\\\Users\\\\stanl\\\\anaconda3\\\\envs\\\\beauty-pulse\\\\python.exe\" -)"
+    ]
+  }
+}

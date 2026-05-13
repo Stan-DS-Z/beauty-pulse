@@ -61,3 +61,7 @@ env/
 Thumbs.db
 .vscode/
 .idea/
+
+# ── Local analysis scripts (not for git) ──────────────────────────────────
+seo_keywords.py
+seo_keywords_output.json
