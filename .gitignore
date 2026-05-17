@@ -65,3 +65,8 @@ Thumbs.db
 # ── Local analysis scripts (not for git) ──────────────────────────────────
 seo_keywords.py
 seo_keywords_output.json
+stamps_extraction.py
+stamps_by_category.json
+
+# ── Claude Code memory (assistant notes, not project code) ────────────────
+memory/
