@@ -39,125 +39,124 @@ C = {
 
 @st.cache_data
 def compute_headline():
-    """Compute headline metrics from DB + CSVs — single source of truth."""
-    db = sqlite3.connect(str(DB_PATH), check_same_thread=False)
+    """Headline metrics — single source of truth, computed live from dashboard assets.
 
-    # Review share by year
-    df_slope = pd.read_csv(ASSETS / "nb07_review_slope.csv")
-    skin = df_slope[df_slope["tier_group"] == "skincare"].set_index("review_year")["share_pct"]
-    skin_2019 = round(skin.get(2019, 0), 1)
-    skin_2025 = round(skin.get(2025, skin.iloc[-1]), 1)
-
-    # COVID inflection — YoY skincare volume 2019→2020
-    vol = df_slope.groupby("review_year")["review_count"].sum()
-    covid_jump = round(100 * (vol.get(2020, 0) - vol.get(2019, 1)) / max(vol.get(2019, 1), 1), 1)
-
+    All v1 review-volume and pooled-TF-IDF metrics were retired; the Google
+    Trends comparison uses the anchored block_B, and convergence is the
+    size-matched figure (see Analysis Revision History in README)."""
     # Rakuten SKU counts
     df_sku = pd.read_csv(ASSETS / "nb07_sku_treemap.csv")
     skin_skus = int(df_sku[df_sku["tier_group"] == "skincare"]["sku_count"].sum())
     cosm_skus = int(df_sku[df_sku["tier_group"] == "cosmetics"]["sku_count"].sum())
     sku_ratio = round(skin_skus / max(cosm_skus, 1), 1)
 
-    # Google Trends crossover year
+    # Google Trends — anchored block_B (the only cross-term-comparable block)
     df_tr = pd.read_csv(ASSETS / "nb07_trends_crossover.csv", parse_dates=["week_start"])
     df_tr["year"] = df_tr["week_start"].dt.year
     annual = df_tr.groupby(["year", "term"])["interest"].mean().unstack(fill_value=0)
-    if "スキンケア" in annual.columns and "化粧品" in annual.columns:
-        cross = annual[annual["スキンケア"] >= annual["化粧品"]].index
-        crossover_year = int(cross[0]) if len(cross) else 2020
-    else:
-        crossover_year = 2020
+    y0, y1 = annual.index.min(), annual.index.max()
+    cosm_decline = int(round(100 * (annual.loc[y1, "化粧品"] - annual.loc[y0, "化粧品"])
+                             / annual.loc[y0, "化粧品"]))
+    ratio_0 = round(annual.loc[y0, "スキンケア"] / annual.loc[y0, "化粧品"], 2)
+    ratio_1 = round(annual.loc[y1, "スキンケア"] / annual.loc[y1, "化粧品"], 2)
 
-    # Cosine similarity
-    df_cos = pd.read_csv(ASSETS / "nb07_cosine_sim.csv", index_col=0)
-    sk19 = [c for c in df_cos.index if "Skincare" in c and "2019" in c]
-    cm19 = [c for c in df_cos.index if "Cosmetics" in c and "2019" in c]
-    sk25 = [c for c in df_cos.index if "Skincare" in c and "2023" in c]
-    cm25 = [c for c in df_cos.index if "Cosmetics" in c and "2023" in c]
-    cosine_2019 = round(df_cos.loc[sk19[0], cm19[0]], 2) if sk19 and cm19 else 0.38
-    cosine_2025 = round(df_cos.loc[sk25[0], cm25[0]], 2) if sk25 and cm25 else 0.81
+    # Vocabulary convergence — size-matched salvage (v1 figure was size-inflated)
+    df_sv = pd.read_csv(ASSETS / "nb06_cosine_salvage.csv")
+    sm = df_sv[df_sv["method"] == "size_matched"]["cosine"].tolist()
+    v1 = df_sv[df_sv["method"] == "v1_full_data"]["cosine"].tolist()
+    conv_lo, conv_hi = round(sm[0], 2), round(sm[1], 2)
+    conv_delta = round(sm[1] - sm[0], 2)
+    conv_v1 = round(v1[1] - v1[0], 2)
 
-    db.close()
+    # Sample-size effect — identical data, cosine vs N
+    df_cv = pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
+    size_lo, size_hi = df_cv.iloc[0], df_cv.iloc[-1]
+
+    # Ingredient search surge — niacinamide, pre- vs post-COVID
+    df_ing = pd.read_csv(ASSETS / "nb07_ingredient_surge.csv", parse_dates=["week_start"])
+    df_ing["year"] = df_ing["week_start"].dt.year
+    nia = df_ing[df_ing["term"] == "ナイアシンアミド"]
+    nia_pre = int(round(nia[nia.year <= 2020]["interest"].mean()))
+    nia_post = int(round(nia[nia.year >= 2023]["interest"].mean()))
 
     return {
-        "skin_share_2019": skin_2019,
-        "skin_share_2025": skin_2025,
-        "covid_jump":      covid_jump,
-        "sku_ratio":       sku_ratio,
-        "crossover_year":  crossover_year,
-        "skin_skus":       skin_skus,
-        "cosm_skus":       cosm_skus,
-        "cosine_2019":     cosine_2019,
-        "cosine_2025":     cosine_2025,
+        "sku_ratio":    sku_ratio,
+        "skin_skus":    skin_skus,
+        "cosm_skus":    cosm_skus,
+        "cosm_decline": cosm_decline,
+        "ratio_0":      ratio_0,
+        "ratio_1":      ratio_1,
+        "conv_lo":      conv_lo,
+        "conv_hi":      conv_hi,
+        "conv_delta":   conv_delta,
+        "conv_v1":      conv_v1,
+        "size_lo_n":    int(size_lo["sample_size"]),
+        "size_lo_cos":  round(size_lo["cross_tier_cosine"], 2),
+        "size_hi_n":    int(size_hi["sample_size"]),
+        "size_hi_cos":  round(size_hi["cross_tier_cosine"], 2),
+        "nia_pre":      nia_pre,
+        "nia_post":     nia_post,
     }
 
 HEADLINE = compute_headline()
 STRINGS = {
     "en": {
         "tagline":       "Japanese beauty market intelligence",
-        "subtitle":      "@cosme reviews · Rakuten Ichiba · Google Trends JP · YouTube · 2019–2026 · 22,451 reviews · 31,202 SKUs",
+        "subtitle":      "@cosme · Rakuten Ichiba · Google Trends JP · YouTube · 2019–2026 · 45,510 reviews · 36,386 SKUs",
         "tab1": "📈  The shift", "tab2": "🔤  The language", "tab3": "🔍  Discovery",
 
         # ── TAB 1: The Shift ──────────────────────────────────────────────
-        "t1_intro":  "Five independent data sources all point in the same direction: since COVID, Japanese consumers have made skincare — not makeup — their top beauty priority. This wasn't a temporary pandemic effect. It's a permanent restructuring.",
+        "t1_intro":  "Several independent data sources lean the same way: since COVID, Japanese consumers have shifted beauty priority toward skincare. The signal is real — but modest, and driven as much by cosmetics demand falling as by skincare rising. This dashboard shows the corrected picture, after an independent methodology audit (see the README's revision history).",
 
-        "t1_m1": "Skincare review share",
-        "t1_m2": "COVID surge",              "t1_m2d": "skincare reviews jumped +152% in one year",
+        "t1_m1": "Cosmetics search decline",  "t1_m1d": "化粧品 search interest, 2019→2026 (anchored Google Trends)",
+        "t1_m2": "Ingredient search surge",   "t1_m2d": "niacinamide search interest, pre- vs post-COVID",
         "t1_m3": "Rakuten SKU ratio",
-        "t1_m4": "Google Trends crossover",  "t1_m4d": "skincare overtakes cosmetics in search",
+        "t1_m4": "Skincare-to-cosmetics search",  "t1_m4d": "the gap roughly halved — but cosmetics still leads",
 
-        "t1_c1h": "Search demand — スキンケア vs 化粧品",
-        "t1_c1e": "How often do Japanese consumers search for \'skincare\' vs \'cosmetics\'? This chart tracks weekly Google search interest from 2019 to 2026. The crossover point — where skincare permanently overtakes cosmetics — is the structural shift made visible.",
+        "t1_c1h": "Search demand — スキンケア vs 化粧品 (anchored)",
+        "t1_c1e": "Weekly Google search interest, 2019–2026. This uses the *anchored* query block — the only one where スキンケア and 化粧品 share a single comparable scale. Cosmetics (化粧品) search has fallen steadily; skincare (スキンケア) is roughly flat. The gap is closing — but cosmetics still leads in every year. There is no crossover. (v1 reported a \'2020 crossover\' from unanchored data, where each term is normalised to its own peak and the two cannot be compared — that claim was retired.)",
         "t1_c2h": "Ingredient search surge",
-        "t1_c2e": "Consumers aren\'t just searching for \'skincare\' — they\'re searching for specific ingredients by name. Each line tracks a single ingredient\'s search popularity over time. The explosion post-COVID shows consumers becoming educated about what goes into their products.",
+        "t1_c2e": "Consumers aren\'t just searching for \'skincare\' — they\'re searching for specific ingredients by name. Each line tracks one ingredient\'s search popularity over time. The post-COVID climb shows consumers becoming educated about what goes into their products. Each term is normalised to its own scale, so this reads as growth-over-time, not cross-ingredient ranking.",
         "t1_c2cap": "Dashed lines = ingredients already known pre-COVID  ·  Solid lines = ingredients that broke out after 2020",
         "t1_ingr_sel": "Select ingredients",
         "t1_c3h": "Rakuten catalog — what the market is actually selling",
-        "t1_c3e": "Every rectangle is a product subcategory on Rakuten Ichiba (Japan\'s largest e-commerce platform). Size = number of products listed · colour = the lens you select below. This is what commercial supply looks like — and skincare dominates the shelf.",
+        "t1_c3e": "Every rectangle is a product subcategory on Rakuten Ichiba (Japan\'s largest e-commerce platform). Size = number of products listed · colour = the lens you select below. Skincare dominates the shelf — though SKU count reflects catalog supply and scraping depth, not sales or demand.",
         "t1_lens": "Colour by",
         "t1_lens_opts": {"Competition": "sku_count", "Engagement": "avg_reviews", "Price point": "avg_price", "Quality": "avg_rating"},
-        "t1_c4h": "Review share by year — @cosme corpus",
-        "t1_c4e": "What percentage of consumer reviews are about skincare vs cosmetics, year by year? This is the core evidence: skincare\'s share is structurally dominant. Note: 2019 has a thin sample (n=168) — the hollow markers flag this. The 2022 cosmetics bump was real (Japan lifted mask mandates) but temporary.",
         "t1_c5h": "YouTube beauty discourse — comment volume by year",
-        "t1_c5e": "A fifth, independent confirmation: YouTube comment volumes on Japanese beauty videos, split by skincare vs cosmetics. This data comes from a completely separate platform — yet it tells the same story.",
-        "t1_c5cap": "559 comments (2019) → 17,645 (2024) for skincare + cosmetics · 2022: cosmetics briefly edges skincare — the mask-off rebound is visible on a third platform · by 2024 skincare comment volume is 3× cosmetics",
+        "t1_c5e": "An independent platform check: YouTube comment volumes on Japanese beauty videos, split by skincare vs cosmetics. Separate platform, broadly the same direction — skincare discourse outgrows cosmetics over the period.",
+        "t1_c5cap": "2022: cosmetics briefly edges skincare — the mask-off rebound is visible here too · by 2024 skincare comment volume is well ahead",
 
-        "f1_title": "Finding 1 — The structural shift is confirmed across five independent sources",
-        "f1_body":  "Review corpus · search demand · commercial supply · ingredient search · YouTube discourse. The 2022 cosmetics rebound (+20pp) was temporary — by 2025 cosmetics retreated to 12.7%, their lowest share in the dataset. Five sources, same direction.",
+        "f1_title": "Finding 1 — The structural shift is supported, but modest",
+        "f1_body":  "Search demand, commercial supply, ingredient curiosity and YouTube discourse all lean the same way. In anchored Google Trends, cosmetics search fell ~35% (2019→2026) while skincare held roughly flat — the gap halved, though cosmetics still leads. Rakuten lists 4.1× more skincare SKUs (shelf share). Ingredient searches surged 6–7×. The direction is clear; the magnitude is moderate — this is a real shift, not a dramatic one.",
 
         # ── TAB 2: The Language ───────────────────────────────────────────
-        "t2_intro": "The shift isn\'t just visible in numbers — it\'s visible in the words consumers use. Six years of @cosme reviews show the vocabularies of skincare and cosmetics converging. Makeup products are increasingly evaluated by how they feel on skin, not how they look.",
+        "t2_intro": "The shift shows up in the words consumers use too — but this tab is also where the data demanded the hardest correction. v1 reported a dramatic vocabulary convergence between skincare and cosmetics reviews. An independent audit showed most of that was a sample-size artifact. What honestly remains is a small, real convergence — and the correction itself is worth seeing.",
 
-        "t2_m1": "Vocabulary convergence",  "t2_m1d": "how much language skincare and cosmetics reviews share",
-        "t2_m2": "2019 baseline",           "t2_m2d": "almost no shared vocabulary",
-        "t2_m3": "マスカラ decline",         "t2_m3d": "−76% in review language 2019→2025",
+        "t2_m1": "Vocabulary convergence",  "t2_m1d": "size-matched Δ — small but statistically robust (95% CI excludes 0)",
+        "t2_m2": "v1 figure — retired",     "t2_m2d": "roughly 80% of it was a sample-size artifact",
+        "t2_m3": "Sample-size effect",       "t2_m3d": "identical data: cosine inflates as N grows 150→6,000",
 
         "t2_wch": "Consumer vocabulary by year",
-        "t2_wce": "What words appear most frequently in beauty reviews each year? Larger words = used more often. Brand names and generic sentiment words have been removed so only product-relevant vocabulary remains.",
-        "t2_wc_early": "2019–2021: makeup application vocabulary dominates — マスカラ (mascara), アイライナー (eyeliner), まつ毛 (eyelashes), ブラシ (brush)",
-        "t2_wc_2022":  "2022: transition year — makeup terms fading, skincare terms beginning to appear",
-        "t2_wc_2023":  "2023: inflection point — both vocabularies visible, functional terms gaining ground",
-        "t2_wc_late":  "2024–2025: skincare vocabulary dominant — 乾燥 (dryness), 保湿 (moisture), 香り (scent), クリーム (cream), 洗顔 (face wash)",
+        "t2_wce": "What words appear most frequently in beauty reviews each year? Larger words = used more often. Brand names and generic sentiment words are removed. Note: the mix of categories in the corpus varies by year, so read these as a descriptive snapshot of each year\'s reviews, not as a controlled trend.",
+        "t2_wc_early": "2019–2021: makeup-application vocabulary is prominent — マスカラ (mascara), アイライナー (eyeliner), まつ毛 (eyelashes), ブラシ (brush)",
+        "t2_wc_2022":  "2022: a mix — makeup and skincare terms both visible",
+        "t2_wc_2023":  "2023: functional skincare terms gaining ground",
+        "t2_wc_late":  "2024–2025: skincare vocabulary prominent — 乾燥 (dryness), 保湿 (moisture), 香り (scent), クリーム (cream), 洗顔 (face wash)",
 
-        "t2_cosh": "Vocabulary convergence — how similar are skincare and cosmetics reviews?",
-        "t2_cose": "This heatmap measures vocabulary overlap between skincare and cosmetics reviews across different time periods. 0 = completely different language · 1 = identical language · the key number: the cross-category similarity rose from 0.38 to 0.81 in six years.",
-        "t2_cosnote": "Neither category absorbed the other. Both moved toward a shared functional vocabulary: 乾燥 (dryness), 保湿 (moisture), しっとり (moist texture), 毛穴 (pores).",
+        "t2_curveh": "The sample-size trap — why v1\'s convergence was overstated",
+        "t2_curvee": "v1 measured vocabulary convergence as the cosine similarity between *pooled* skincare and cosmetics reviews. But that cosine rises mechanically with sample size — a bigger pool simply covers more vocabulary. This line uses the *identical* 2023–25 reviews, subsampled to different sizes: the similarity climbs from ~0.31 to ~0.66 with no change in the underlying language. v1\'s bootstrap resampled within fixed sizes and never detected this.",
+        "t2_curvenote": "Size-matched — every period equalised to 249 reviews — a convergence still remains: 0.25 → 0.32, Δ +0.06 (bootstrap 95% CI excludes zero). Real, statistically robust, but roughly one-fifth the magnitude v1 claimed (Δ +0.31).",
 
-        "t2_tfidfh": "Vocabulary shift — which words rose and fell?",
-        "t2_tfidfe": "Comparing which words became more or less important in beauty reviews from pre-COVID (≤2020) to recent (≥2023). Longer bars = bigger change. Left = rising terms (skincare language). Right = declining terms (makeup language).",
-        "t2_rise": "↑ Rising — skincare and functional vocabulary",
-        "t2_decl": "↓ Declining — makeup and visual vocabulary",
-        "t2_tfidfcap": "Note: 化粧水 (toner) appearing as \'declining\' is a small-sample artefact — the 2019 corpus over-indexed on toner reviews. Google Trends does not confirm this decline.",
-
-        "f2_title": "Finding 2 — Consumer vocabulary converged dramatically across six years",
-        "f2_body":  "In 2019, skincare and cosmetics reviews shared just 38% of their top vocabulary. By 2023–25, that figure is 81%. The direction is clear: mascara (マスカラ) −76%, eyelashes (まつ毛) −86%, eyeliner (アイライナー) −71% — replaced by moisture (保湿) +409%, cream (クリーム) +3,101%, dryness (乾燥) +312%. Cosmetics are now evaluated through a skincare lens.",
+        "f2_title": "Finding 2 — Vocabulary converged slightly; v1\'s headline was a sample-size artifact",
+        "f2_body":  "v1 reported skincare and cosmetics review language converging from 0.39 to 0.70 and called it the project\'s strongest unsupervised finding. An independent audit showed TF-IDF cosine between pooled corpora inflates with sample size — and v1\'s bootstrap, which resampled within fixed sizes, could not see it. Under a properly size-matched comparison the convergence is real but small: Δ +0.06 (95% CI excludes zero). The honest version is less dramatic — the full correction is documented in the README\'s revision history.",
 
         # ── TAB 3: Discovery ──────────────────────────────────────────────
-        "t3_intro": "Two discovery engines reveal what\'s coming next. Google Trends surfaces what consumers are searching for before it appears in reviews — a leading indicator of demand. The review map below shows the spatial shape of consumer vocabulary, revealing where skincare and cosmetics language has already merged.",
+        "t3_intro": "Two discovery engines look at what\'s coming next. Google Trends surfaces what consumers search for before it shows up in reviews. The review map below shows the spatial shape of consumer vocabulary — a descriptive structure that, unlike the convergence metric, does not depend on sample size.",
 
         "t3_m1": "Strongest recent signal",  "t3_m1d": "Korean brand · across 4 independent search terms",
         "t3_m2": "COVID-era leader",          "t3_m2d": "ingredient · 5 search terms · consumers learning",
-        "t3_m3": "Review corpus shape",       "t3_m3d": "78% form a continuum, not clusters",
+        "t3_m3": "Review corpus shape",       "t3_m3d": "~28% resist clustering — a continuum, not segments",
 
         "t3_bch": "Search discovery — what are consumers searching for next?",
         "t3_bce": "Starting from 20+ beauty search terms (e.g. スキンケア, ナイアシンアミド, 口紅), Google identifies the fastest-accelerating related searches. When the same brand or ingredient appears across multiple independent starting points, that\'s a strong signal. Size = signal strength · colour = signal type.",
@@ -172,86 +171,78 @@ STRINGS = {
         "t3_ytch":  "YouTube content supply — top channels by category",
         "t3_ytche": "The top 15 YouTube beauty channels by total views, coloured by whether they focus on skincare or cosmetics. Notice the gap: Korean beauty (韓国コスメ) generates massive search demand (Finding 4), but has very little YouTube content covering it.",
         "t3_ytgap":  "Content supply gap — ",
-        "t3_ytgapb": "Korean beauty (韓国コスメ) generates the strongest search signal (アヌア across 4 search terms) but has only 9 videos and 2.9M views in our dataset. Meanwhile, かずのすけ (a science-focused beauty creator) dominates ingredient content with 25 videos and 15.6M views — confirming that ingredient education drives engagement. Korean brands have captured search and reviews; YouTube is still wide open.",
+        "t3_ytgapb": "Korean beauty (韓国コスメ) generates the strongest search signal (アヌア across 4 search terms) but has only 9 videos and 2.9M views in our dataset. Meanwhile かずのすけ (a science-focused beauty creator) dominates ingredient content with 25 videos and 15.6M views — ingredient education drives engagement. Korean brands have captured search and reviews; YouTube is still wide open.",
 
         "t3_yttfh": "YouTube comments — what are viewers actually saying?",
-        "t3_yttfe": "The same text analysis applied to YouTube comments reveals a surprise: YouTube and @cosme are different conversations. Only 14 out of 30 top skincare terms overlap between the two platforms.",
+        "t3_yttfe": "The same text analysis applied to YouTube comments reveals a surprise: YouTube and @cosme are different conversations. Only 14 of the top 30 skincare terms overlap between the two platforms.",
         "t3_ytreg":  "Platform difference — ",
-        "t3_ytregb": "動画 (video) · 参考 (reference) · 思う (think) dominate YouTube — viewers are commenting <em>on the video</em>, not reviewing a product. @cosme = product evaluation language (しっとり/moist texture · 毛穴/pores · 香り/scent). YouTube = social reaction language. These are two genuinely different conversations about the same products. <b>かずのすけ</b> appears as a top-3 skincare term on YouTube — more prominent than 化粧水 (toner).",
+        "t3_ytregb": "動画 (video) · 参考 (reference) · 思う (think) dominate YouTube — viewers comment <em>on the video</em>, not on a product. @cosme = product-evaluation language (しっとり/moist texture · 毛穴/pores · 香り/scent). YouTube = social-reaction language. Two genuinely different conversations about the same products. <b>かずのすけ</b> appears as a top-3 skincare term on YouTube — more prominent than 化粧水 (toner).",
         "t3_ytdivtitle": "← Cosmetics YouTube language  ·  Skincare YouTube language →",
         "t3_ytdivax":    "How much more a term appears in skincare vs cosmetics comments",
 
         "t3_umaph": "Review map — the shape of consumer vocabulary",
-        "t3_umape": "Every dot is one @cosme review, positioned by vocabulary similarity — reviews using similar words appear close together. This turns 14,727 reviews into a landscape you can explore. Colours: blue = skincare, rose = cosmetics.",
+        "t3_umape": "Every dot is one @cosme review, positioned by vocabulary similarity — reviews using similar words appear close together. This turns 21,058 reviews into a landscape you can explore. Colours: blue = skincare, rose = cosmetics.",
         "t3_umap_yr": "Filter by year",
         "t3_umap_sk": "Skincare", "t3_umap_co": "Cosmetics",
-        "t3_umap_note": "Labels show the key vocabulary of each region.\n\nCompare 2019 vs 2025 — where rose (cosmetics) dots mix into blue (skincare) territory, consumer vocabulary has converged.",
+        "t3_umap_note": "Labels show the key vocabulary of each region.\n\nCompare 2019 vs 2025 — where rose (cosmetics) dots mix into blue (skincare) territory, consumer vocabulary overlaps.",
 
-        "f3_title": "Finding 3 — The review map reveals three hidden structures",
-        "f3_body":  "The northeast cluster (★ 収束点) is where skincare and cosmetics vocabulary has already merged — foundation reviews written in skincare language, cleansing reviews evaluating moisture and texture. The 0.38→0.81 convergence, made spatial.<br><br>The isolated top island reveals something equally important: influencer and giveaway reviews separated automatically from organic consumer reviews — without being told to. Brands measuring sentiment without filtering these out are mixing two different signals. The tone-up SPF satellite (right) confirms SPF is not one category — functional sunscreen and cosmetic base makeup are different conversations.",
+        "f3_title": "Finding 3 — The review map reveals structure that survives scrutiny",
+        "f3_body":  "Unlike the convergence number, this is spatial structure — descriptive, and independent of sample size. The northeast zone is where skincare and cosmetics vocabulary overlap most: foundation reviews written in skincare language, cleansing reviews evaluated on moisture and texture.<br><br>More striking is the isolated top island: influencer and giveaway reviews (「プレゼント」/「当選」 template language) separated automatically from organic consumer reviews — without being told to. Brands measuring sentiment without filtering these populations are mixing two different signals. This is the most robust thing @cosme\'s text offers.",
     },
     "jp": {
         "tagline":        "日本の美容市場インテリジェンス",
-        "subtitle":       "@cosme · 楽天市場 · Google Trends JP · YouTube · 2019–2026 · 22,451件レビュー · 31,202 SKU",
+        "subtitle":       "@cosme · 楽天市場 · Google Trends JP · YouTube · 2019–2026 · 45,510件レビュー · 36,386 SKU",
         "tab1": "📈  市場変化", "tab2": "🔤  消費者の言語", "tab3": "🔍  発見",
 
-        "t1_intro":  "5つの独立したデータソースがすべて同じ方向を指している。コロナ禍以降、日本の消費者はメイクアップではなくスキンケアを美容の最優先事項に据えた。これはパンデミック中の一時的な現象ではない。構造的かつ恒久的な変化である。",
+        "t1_intro":  "複数の独立したデータソースが同じ方向を指している。コロナ禍以降、日本の消費者は美容の優先順位をスキンケアへと移した。このシグナルは実在するが、規模は控えめであり、スキンケアの上昇よりむしろ化粧品の需要低下に支えられている。本ダッシュボードは、独立した方法論監査を経た修正後の姿を示す（READMEの改訂履歴を参照）。",
 
-        "t1_m1":     "スキンケアレビュー比率",
-        "t1_m2":     "COVID後の急増",           "t1_m2d": "スキンケアレビューが1年で+152%",
+        "t1_m1":     "化粧品の検索需要の低下",  "t1_m1d": "化粧品の検索関心度、2019→2026年（アンカー付きトレンド）",
+        "t1_m2":     "成分検索の急増",          "t1_m2d": "ナイアシンアミドの検索関心度、コロナ前後",
         "t1_m3":     "楽天SKU比率",
-        "t1_m4":     "Googleトレンド逆転",       "t1_m4d": "スキンケアが化粧品を逆転した年",
+        "t1_m4":     "スキンケア対化粧品 検索比",  "t1_m4d": "差は半減 —— ただし化粧品が依然上回る",
 
-        "t1_c1h":    "検索需要 — スキンケア vs 化粧品",
-        "t1_c1e":    "日本の消費者は「スキンケア」と「化粧品」をどれくらい検索しているか？\u3000 2019年から2026年までの週次Google検索関心度を追跡。スキンケアが化粧品を恒久的に上回った逆転点が、構造的変化の可視化である。",
+        "t1_c1h":    "検索需要 — スキンケア vs 化粧品（アンカー付き）",
+        "t1_c1e":    "2019〜2026年の週次Google検索関心度。「スキンケア」と「化粧品」が共通の比較可能なスケールに乗る唯一のクエリブロック（アンカー付き）を用いている。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。差は縮まっているが、化粧品が毎年上回り、「逆転」は起きていない。（初版は非アンカーのデータで「2020年の逆転」を報告したが、そこでは各語が自身のピークに正規化され両者を比較できない —— この主張は撤回した。）",
         "t1_c2h":    "成分検索の急増",
-        "t1_c2e":    "消費者は「スキンケア」だけでなく、成分名を指名検索している。各線は1つの成分の検索人気を経時的に追跡。コロナ後の急増は、消費者が自分の使う製品の中身について学び始めたことを示す。",
-        "t1_c2cap":  "点線 = COVID前から認知されていた成分  ·  実線 = 2020年以降に急浮上した成分",
+        "t1_c2e":    "消費者は「スキンケア」だけでなく、成分名を指名検索している。各線は1つの成分の検索人気を経時的に追跡。コロナ後の上昇は、消費者が製品の中身について学び始めたことを示す。各語は自身のスケールに正規化されているため、これは経時的な伸びを示すもので、成分間の順位比較ではない。",
+        "t1_c2cap":  "点線 = コロナ前から認知されていた成分  ·  実線 = 2020年以降に急浮上した成分",
         "t1_ingr_sel": "成分を選択",
         "t1_c3h":    "楽天カタログ — 市場が実際に売っているもの",
-        "t1_c3e":    "各長方形は楽天市場（日本最大のECプラットフォーム）のサブカテゴリ。サイズ = 商品掲載数 · 色 = 選択レンズ。商業的供給の実態であり、スキンケアが棚を支配している。",
+        "t1_c3e":    "各長方形は楽天市場（日本最大のECプラットフォーム）のサブカテゴリ。サイズ = 商品掲載数 · 色 = 選択レンズ。スキンケアが棚を支配している —— ただしSKU数はカタログ供給と取得の深さを反映し、売上や需要そのものではない。",
         "t1_lens":   "色分け基準",
         "t1_lens_opts": {"競合状況": "sku_count", "エンゲージメント": "avg_reviews", "価格帯": "avg_price", "品質": "avg_rating"},
-        "t1_c4h":    "年別レビュー比率 — @cosmeコーパス",
-        "t1_c4e":    "スキンケアとコスメのレビュー比率は年ごとにどう変化したか？\u3000 これが中核的エビデンスである。2019年はサンプル数が少ない（n=168）ため、白抜きマーカーで示している。2022年のコスメ回復（マスク解禁効果）は実在したが一時的だった。",
         "t1_c5h":    "YouTube美容言論 — 年別コメント数",
-        "t1_c5e":    "5つ目の独立した確認源：日本の美容動画に対するYouTubeコメント量をスキンケア対コスメで分割。完全に別のプラットフォームのデータが同じストーリーを語っている。",
-        "t1_c5cap":  "559件（2019）→ 17,645件（2024）スキンケア＋コスメ · 2022年はコスメが一時逆転（マスク解禁効果が3つ目のプラットフォームでも可視化）· 2024年にはスキンケアがコスメの3倍超に加速",
+        "t1_c5e":    "独立したプラットフォームでの確認：日本の美容動画へのYouTubeコメント量をスキンケア対コスメで分割。別のプラットフォームでも、おおむね同じ方向 —— 期間を通じてスキンケアの言論がコスメを上回って伸びる。",
+        "t1_c5cap":  "2022年はコスメが一時的にスキンケアを上回る（マスク解禁効果はここでも可視）· 2024年にはスキンケアのコメント量が大きく先行",
 
-        "f1_title":  "発見1 — 構造的変化は5つの独立したソースで確認された",
-        "f1_body":   "レビューコーパス · 検索需要 · 商業的供給 · 成分検索 · YouTube言論。2022年のコスメ一時回復（+20pp）は一過性だった。2025年にはコスメがデータセット最低値の12.7%まで後退。5つのソース、同じ方向性。",
+        "f1_title":  "発見1 — 構造的変化は支持されるが、規模は控えめ",
+        "f1_body":   "検索需要・商業的供給・成分への関心・YouTube言論が、いずれも同じ方向を指す。アンカー付きGoogleトレンドでは、化粧品の検索が約35%低下（2019→2026）した一方、スキンケアはほぼ横ばい —— 差は半減したが化粧品が依然上回る。楽天はスキンケアSKUを4.1倍掲載（棚シェア）。成分検索は6〜7倍に急増。方向は明確だが規模は中程度 —— これは実在する変化であり、劇的な変化ではない。",
 
-        "t2_intro":  "変化は数値だけでなく、消費者が実際に使う「言葉」にも現れている。6年間の@cosmeレビューを分析すると、スキンケアとコスメの語彙が融合しつつあることがわかる。メイクアップ製品が「見た目」ではなく「肌への感触」で評価されるようになった。",
+        "t2_intro":  "変化は消費者が使う「言葉」にも現れる —— だがこのタブは、データが最も厳しい修正を要求した場所でもある。初版は、スキンケアとコスメのレビュー語彙が劇的に収束したと報告した。独立した監査により、その大部分がサンプルサイズのアーティファクトであることが判明した。正直に残るのは、小さいが実在する収束 —— そしてその修正の過程自体が見るに値する。",
 
-        "t2_m1":     "語彙収束度",  "t2_m1d": "スキンケアとコスメのレビューがどれだけ同じ言葉を使っているか",
-        "t2_m2":     "2019年ベースライン", "t2_m2d": "ほぼ共通語彙なし",
-        "t2_m3":     "マスカラ低下", "t2_m3d": "レビュー語彙で−76%（2019→2025）",
+        "t2_m1":     "語彙収束",  "t2_m1d": "サンプル数を揃えたΔ —— 小さいが統計的に頑健（95%CIがゼロを除外）",
+        "t2_m2":     "初版の値（撤回）", "t2_m2d": "そのうち約8割はサンプルサイズのアーティファクト",
+        "t2_m3":     "サンプルサイズ効果", "t2_m3d": "同一データ：Nが150→6,000と増えるとコサインが上昇",
 
         "t2_wch":    "年別消費者語彙",
-        "t2_wce":    "美容レビューで各年に最も頻出する語彙は何か？\u3000 大きい語 = より頻繁に使用。ブランド名と汎用感情語は除外し、製品に関連する語彙のみを表示。",
-        "t2_wc_early":  "2019–2021：メイクアップ語彙が支配的 — マスカラ、アイライナー、まつ毛、ブラシ",
-        "t2_wc_2022":   "2022：過渡期 — メイク語彙の衰退とスキンケア語彙の台頭",
-        "t2_wc_2023":   "2023：変曲点 — 両方の語彙が共存、機能的語彙が優勢に",
-        "t2_wc_late":   "2024–2025：スキンケア語彙が支配的 — 乾燥、保湿、香り、クリーム、洗顔",
+        "t2_wce":    "美容レビューで各年に最も頻出する語彙は何か？　 大きい語 = より頻繁に使用。ブランド名と汎用感情語は除外。注：コーパスのカテゴリ構成は年により変動するため、これは各年のレビューの記述的スナップショットであり、統制されたトレンドではない。",
+        "t2_wc_early":  "2019–2021：メイクアップ語彙が目立つ — マスカラ、アイライナー、まつ毛、ブラシ",
+        "t2_wc_2022":   "2022：混在期 — メイクとスキンケアの語彙が両方見える",
+        "t2_wc_2023":   "2023：機能的なスキンケア語彙が台頭",
+        "t2_wc_late":   "2024–2025：スキンケア語彙が目立つ — 乾燥、保湿、香り、クリーム、洗顔",
 
-        "t2_cosh":   "語彙収束 — スキンケアとコスメのレビューはどれくらい似ているか？",
-        "t2_cose":   "異なる時期のスキンケアとコスメのレビューの語彙重複度を測定。0 = まったく異なる言葉 · 1 = 同一の言葉 · 注目すべき数値：カテゴリ間類似度が6年間で0.38から0.81に上昇。",
-        "t2_cosnote":"どちらかがもう一方を吸収したのではない。両者が共有の機能的語彙（乾燥、保湿、しっとり、毛穴）へと移行した。",
+        "t2_curveh": "サンプルサイズの罠 — なぜ初版の収束は過大だったのか",
+        "t2_curvee": "初版は語彙収束を、プールしたスキンケアレビューとコスメレビューの間のコサイン類似度として測定した。しかしこのコサインは、サンプル数とともに機械的に上昇する —— プールが大きいほど多くの語彙を被覆するためである。この線は同一の2023–25年レビューを異なるサイズにサブサンプルしたもの：基となる言語は何も変えていないのに、類似度は約0.31から約0.66まで上昇する。初版のブートストラップは固定サイズ内で再標本化しており、これを検出できなかった。",
+        "t2_curvenote": "サンプル数を揃えると（各期間を249件に均一化）、収束は依然として残る：0.25 → 0.32、Δ +0.06（ブートストラップ95%CIはゼロを除外）。実在し統計的に頑健だが、初版の主張（Δ +0.31）の約5分の1の規模。",
 
-        "t2_tfidfh": "語彙シフト — どの言葉が増え、どの言葉が減ったか？",
-        "t2_tfidfe": "美容レビューにおける各語の重要度がCOVID前（≤2020）から直近（≥2023）にかけてどう変化したかを比較。長いバー = 大きな変化。左 = 上昇語（スキンケア語彙）。右 = 下降語（メイク語彙）。",
-        "t2_rise":   "↑ 上昇 — スキンケア・機能的語彙",
-        "t2_decl":   "↓ 下降 — メイク・ビジュアル語彙",
-        "t2_tfidfcap": "注：化粧水の「下降」は少数サンプルによる統計的偏り — 2019年コーパスがトナーレビューに偏重していた。Googleトレンドではこの下降は確認されていない。",
+        "f2_title":  "発見2 — 語彙はわずかに収束した。初版の見出しはサンプルサイズのアーティファクトだった",
+        "f2_body":   "初版は、スキンケアとコスメのレビュー言語が0.39から0.70へ収束したと報告し、これをプロジェクト最強の教師なし発見と称した。独立した監査により、プールされたコーパス間のTF-IDFコサインはサンプル数とともに上昇すること、そして固定サイズ内で再標本化した初版のブートストラップではそれを検出できないことが判明した。サンプル数を適切に揃えた比較では、収束は実在するが小さい：Δ +0.06（95%CIはゼロを除外）。正直な姿はより地味である —— 修正の全容はREADMEの改訂履歴に記録されている。",
 
-        "f2_title":  "発見2 — 消費者語彙は6年間で劇的に収束した",
-        "f2_body":   "2019年、スキンケアとコスメのレビューは上位語彙の38%を共有していた。2023–25年には81%に上昇。方向性は明確：マスカラ −76%、まつ毛 −86%、アイライナー −71% — 代わりに保湿 +409%、クリーム +3,101%、乾燥 +312%が台頭。コスメはスキンケアの文脈で評価されるようになった。",
-
-        "t3_intro":  "2つの発見エンジンが「次に来るもの」を明らかにする。Googleトレンドはレビューに現れる前に消費者が検索しているものを特定する先行指標。下のレビューマップは消費者語彙の空間的形状を示し、スキンケアとコスメの言葉がすでに融合している領域を可視化する。",
+        "t3_intro":  "2つの発見エンジンが「次に来るもの」を見る。Googleトレンドはレビューに現れる前に消費者が検索しているものを浮かび上がらせる。下のレビューマップは消費者語彙の空間的形状を示す —— 収束指標とは異なり、この記述的構造はサンプルサイズに依存しない。",
 
         "t3_m1":     "直近の最強シグナル", "t3_m1d": "韓国ブランド · 4つの独立した検索語で出現",
         "t3_m2":     "COVID期リーダー",    "t3_m2d": "成分 · 5つの検索語 · 消費者が学習していた時期",
-        "t3_m3":     "レビューコーパスの形状",  "t3_m3d": "78%はクラスタではなく連続体を形成",
+        "t3_m3":     "レビューコーパスの形状",  "t3_m3d": "約28%はクラスタに属さない —— セグメントではなく連続体",
 
         "t3_bch":    "検索発見 — 消費者は次に何を検索しているか？",
         "t3_bce":    "20以上の美容検索語（スキンケア、ナイアシンアミド、口紅など）を起点に、Googleが最も急上昇する関連検索を抽出。同じブランドや成分が複数の異なる起点から浮上する場合、それは強いシグナルである。サイズ = シグナル強度 · 色 = シグナル種別。",
@@ -266,26 +257,25 @@ STRINGS = {
         "t3_ytch":   "YouTubeコンテンツ供給 — カテゴリ別トップチャンネル",
         "t3_ytche":  "総視聴数上位15チャンネルをスキンケア/コスメ別に表示。注目すべきギャップ：韓国コスメは検索需要が巨大（発見4）にもかかわらず、YouTubeコンテンツがほとんどない。",
         "t3_ytgap":  "コンテンツ供給ギャップ — ",
-        "t3_ytgapb": "韓国コスメは最強の検索シグナル（アヌアが4つの検索語で出現）を生成しているが、YouTube動画はわずか9本・視聴数290万。一方、かずのすけ（科学系美容クリエイター）は25本・1,560万回視聴で成分コンテンツを支配しており、成分教育がエンゲージメントを駆動することを裏付ける。韓国ブランドは検索と@cosmeを掌握した。YouTubeはまだ開かれている。",
+        "t3_ytgapb": "韓国コスメは最強の検索シグナル（アヌアが4つの検索語で出現）を生成しているが、YouTube動画はわずか9本・視聴数290万。一方、かずのすけ（科学系美容クリエイター）は25本・1,560万回視聴で成分コンテンツを支配 —— 成分教育がエンゲージメントを駆動する。韓国ブランドは検索と@cosmeを掌握した。YouTubeはまだ開かれている。",
 
         "t3_yttfh":  "YouTubeコメント — 視聴者は実際に何を言っているのか？",
         "t3_yttfe":  "同じテキスト分析をYouTubeコメントに適用すると意外な発見がある。YouTubeと@cosmeは異なる会話空間である。スキンケア上位30語のうち、両プラットフォームで共通するのはわずか14語。",
         "t3_ytreg":  "プラットフォーム間の違い — ",
-        "t3_ytregb": "動画・参考・思うがYouTubeの両リストを支配 — 視聴者は商品をレビューするのではなく、<em>動画に対して</em>コメントしている。@cosme = 商品評価言語（しっとり・毛穴・香り）。YouTube = 社会的反応言語。これらは同じ製品について語る2つの異なる会話空間。<b>かずのすけ</b>がスキンケア上位3語として登場 — 化粧水よりも上位。",
+        "t3_ytregb": "動画・参考・思うがYouTubeを支配 — 視聴者は商品ではなく<em>動画に対して</em>コメントしている。@cosme = 商品評価言語（しっとり・毛穴・香り）。YouTube = 社会的反応言語。同じ製品についての2つの異なる会話空間。<b>かずのすけ</b>がスキンケア上位3語として登場 — 化粧水よりも上位。",
         "t3_ytdivtitle": "← コスメYouTube言語  ·  スキンケアYouTube言語 →",
         "t3_ytdivax":    "スキンケアのコメントでどれだけ多く登場するか（コスメとの差分）",
 
         "t3_umaph":  "レビューマップ — 消費者語彙の地形",
-        "t3_umape":  "各点が@cosmeレビュー1件。似た語彙を使うレビューほど近くに配置される。14,727件のレビューを探索可能な地形図に変換。色：青 = スキンケア、ローズ = コスメ。",
+        "t3_umape":  "各点が@cosmeレビュー1件。似た語彙を使うレビューほど近くに配置される。21,058件のレビューを探索可能な地形図に変換。色：青 = スキンケア、ローズ = コスメ。",
         "t3_umap_yr":   "年でフィルタ",
         "t3_umap_sk":   "スキンケア", "t3_umap_co": "コスメ",
-        "t3_umap_note": "ラベルは各領域の主要語彙を示す。\n\n2019年と2025年を比較 — コスメ（ローズ）の点がスキンケア（ブルー）領域に混在している箇所が、消費者語彙の収束点。",
+        "t3_umap_note": "ラベルは各領域の主要語彙を示す。\n\n2019年と2025年を比較 — コスメ（ローズ）の点がスキンケア（ブルー）領域に混在している箇所が、消費者語彙の重なり。",
 
-        "f3_title":  "発見3 — レビューマップが3つの隠れた構造を明らかにする",
-        "f3_body":   "北東クラスター（★ 収束点）はスキンケアとコスメの語彙がすでに融合した領域 — スキンケア言語で書かれたファンデーションレビュー、テクスチャーと保湿で評価するクレンジングレビュー。コサイン収束0.38→0.81の空間的表現。<br><br>上部の孤立アイランドは同等に重要な発見を示す：インフルエンサーやモニターレビューが、意図的に探索しなくてもオーガニック消費者レビューから自動的に分離された。この2つを分けずにセンチメント測定を行うブランドは、2種類のシグナルを混在させている。右側のトーンアップSPF衛星が第3の発見を確認：SPFは単一カテゴリではなく、機能的日焼け止めとコスメベースは異なる会話空間である。",
+        "f3_title":  "発見3 — レビューマップは精査に耐える構造を示す",
+        "f3_body":   "収束の数値とは異なり、これは空間的構造 —— 記述的であり、サンプルサイズに依存しない。北東の領域はスキンケアとコスメの語彙が最も重なる場所：スキンケア言語で書かれたファンデーションレビュー、保湿とテクスチャーで評価されるクレンジングレビュー。<br><br>さらに顕著なのは上部の孤立アイランド：インフルエンサー・モニターレビュー（「プレゼント」「当選」テンプレート）が、指示なしにオーガニックレビューから自動的に分離された。この2集団を分けずにセンチメント測定を行うブランドは、2種類のシグナルを混在させている。これは@cosmeのテキストが提供する最も頑健な所見である。",
     },
 }
-
 def _base(height=420):
     return dict(
         height=height,
@@ -344,9 +334,8 @@ def load_tfidf_delta():
     return pd.read_csv(ASSETS / "nb07_tfidf_delta.csv")
 
 @st.cache_data
-def load_cosine_sim():
-    df = pd.read_csv(ASSETS / "nb07_cosine_sim.csv", index_col=0)
-    return df
+def load_cosine_sizecurve():
+    return pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
 
 @st.cache_data
 def load_yt_volume():
@@ -416,17 +405,14 @@ with tab1:
 
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.metric(S["t1_m1"], f"{HEADLINE['skin_share_2025']}%",
-                  f"+{HEADLINE['skin_share_2025']-HEADLINE['skin_share_2019']:.1f}pp vs 2019" if lang=="en" else f"+{HEADLINE['skin_share_2025']-HEADLINE['skin_share_2019']:.1f}pp（2019年比）")
+        st.metric(S["t1_m1"], f"{HEADLINE['cosm_decline']}%", S["t1_m1d"])
     with m2:
-        st.metric(S["t1_m2"], f"+{HEADLINE['covid_jump']}%",
-                  S["t1_m2d"])
+        st.metric(S["t1_m2"], f"{HEADLINE['nia_pre']} → {HEADLINE['nia_post']}", S["t1_m2d"])
     with m3:
         st.metric(S["t1_m3"], f"{HEADLINE['sku_ratio']}x",
                   f"{HEADLINE['skin_skus']:,} vs {HEADLINE['cosm_skus']:,} SKUs" if lang=="en" else f"{HEADLINE['skin_skus']:,} vs {HEADLINE['cosm_skus']:,} SKU")
     with m4:
-        st.metric(S["t1_m4"], str(HEADLINE["crossover_year"]),
-                  S["t1_m4d"])
+        st.metric(S["t1_m4"], f"{HEADLINE['ratio_0']} → {HEADLINE['ratio_1']}", S["t1_m4d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
 
@@ -453,10 +439,11 @@ with tab1:
                                    name=label, mode="lines",
                                    line=dict(color=color, width=2.5),
                                    hovertemplate="%{y:.0f}<extra></extra>"))
-    fig1.add_annotation(x="2020-06-01", y=72, text=f"Crossover: {HEADLINE['crossover_year']}",
-                        showarrow=True, arrowhead=2, arrowcolor=C["gold"],
-                        font=dict(size=11, color=C["gold"]), bgcolor=C["card"],
-                        bordercolor=C["gold"], borderwidth=1, borderpad=4)
+    fig1.add_annotation(x="2024-01-01", y=70,
+                        text="gap halving — no crossover" if lang == "en" else "差は縮小 — 逆転はなし",
+                        showarrow=False,
+                        font=dict(size=10, color=C["muted"]), bgcolor=C["card"],
+                        bordercolor=C["border"], borderwidth=1, borderpad=4)
     fig1.update_layout(**_base(height=360))
     fig1.update_layout(margin=dict(l=20, r=20, t=20, b=40),
                        legend=dict(orientation="h", yanchor="top", y=-0.12,
@@ -640,57 +627,7 @@ with tab1:
 
     st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
 
-    # Chart 4 — Review slope
-    st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t1_c4h"]}</h3><p class="expl">{S["t1_c4e"]}</p>', unsafe_allow_html=True)
-    df_slope = load_review_slope()
-    df_skin  = df_slope[df_slope["tier_group"] == "skincare"]
-    df_cosm  = df_slope[df_slope["tier_group"] == "cosmetics"]
-    fig4 = go.Figure()
-    fig4.add_vrect(x0=2019.8, x1=2021.2, fillcolor=C["grid"], opacity=0.6,
-                   layer="below", line_width=0, annotation_text="COVID",
-                   annotation_position="top left",
-                   annotation_font=dict(size=10, color=C["muted"]))
-    # Marker arrays — hollow for 2019 (thin sample), filled for rest
-    skin_symbols = ['circle-open' if y == 2019 else 'circle' for y in df_skin["review_year"]]
-    cosm_symbols = ['circle-open' if y == 2019 else 'circle' for y in df_cosm["review_year"]]
-    skin_opacity = [0.4 if y == 2019 else 1.0 for y in df_skin["review_year"]]
-    cosm_opacity = [0.4 if y == 2019 else 1.0 for y in df_cosm["review_year"]]
-
-    fig4.add_trace(go.Scatter(x=df_skin["review_year"], y=df_skin["share_pct"],
-                               name="Skincare", mode="lines+markers",
-                               line=dict(color=C["skin"], width=3),
-                               marker=dict(size=10, symbol=skin_symbols,
-                                           opacity=skin_opacity,
-                                           line=dict(width=2, color=C["skin"])),
-                               hovertemplate="Skincare: %{y:.1f}%<extra></extra>"))
-    fig4.add_trace(go.Scatter(x=df_cosm["review_year"], y=df_cosm["share_pct"],
-                               name="Cosmetics", mode="lines+markers",
-                               line=dict(color=C["cosm"], width=3),
-                               marker=dict(size=10, symbol=cosm_symbols,
-                                           opacity=cosm_opacity,
-                                           line=dict(width=2, color=C["cosm"])),
-                               hovertemplate="Cosmetics: %{y:.1f}%<extra></extra>"))
-    fig4.add_annotation(x=2019,
-                        y=float(df_skin[df_skin.review_year==2019]["share_pct"].values[0]),
-                        text="2019: thin sample<br>(n=168)", showarrow=True,
-                        arrowhead=2, ax=50, ay=-40,
-                        font=dict(size=10, color=C["muted"]), bgcolor=C["card"], borderpad=3)
-    fig4.add_annotation(x=2022,
-                        y=float(df_cosm[df_cosm.review_year==2022]["share_pct"].values[0]),
-                        text="Mask-off rebound", showarrow=True,
-                        arrowhead=2, ax=60, ay=30,
-                        font=dict(size=10, color=C["cosm"]), bgcolor=C["card"], borderpad=3)
-    fig4.update_layout(**_base(height=320))
-    fig4.update_layout(margin=dict(l=20, r=20, t=20, b=60),
-                       legend=dict(orientation="h", yanchor="top", y=-0.18,
-                                   xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
-                       xaxis=_xax(dtick=1, tickformat="d"),
-                       yaxis=_yax(title="Review share (%)", suffix="%", range=[0, 100]))
-    st.plotly_chart(fig4, use_container_width=True)
-
-    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-
-    # Chart 5 — YouTube comment volume
+    # Chart 4 — YouTube comment volume
     st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t1_c5h"]}</h3><p class="expl">{S["t1_c5e"]}</p>', unsafe_allow_html=True)
 
     try:
@@ -739,13 +676,13 @@ with tab2:
     # ── Metric row ────────────────────────────────────────────────────────
     t1, t2, t3 = st.columns(3)
     with t1:
-        st.metric(S["t2_m1"], f"{HEADLINE['cosine_2025']}",
+        st.metric(S["t2_m1"], f"+{HEADLINE['conv_delta']}",
                   S["t2_m1d"])
     with t2:
-        st.metric(S["t2_m2"], f"{HEADLINE['cosine_2019']}",
+        st.metric(S["t2_m2"], f"+{HEADLINE['conv_v1']}",
                   S["t2_m2d"])
     with t3:
-        st.metric(S["t2_m3"], "−76%",
+        st.metric(S["t2_m3"], f"{HEADLINE['size_lo_cos']} → {HEADLINE['size_hi_cos']}",
                   S["t2_m3d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
@@ -793,199 +730,44 @@ with tab2:
         st.markdown(f'<div style="background:{note_color};border-left:3px solid {note_border};border-radius:0 6px 6px 0;padding:8px 12px;margin-top:8px;"><span style="font-size:12px;color:{C["text"]};">{note_text}</span></div>', unsafe_allow_html=True)
 
     with col_cos:
-        st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t2_cosh"]}</h3><p class="expl">{S["t2_cose"]}</p>', unsafe_allow_html=True)
+        st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t2_curveh"]}</h3><p class="expl">{S["t2_curvee"]}</p>', unsafe_allow_html=True)
 
-        df_sim = load_cosine_sim()
+        df_curve = load_cosine_sizecurve()
 
-        # Reorder for better visual — skincare rows first, cosmetics rows second
-        ordered = [c for c in df_sim.index if 'Skincare' in c] + \
-                  [c for c in df_sim.index if 'Cosmetics' in c]
-        df_plot = df_sim.loc[ordered, ordered]
-
-        # Short labels for axis
-        SHORT = {
-            'Skincare 2019':     'SK 2019',
-            'Skincare 2020':     'SK 2020',
-            'Skincare 2021–22':  'SK 21–22',
-            'Skincare 2023–25':  'SK 23–25',
-            'Cosmetics 2019':    'CM 2019',
-            'Cosmetics 2020':    'CM 2020',
-            'Cosmetics 2021–22': 'CM 21–22',
-            'Cosmetics 2023–25': 'CM 23–25',
-        }
-        short_labels = [SHORT.get(l, l) for l in ordered]
-
-        z    = df_plot.values
-        text = [[f"{v:.2f}" for v in row] for row in z]
-
-        fig_cos = go.Figure(go.Heatmap(
-            z=z,
-            x=short_labels,
-            y=short_labels,
-            text=text,
-            texttemplate="%{text}",
-            textfont=dict(size=11, color="white"),
-            colorscale=[
-                [0.0, "#F5DDE3"],
-                [0.4, "#C4627A"],
-                [0.6, "#4A90B8"],
-                [1.0, "#1A3A5C"],
-            ],
-            zmin=0.2, zmax=1.0,
-            showscale=True,
-            colorbar=dict(
-                thickness=10, len=0.8,
-                title=dict(text="similarity", font=dict(size=9), side="right"),
-                tickfont=dict(size=9),
-            ),
-            hovertemplate=(
-                "<b>%{y}</b> ↔ <b>%{x}</b><br>"
-                "Cosine similarity: %{text}"
-                "<extra></extra>"
-            ),
+        fig_cv = go.Figure()
+        fig_cv.add_trace(go.Scatter(
+            x=df_curve["sample_size"], y=df_curve["cross_tier_cosine"],
+            mode="lines+markers",
+            line=dict(color=C["cosm"], width=2.5),
+            marker=dict(size=8, color=C["cosm"]),
+            hovertemplate="N=%{x:,} reviews<br>cosine = %{y:.2f}<extra></extra>",
         ))
-
-        # Divider line between skincare and cosmetics blocks
-        fig_cos.add_shape(
-            type="line",
-            x0=-0.5, x1=3.5, y0=3.5, y1=3.5,
-            line=dict(color="white", width=3),
+        # v1 rode the top of this curve; the size-matched value sits near the bottom
+        fig_cv.add_hline(
+            y=HEADLINE["conv_hi"], line_dash="dot", line_color=C["muted"],
+            annotation_text=f"v1 reported {HEADLINE['conv_hi']:.2f}",
+            annotation_position="top left",
+            annotation_font=dict(size=9, color=C["muted"]),
         )
-        fig_cos.add_shape(
-            type="line",
-            x0=3.5, x1=3.5, y0=-0.5, y1=7.5,
-            line=dict(color="white", width=3),
+        fig_cv.add_hline(
+            y=HEADLINE["conv_lo"], line_dash="dot", line_color=C["skin"],
+            annotation_text=f"size-matched ≈ {HEADLINE['conv_lo']:.2f}",
+            annotation_position="bottom left",
+            annotation_font=dict(size=9, color=C["skin"]),
         )
-
-        fig_cos.update_layout(**_base(height=380))
-        fig_cos.update_layout(
-            margin=dict(l=70, r=40, t=20, b=70),
-            xaxis=dict(
-                side="bottom",
-                tickfont=dict(size=10),
-                gridcolor="rgba(0,0,0,0)",
-                linecolor="rgba(0,0,0,0)",
-            ),
-            yaxis=dict(
-                autorange="reversed",
-                tickfont=dict(size=10),
-                gridcolor="rgba(0,0,0,0)",
-                linecolor="rgba(0,0,0,0)",
-            ),
+        fig_cv.update_layout(**_base(height=380))
+        fig_cv.update_layout(
+            margin=dict(l=20, r=20, t=20, b=50),
+            showlegend=False,
+            xaxis=_xax(title=dict(text="Reviews per slice (subsample size)",
+                                  font=dict(size=11))),
+            yaxis=_yax(title="Skincare ↔ cosmetics cosine", range=[0, 0.8]),
         )
-        st.plotly_chart(fig_cos, use_container_width=True)
+        st.plotly_chart(fig_cv, use_container_width=True)
 
-        st.markdown(f'<div style="background:{C["skin_lt"]};border-left:3px solid {C["skin"]};border-radius:0 6px 6px 0;padding:10px 14px;margin-top:4px;"><span style="font-size:12px;color:{C["text"]};font-weight:600;">0.38 → 0.81</span><span style="font-size:12px;color:{C["muted"]};">  — {S["t2_cosnote"]}</span></div>', unsafe_allow_html=True)
+        st.markdown(f'<div style="background:{C["skin_lt"]};border-left:3px solid {C["skin"]};border-radius:0 6px 6px 0;padding:10px 14px;margin-top:4px;"><span style="font-size:12px;color:{C["text"]};font-weight:600;">+{HEADLINE["conv_delta"]}</span><span style="font-size:12px;color:{C["muted"]};">  — {S["t2_curvenote"]}</span></div>', unsafe_allow_html=True)
 
     st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
-
-    # ── Row 2: TF-IDF emerging / declining — live Plotly ─────────────────
-    st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t2_tfidfh"]}</h3><p class="expl">{S["t2_tfidfe"]}</p>', unsafe_allow_html=True)
-
-    df_tfidf = load_tfidf_delta()
-
-    # Filter to clean content terms — exclude filler bigrams and politeness verbs
-    TFIDF_EXCLUDE = {
-            'プレゼント', 'タイプ', 'すぐ', '今まで', 'すごい', '使う みる',
-        }
-    df_tfidf = df_tfidf[~df_tfidf['term'].isin(TFIDF_EXCLUDE)]
-
-    rising_df   = df_tfidf.sort_values('delta', ascending=False).head(15)
-    declining_df = df_tfidf.sort_values('delta', ascending=True).head(15)
-
-    col_r, col_d = st.columns(2)
-
-    with col_r:
-        st.markdown(f'<p style="font-size:13px;font-weight:600;color:{C["skin"]};margin-bottom:4px;">{S["t2_rise"]}</p>', unsafe_allow_html=True)
-
-        fig_rise = go.Figure()
-        fig_rise.add_trace(go.Bar(
-            x=rising_df['delta'],
-            y=rising_df['term'],
-            orientation='h',
-            marker=dict(
-                color=rising_df['delta'],
-                colorscale=[[0, C["skin_lt"]], [1, C["skin"]]],
-                showscale=False,
-                line=dict(width=0),
-            ),
-            customdata=np.stack([
-                rising_df['pre_mean'].round(4),
-                rising_df['post_mean'].round(4),
-                rising_df['pct_change'].round(1),
-            ], axis=-1),
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Delta: +%{x:.4f}<br>"
-                "Pre-COVID: %{customdata[0]:.4f}<br>"
-                "Recent: %{customdata[1]:.4f}<br>"
-                "Change: +%{customdata[2]:.1f}%"
-                "<extra></extra>"
-            ),
-        ))
-        fig_rise.update_layout(**_base(height=380))
-        fig_rise.update_layout(
-            margin=dict(l=10, r=20, t=10, b=40),
-            xaxis=dict(
-                title=dict(text="TF-IDF weight delta", font=dict(size=10)),
-                gridcolor=C["grid"], linecolor=C["border"],
-                zerolinecolor=C["border"],
-            ),
-            yaxis=dict(
-                autorange="reversed",
-                tickfont=dict(size=11),
-                gridcolor="rgba(0,0,0,0)",
-                linecolor="rgba(0,0,0,0)",
-            ),
-        )
-        st.plotly_chart(fig_rise, use_container_width=True)
-
-    with col_d:
-        st.markdown(f'<p style="font-size:13px;font-weight:600;color:{C["cosm"]};margin-bottom:4px;">{S["t2_decl"]}</p>', unsafe_allow_html=True)
-
-        fig_decl = go.Figure()
-        fig_decl.add_trace(go.Bar(
-            x=declining_df['delta'],
-            y=declining_df['term'],
-            orientation='h',
-            marker=dict(
-                color=declining_df['delta'],
-                colorscale=[[0, C["cosm"]], [1, C["cosm_lt"]]],
-                showscale=False,
-                line=dict(width=0),
-            ),
-            customdata=np.stack([
-                declining_df['pre_mean'].round(4),
-                declining_df['post_mean'].round(4),
-                declining_df['pct_change'].round(1),
-            ], axis=-1),
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Delta: %{x:.4f}<br>"
-                "Pre-COVID: %{customdata[0]:.4f}<br>"
-                "Recent: %{customdata[1]:.4f}<br>"
-                "Change: %{customdata[2]:.1f}%"
-                "<extra></extra>"
-            ),
-        ))
-        fig_decl.update_layout(**_base(height=380))
-        fig_decl.update_layout(
-            margin=dict(l=10, r=20, t=10, b=40),
-            xaxis=dict(
-                title=dict(text="TF-IDF weight delta", font=dict(size=10)),
-                gridcolor=C["grid"], linecolor=C["border"],
-                zerolinecolor=C["border"],
-            ),
-            yaxis=dict(
-                autorange="reversed",
-                tickfont=dict(size=11),
-                gridcolor="rgba(0,0,0,0)",
-                linecolor="rgba(0,0,0,0)",
-            ),
-        )
-        st.plotly_chart(fig_decl, use_container_width=True)
-
-    st.caption(S["t2_tfidfcap"])
 
     # ── Finding 2 callout ─────────────────────────────────────────────────
     st.markdown(f'<div style="background:{C["skin_lt"]};border-left:4px solid {C["skin"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:8px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["f2_title"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["f2_body"]}</p></div>', unsafe_allow_html=True)
@@ -1008,7 +790,7 @@ with tab3:
         st.metric(S["t3_m2"], "レチノール",
                   S["t3_m2d"])
     with d3:
-        st.metric(S["t3_m3"], "14,727 reviews",
+        st.metric(S["t3_m3"], "21,058 reviews",
                   S["t3_m3d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
