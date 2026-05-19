@@ -3,6 +3,7 @@ Beauty Pulse — Japanese Beauty Market Analytics Dashboard
 streamlit_app.py  ·  single file  ·  Streamlit Community Cloud
 """
 
+import html as _html
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -349,15 +350,52 @@ def load_yt_channels():
 def load_yt_tfidf():
     return pd.read_csv(ASSETS / "nb07_yt_tfidf.csv")
 
+def kpi_card(label, value, subtitle, arrow="up"):
+    """KPI metric card with a CSS tooltip on the truncated subtitle."""
+    if arrow == "up":
+        sub_color, prefix = "#21a550", "↑ "
+    elif arrow == "down":
+        sub_color, prefix = "#e05252", "↓ "
+    else:
+        sub_color, prefix = C["muted"], ""
+    tip = _html.escape(subtitle)
+    st.markdown(
+        f'<div class="kpi-card">'
+        f'<div class="kpi-label">{label}</div>'
+        f'<div class="kpi-value">{value}</div>'
+        f'<div class="kpi-sub" style="color:{sub_color}" data-tooltip="{tip}">'
+        f'{prefix}{tip}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
 st.markdown(f"""
 <style>
 .stApp {{ background-color:{C["bg"]}; }}
 [data-testid="stToolbar"]    {{ display:none !important; }}
 [data-testid="stDecoration"] {{ display:none !important; }}
-[data-testid="stMetric"] {{
+.kpi-card {{
     background:{C["card"]}; border:1px solid {C["border"]};
     border-radius:10px; padding:14px 18px;
 }}
+.kpi-label {{ font-size:12px; color:{C["muted"]}; font-weight:500; margin-bottom:6px; }}
+.kpi-value {{ font-size:28px; font-weight:700; color:{C["text"]}; line-height:1.1; margin-bottom:6px; }}
+.kpi-sub {{
+    font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    cursor:help; position:relative; display:block;
+}}
+.kpi-sub::after {{
+    content: attr(data-tooltip);
+    visibility:hidden; opacity:0;
+    position:absolute; bottom:calc(100% + 6px); left:0;
+    background:#1e1e1e; color:#fff;
+    padding:7px 11px; border-radius:7px; font-size:12px;
+    white-space:normal; width:max-content; max-width:280px; line-height:1.5;
+    z-index:9999; box-shadow:0 2px 10px rgba(0,0,0,.2);
+    pointer-events:none; transition:opacity .15s;
+}}
+.kpi-sub:hover::after {{ visibility:visible; opacity:1; }}
 .stTabs [data-baseweb="tab-list"] {{ gap:8px; border-bottom:2px solid {C["border"]}; }}
 .stTabs [data-baseweb="tab"] {{
     background:transparent; border-radius:6px 6px 0 0;
@@ -373,9 +411,9 @@ st.markdown(f"""
 
 _hdr_left, _hdr_right = st.columns([12, 1])
 with _hdr_right:
-    _lang = st.radio("lang", ["EN", "JP"], horizontal=True,
+    _lang = st.radio("lang", ["EN", "JA"], horizontal=True,
                      label_visibility="collapsed", key="lang_toggle")
-lang = "jp" if _lang == "JP" else "en"
+lang = "jp" if _lang == "JA" else "en"
 S = STRINGS[lang]
 
 with _hdr_left:
@@ -405,14 +443,14 @@ with tab1:
 
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.metric(S["t1_m1"], f"{HEADLINE['cosm_decline']}%", S["t1_m1d"])
+        kpi_card(S["t1_m1"], f"{HEADLINE['cosm_decline']}%", S["t1_m1d"], arrow=None)
     with m2:
-        st.metric(S["t1_m2"], f"{HEADLINE['nia_pre']} → {HEADLINE['nia_post']}", S["t1_m2d"])
+        kpi_card(S["t1_m2"], f"{HEADLINE['nia_pre']} → {HEADLINE['nia_post']}", S["t1_m2d"])
     with m3:
-        st.metric(S["t1_m3"], f"{HEADLINE['sku_ratio']}x",
-                  f"{HEADLINE['skin_skus']:,} vs {HEADLINE['cosm_skus']:,} SKUs" if lang=="en" else f"{HEADLINE['skin_skus']:,} vs {HEADLINE['cosm_skus']:,} SKU")
+        _sub3 = f"{HEADLINE['skin_skus']:,} vs {HEADLINE['cosm_skus']:,} {'SKUs' if lang == 'en' else 'SKU'}"
+        kpi_card(S["t1_m3"], f"{HEADLINE['sku_ratio']}x", _sub3)
     with m4:
-        st.metric(S["t1_m4"], f"{HEADLINE['ratio_0']} → {HEADLINE['ratio_1']}", S["t1_m4d"])
+        kpi_card(S["t1_m4"], f"{HEADLINE['ratio_0']} → {HEADLINE['ratio_1']}", S["t1_m4d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
 
@@ -676,14 +714,11 @@ with tab2:
     # ── Metric row ────────────────────────────────────────────────────────
     t1, t2, t3 = st.columns(3)
     with t1:
-        st.metric(S["t2_m1"], f"+{HEADLINE['conv_delta']}",
-                  S["t2_m1d"])
+        kpi_card(S["t2_m1"], f"+{HEADLINE['conv_delta']}", S["t2_m1d"])
     with t2:
-        st.metric(S["t2_m2"], f"+{HEADLINE['conv_v1']}",
-                  S["t2_m2d"])
+        kpi_card(S["t2_m2"], f"+{HEADLINE['conv_v1']}", S["t2_m2d"])
     with t3:
-        st.metric(S["t2_m3"], f"{HEADLINE['size_lo_cos']} → {HEADLINE['size_hi_cos']}",
-                  S["t2_m3d"])
+        kpi_card(S["t2_m3"], f"{HEADLINE['size_lo_cos']} → {HEADLINE['size_hi_cos']}", S["t2_m3d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
 
@@ -784,14 +819,11 @@ with tab3:
     # ── Metric row ────────────────────────────────────────────────────────
     d1, d2, d3 = st.columns(3)
     with d1:
-        st.metric(S["t3_m1"], "アヌア",
-                  S["t3_m1d"])
+        kpi_card(S["t3_m1"], "アヌア", S["t3_m1d"])
     with d2:
-        st.metric(S["t3_m2"], "レチノール",
-                  S["t3_m2d"])
+        kpi_card(S["t3_m2"], "レチノール", S["t3_m2d"])
     with d3:
-        st.metric(S["t3_m3"], "21,058 reviews",
-                  S["t3_m3d"])
+        kpi_card(S["t3_m3"], "21,058 reviews", S["t3_m3d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
 
