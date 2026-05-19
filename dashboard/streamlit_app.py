@@ -383,19 +383,8 @@ st.markdown(f"""
 .kpi-value {{ font-size:28px; font-weight:700; color:{C["text"]}; line-height:1.1; margin-bottom:6px; }}
 .kpi-sub {{
     font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    cursor:help; position:relative; display:block;
+    cursor:help; display:block;
 }}
-.kpi-sub::after {{
-    content: attr(data-tooltip);
-    visibility:hidden; opacity:0;
-    position:absolute; bottom:calc(100% + 6px); left:0;
-    background:#1e1e1e; color:#fff;
-    padding:7px 11px; border-radius:7px; font-size:12px;
-    white-space:normal; width:max-content; max-width:280px; line-height:1.5;
-    z-index:9999; box-shadow:0 2px 10px rgba(0,0,0,.2);
-    pointer-events:none; transition:opacity .15s;
-}}
-.kpi-sub:hover::after {{ visibility:visible; opacity:1; }}
 .stTabs [data-baseweb="tab-list"] {{ gap:8px; border-bottom:2px solid {C["border"]}; }}
 .stTabs [data-baseweb="tab"] {{
     background:transparent; border-radius:6px 6px 0 0;
@@ -407,6 +396,31 @@ st.markdown(f"""
 }}
 .expl {{ font-size:12px; color:{C["muted"]}; margin-top:2px; margin-bottom:10px; }}
 </style>
+<script>
+(function() {{
+    if (document.getElementById('_kpi_tip')) return;
+    var tip = document.createElement('div');
+    tip.id = '_kpi_tip';
+    tip.style.cssText = 'position:fixed;background:#1e1e1e;color:#fff;padding:7px 11px;'
+        + 'border-radius:7px;font-size:12px;max-width:280px;line-height:1.5;z-index:99999;'
+        + 'box-shadow:0 2px 10px rgba(0,0,0,.2);pointer-events:none;display:none;white-space:normal;';
+    document.body.appendChild(tip);
+    document.addEventListener('mouseover', function(e) {{
+        var el = e.target.closest('[data-tooltip]');
+        if (el) {{ tip.textContent = el.getAttribute('data-tooltip'); tip.style.display = 'block'; }}
+    }});
+    document.addEventListener('mouseout', function(e) {{
+        var el = e.target.closest('[data-tooltip]');
+        if (el) tip.style.display = 'none';
+    }});
+    document.addEventListener('mousemove', function(e) {{
+        if (tip.style.display === 'block') {{
+            tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 300) + 'px';
+            tip.style.top  = (e.clientY - 42) + 'px';
+        }}
+    }});
+}})();
+</script>
 """, unsafe_allow_html=True)
 
 _hdr_left, _hdr_right = st.columns([12, 1])
