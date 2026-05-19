@@ -5,6 +5,7 @@ streamlit_app.py  ·  single file  ·  Streamlit Community Cloud
 
 import html as _html
 import streamlit as st
+import streamlit.components.v1 as _components
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -396,32 +397,38 @@ st.markdown(f"""
 }}
 .expl {{ font-size:12px; color:{C["muted"]}; margin-top:2px; margin-bottom:10px; }}
 </style>
+""", unsafe_allow_html=True)
+
+# st.markdown cannot execute <script> tags (React strips them).
+# components.html runs inside an iframe where scripts execute; we reach
+# the parent document via window.parent to attach the floating tooltip.
+_components.html("""
 <script>
-(function() {{
-    if (document.getElementById('_kpi_tip')) return;
-    var tip = document.createElement('div');
+var doc = window.parent.document;
+if (!doc.getElementById('_kpi_tip')) {
+    var tip = doc.createElement('div');
     tip.id = '_kpi_tip';
     tip.style.cssText = 'position:fixed;background:#1e1e1e;color:#fff;padding:7px 11px;'
         + 'border-radius:7px;font-size:12px;max-width:280px;line-height:1.5;z-index:99999;'
         + 'box-shadow:0 2px 10px rgba(0,0,0,.2);pointer-events:none;display:none;white-space:normal;';
-    document.body.appendChild(tip);
-    document.addEventListener('mouseover', function(e) {{
+    doc.body.appendChild(tip);
+    doc.addEventListener('mouseover', function(e) {
         var el = e.target.closest('[data-tooltip]');
-        if (el) {{ tip.textContent = el.getAttribute('data-tooltip'); tip.style.display = 'block'; }}
-    }});
-    document.addEventListener('mouseout', function(e) {{
+        if (el) { tip.textContent = el.getAttribute('data-tooltip'); tip.style.display = 'block'; }
+    });
+    doc.addEventListener('mouseout', function(e) {
         var el = e.target.closest('[data-tooltip]');
         if (el) tip.style.display = 'none';
-    }});
-    document.addEventListener('mousemove', function(e) {{
-        if (tip.style.display === 'block') {{
-            tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 300) + 'px';
+    });
+    doc.addEventListener('mousemove', function(e) {
+        if (tip.style.display === 'block') {
+            tip.style.left = Math.min(e.clientX + 14, window.parent.innerWidth - 300) + 'px';
             tip.style.top  = (e.clientY - 42) + 'px';
-        }}
-    }});
-}})();
+        }
+    });
+}
 </script>
-""", unsafe_allow_html=True)
+""", height=0)
 
 _hdr_left, _hdr_right = st.columns([12, 1])
 with _hdr_right:
