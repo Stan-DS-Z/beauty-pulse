@@ -1,5 +1,6 @@
 method,period,cosine,ci_lo,ci_hi
 v1_full_data,2021–22,0.39,,
-v1_full_data,2023–25,0.698,,
+v1_full_data,2023–26,0.698,,
 size_matched,2021–22,0.253,0.243,0.262
-size_matched,2023–25,0.317,0.303,0.332
+size_matched,2023–26,0.317,0.303,0.332
+matched_n,,249.0,,
