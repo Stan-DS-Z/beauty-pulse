@@ -21,6 +21,7 @@ data/*.db-wal
 
 # ── Notebooks — scraping / reconnaissance (not part of public pipeline) ───
 notebooks/NB01*.ipynb
+notebooks/recon/
 
 # Company-specific analysis — private
 notebooks/NB05a_*.ipynb

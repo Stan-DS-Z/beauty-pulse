@@ -7,6 +7,7 @@ and the feasibility matrix schema used in NB01.
 """
 
 import os
+import re
 import time
 import json
 import logging
@@ -181,6 +182,59 @@ def load_feasibility_matrix(output_path: Optional[Path] = None) -> list:
         return []
     with open(path) as f:
         return json.load(f)
+
+
+# ── Snapshot-dated raw files ──────────────────────────────────────────────────
+# Scrape notebooks stamp every output with the run date (…_YYYY-MM-DD.json), so
+# a re-run on a new day produces a fresh snapshot while older snapshots remain
+# on disk as history. The skip-if-exists guards then mean "resume today's run",
+# not "never refresh". Readers use latest_snapshot() to load only the newest
+# version of each file.
+
+SNAPSHOT_DATE_RE = re.compile(r"_(\d{4}-\d{2}-\d{2})$")
+
+
+def snapshot_date_of(path: Path) -> Optional[str]:
+    """Trailing _YYYY-MM-DD snapshot date of a raw file, or None if undated."""
+    m = SNAPSHOT_DATE_RE.search(Path(path).stem)
+    return m.group(1) if m else None
+
+
+def strip_snapshot_date(stem: str) -> str:
+    """Remove a trailing _YYYY-MM-DD from a filename stem."""
+    return SNAPSHOT_DATE_RE.sub("", stem)
+
+
+def latest_snapshot(directory: Path, pattern: str = "*.json") -> list:
+    """
+    The newest version of each distinct raw file in `directory`.
+
+    Files are keyed by their name with the snapshot date removed; for each key
+    the newest dated file wins, falling back to the undated ("legacy",
+    pre-snapshot-convention) file when no dated one exists. Keying per file —
+    rather than per snapshot date — means a partially-completed re-scrape
+    degrades gracefully: items it didn't reach still load from the previous
+    snapshot instead of disappearing.
+
+    Warns when the result mixes more than one snapshot date, which usually
+    means the latest scrape is incomplete (crashed or still running).
+    """
+    directory = Path(directory)
+    newest: dict = {}
+    for f in sorted(directory.glob(pattern)):
+        base = strip_snapshot_date(f.stem) + f.suffix
+        prev = newest.get(base)
+        if prev is None or (snapshot_date_of(f) or "") >= (snapshot_date_of(prev) or ""):
+            newest[base] = f
+    files = sorted(newest.values())  # Path ordering — matches sorted(dir.glob(...))
+    dates = {snapshot_date_of(f) or "legacy" for f in files}
+    if len(dates) > 1:
+        log.warning(
+            "latest_snapshot(%s/%s): mixing snapshots %s — the newest scrape "
+            "may be incomplete (crashed or still running)",
+            directory.name, pattern, sorted(dates),
+        )
+    return files
 
 
 # ── Data serialisation helpers ────────────────────────────────────────────────

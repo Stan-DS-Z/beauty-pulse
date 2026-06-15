@@ -1,0 +1,11 @@
+# Analysis pipeline (NB02 → NB07) — local use; not needed to run the dashboard.
+# Install on top of requirements.txt.
+matplotlib
+scikit-learn
+sudachipy
+sudachidict-core
+umap-learn
+hdbscan
+xgboost
+wordcloud
+pytrends
