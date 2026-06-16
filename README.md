@@ -23,11 +23,9 @@ Search behaviour, product catalog, ingredient searches, YouTube discourse, and c
 
 ## 仮説 / Hypothesis
 
-> コロナ禍以降、日本の消費者はスキンケアを美容の最優先事項として位置づけるようになった。  
-> 「正直なスキンケア」が「演出するコスメ」を、構造的に凌駕している。
+> コロナ禍以降、日本の消費者はスキンケアを美容の最優先事項として位置づけるようになった。
 
-> Post-COVID Japanese consumers have structurally reprioritised skincare over cosmetics.  
-> "Honest skincare" has displaced "performance cosmetics" as the dominant consumer concern.
+> Post-COVID Japanese consumers have structurally reprioritised skincare over cosmetics.
 
 ---
 
@@ -42,8 +40,8 @@ An independent methodology audit (skeptical peer review) preserved the *directio
 *Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、当初報告した収束の規模（0.39→0.70）の大部分はサンプルサイズのアーティファクトだった。サンプル数を揃えた厳密な比較では、収束は実在するがはるかに小さい（Δ +0.06）。  
 *Nuance:* skincare and cosmetics review language is converging slowly, but most of the originally reported magnitude (0.39→0.70) was a sample-size artifact. Under a size-matched comparison the convergence is real but much smaller (Δ +0.06).
 
-> **正直さについての注記 / A note on honesty.** この結論の根拠は、初版から三度にわたり改訂されている。@cosmeレビューの「量」に基づく指標、期間横断のTF-IDF語彙デルタ、「Googleトレンドの逆転」、韓国ブランドの誤分類、未評価SKUを含む評価平均は、いずれも後のデータ修正・方法論監査・事実検証で問題が判明し、撤回または修正された。詳細は[分析の改訂履歴](#分析の改訂履歴--analysis-revision-history)を参照。**過去の弱い分析を公開の場で上書きすることは、本プロジェクトの設計思想である。**  
-> The evidence behind this verdict has been revised three times. Metrics based on @cosme review *volume*, pooled TF-IDF term deltas, a "Google Trends crossover", a Korean-brand misclassification, and rating averages that included unrated SKUs were each found flawed by later data correction, methodology audit and fact verification, and retired or fixed — see [Analysis Revision History](#分析の改訂履歴--analysis-revision-history). **Overwriting prior, weaker analysis in public is a design principle of this project.**
+> **正直さについての注記 / A note on honesty.** この結論の根拠は、初版から三度にわたり改訂されている。@cosmeレビューの「量」に基づく指標、期間横断のTF-IDF語彙デルタ、「Googleトレンドの逆転」、韓国ブランドの誤分類、未評価SKUを含む評価平均は、いずれも後のデータ修正・方法論監査・事実検証で問題が判明し、撤回または修正された。詳細は[分析の改訂履歴](#分析の改訂履歴--analysis-revision-history)を参照。  
+> The evidence behind this verdict has been revised three times. Metrics based on @cosme review *volume*, pooled TF-IDF term deltas, a "Google Trends crossover", a Korean-brand misclassification, and rating averages that included unrated SKUs were each found flawed by later data correction, methodology audit and fact verification, and retired or fixed — see [Analysis Revision History](#分析の改訂履歴--analysis-revision-history).
 
 ---
 
@@ -106,16 +104,16 @@ Notably, influencer/giveaway reviews (「プレゼント」/「当選」 templat
 
 ---
 
-### 発見4 — 韓国ブランドが日本の需要を取り込んでいる
+### 発見4 — 急上昇検索の最多シグナルは韓国ブランド
 
 コロナ期：消費者は成分名を検索していた（レチノール・ナイアシンアミドが複数の独立した検索起点で浮上）。ブランドではなく知識を求めていた。  
-直近：アヌア（韓国ブランド）が6つの独立した検索語で最強シグナルを記録。構造的変化が消費者を教育し、韓国ブランドがその恩恵を受けている。
+直近：アヌア（韓国ブランド）は6つの独立した検索語に出現し、ブランド別で最多。構造的変化が消費者を教育し、その急上昇している検索シグナルで最多を占めるのが韓国ブランドである。
 
 *分類の検証（改訂4）：* ブランドの原産国を公式情報と照合した結果、当初「韓国ブランド」と分類していた3つ —— アンレーベル（JPS LABO・日本）、セラミエイド（コーセーコスメポート・日本）、キテン（日本）—— は日本ブランドであり、修正した。検証済みの韓国シグナル（アヌア・COSRX・メディキューブ・リードルショット・イニスフリー）で発見自体は維持される。なお、日本ブランドがK-Beauty風の成分前面ポジショニングを取るあまり誤分類を招いたこと自体が、この発見を補強する副次的所見である。
 
-**Finding 4 — Korean Brands Are Harvesting Japanese Demand**  
+**Finding 4 — Korean Brands Lead the Fastest-Rising Beauty Searches**  
 COVID era: consumers searched for ingredient names (retinol, niacinamide appeared across multiple independent search starting points) — building knowledge, not searching for brands.  
-Recent window: Anua (アヌア, a Korean brand) is the single strongest signal, appearing across 6 independent search terms. The structural shift educated consumers; Korean brands captured them.
+Recent window: Anua (アヌア, a Korean brand) appears across 6 independent search terms — more than any other brand. The structural shift educated consumers, and Korean brands now lead the fastest-rising searches.
 
 *Classification verified (Revision 4):* brand origins were checked against official sources. Three brands initially tagged Korean — unlabel (アンレーベル, JPS LABO, Japan), CERAMIAID (セラミエイド, KOSÉ Cosmeport, Japan) and KITEN (キテン, Japan) — are Japanese and were reclassified. The finding stands on the verified Korean signals (Anua, COSRX, Medicube, Reedle Shot/VT, innisfree). That Japanese brands now position themselves K-style strongly enough to fool the classifier is itself a corroborating observation.
 
@@ -131,7 +129,7 @@ All data self-sourced and self-collected. No Kaggle datasets.
 | ソース / Source | 内容 / Contents | 規模 / Scale |
 |---|---|---|
 | @cosme | Consumer reviews — used for *language* analysis | 45,510 reviews |
-| Rakuten Ichiba API | Product catalog, prices, review counts | 36,386 SKUs |
+| Rakuten Ichiba API | Product catalog, prices, review counts | 36,147 SKUs |
 | Amazon | Name, price, aggregate rating, review count | 111 ASINs · 1,079 reviews |
 | Google Trends JP | Monthly search interest (2019–2026) | 4,635 rows |
 | YouTube Data API v3 | Beauty video comments | 248 videos · 60,676 comments |
@@ -204,8 +202,8 @@ To refresh, just re-run any NB01x scraper. Every output is snapshot-dated (`…_
 
 ## 分析の改訂履歴 / Analysis Revision History
 
-> このプロジェクトは継続的なデータ精緻化と方法論監査を経ている。過去の不十分な分析を上書きし改善することは、本プロジェクトの設計思想である —— 隠すべき欠陥ではない。  
-> This project undergoes continuous data refinement and methodology audit. Overwriting and improving prior, weaker analysis is a design principle here — not a flaw to hide.
+> 以下は、データ修正と方法論監査による改訂の記録である。  
+> Below is the record of revisions from data correction and methodology audit.
 
 **改訂1 — @cosmeカテゴリ分類の修正 / Revision 1 — @cosme category correction**  
 @cosmeはランキングのカテゴリ体系を移行しており、旧IDは無言のまま無関係なカテゴリを返していた（HTTP 200のためエラーは表面化せず）。商品名とカテゴリラベルの不一致から検出し、検証済みの現行IDで@cosme全体を再取得した。  

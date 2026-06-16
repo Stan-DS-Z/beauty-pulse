@@ -145,7 +145,7 @@ STRINGS = {
         "t1_c4e": "The strongest rival explanation for the cosmetics decline is masks — \'makeup search fell because faces were covered, and it returns once masks come off.\' This panel tests that directly. Each makeup-category term is indexed to its own scale (no cross-term comparison). Japan relaxed its mask guidance on 13 March 2023: a pure mask effect predicts a rebound to the 2019 baseline after that line. Instead, lipstick and foundation managed only a brief 2023 bump before resuming their decline — by 2025 lipstick search sat *below its COVID-era trough*. Eyeshadow is the control that proves masks mattered: it *rose* while masks emphasised eyes, then fell below its 2019 baseline once they came off. The mask effect was real — but what remains is structural.",
         "t1_c4cap": "Monthly search interest, each term normalised to its own peak · grey band = COVID emergency phase · dashed line = mask guidance relaxed (2023-03-13) · 2026 = Jan–Mar",
         "f1b_title": "Why this matters — the decline is structural, not cyclical",
-        "f1b_body":  "Annual averages vs each term\'s own 2019 baseline: lipstick 100 → 42 (2021, masks) → 53 (2023, rebound) → 36 (2025). Foundation 100 → 77 → 86 → 69. Eyeshadow 100 → 128 (2022 peak — eyes above the mask) → 80 (2025). If masks were the whole story, all three should have returned toward 100 after March 2023. None did. This is the single strongest piece of evidence that the skincare shift is structural — stronger than the 化粧品 headline, which could partly reflect consumers simply searching more specific terms over time.",
+        "f1b_body":  "Annual averages vs each term\'s own 2019 baseline: lipstick 100 → 42 (2021, masks) → 53 (2023, rebound) → 36 (2025). Foundation 100 → 77 → 86 → 69. Eyeshadow 100 → 128 (2022 peak — eyes above the mask) → 80 (2025). If masks were the whole story, all three should have returned toward 100 after March 2023. None did. Because each term is indexed to its own 2019 baseline, this is a controlled test of structural-vs-cyclical — with less confound than the 化粧品 headline, which can partly reflect consumers searching more specific terms over time.",
 
         "t1_c5h": "YouTube: skincare comment volume outgrew cosmetics",
         "t1_c5e": "An independent platform check: YouTube comment volumes on Japanese beauty videos, split by skincare vs cosmetics. Separate platform, broadly the same direction — skincare discourse outgrows cosmetics over the period.",
@@ -173,7 +173,7 @@ STRINGS = {
         "t2_curvenote": "Size-matched — every period equalised to 249 reviews — a convergence still remains: 0.25 → 0.32, Δ +0.06 (bootstrap 95% CI excludes zero). Real, statistically robust, but roughly one-fifth the magnitude v1 claimed (Δ +0.31).",
 
         "f2_title": "Finding 2 — Vocabulary converged slightly; v1\'s headline was a sample-size artifact",
-        "f2_body":  "v1 reported skincare and cosmetics review language converging from 0.39 to 0.70 and called it the project\'s strongest unsupervised finding. An independent audit showed TF-IDF cosine between pooled corpora inflates with sample size — and v1\'s bootstrap, which resampled within fixed sizes, could not see it. Under a properly size-matched comparison the convergence is real but small: Δ +0.06 (95% CI excludes zero). The honest version is less dramatic — the full correction is documented in the README\'s revision history.",
+        "f2_body":  "v1 reported skincare and cosmetics review language converging from 0.39 to 0.70 and called it a headline unsupervised finding. An independent audit showed TF-IDF cosine between pooled corpora inflates with sample size — and v1\'s bootstrap, which resampled within fixed sizes, could not see it. Under a properly size-matched comparison the convergence is real but small: Δ +0.06 (95% CI excludes zero). The size-matched version is less dramatic — the full correction is documented in the README\'s revision history.",
 
         # ── TAB 3: Discovery ──────────────────────────────────────────────
         "t3_intro": "Two discovery engines look at what\'s coming next. Google Trends surfaces what consumers search for before it shows up in reviews. The review map below shows the spatial shape of consumer vocabulary — a descriptive structure that, unlike the convergence metric, does not depend on sample size.",
@@ -187,15 +187,15 @@ STRINGS = {
         "t3_win_r": "Recent (2023–2025)", "t3_win_c": "COVID era (2020–2021)",
         "t3_sig_kr": "Korean brand", "t3_sig_in": "Ingredient", "t3_sig_ot": "Other",
 
-        "f4r_title": "Finding 4 — Korean brands are harvesting Japanese demand",
-        "f4r_body":  "During COVID, ingredient searches dominated — consumers were building knowledge (retinol appeared across 5 independent search terms, niacinamide across 4). In the recent window, Anua (アヌア, a Korean brand) is the single strongest signal, appearing across 6 independent search terms. The structural shift educated consumers. Korean brands captured them.",
+        "f4r_title": "Finding 4 — Korean brands lead the fastest-rising searches",
+        "f4r_body":  "During COVID, ingredient searches dominated — consumers were building knowledge (retinol appeared across 5 independent search terms, niacinamide across 4). In the recent window, Anua (アヌア, a Korean brand) appears across 6 independent search terms — more than any other brand. The structural shift educated consumers, and Korean brands lead the fastest-rising searches.",
         "f4c_title": "COVID era — consumers were learning ingredients, not searching for brands",
-        "f4c_body":  "During 2020–2021, Japanese consumers weren\'t searching for brands — they were learning ingredients. Retinol (レチノール), niacinamide (ナイアシンアミド), and ceramide (セラミド) dominated the fastest-rising searches across multiple starting points. This ingredient literacy is the knowledge foundation that Korean brands later capitalised on.",
+        "f4c_body":  "During 2020–2021, Japanese consumers weren\'t searching for brands — they were learning ingredients. Retinol (レチノール), niacinamide (ナイアシンアミド), and ceramide (セラミド) dominated the fastest-rising searches across multiple starting points. This ingredient literacy is the knowledge foundation behind the Korean brands' later rising searches.",
 
         "t3_ytch":  "YouTube content supply — top channels by category",
         "t3_ytche": "The top 15 YouTube beauty channels by total views, coloured by whether they focus on skincare or cosmetics. Notice the gap: Korean beauty (韓国コスメ) generates massive search demand (Finding 4), but has very little YouTube content covering it.",
         "t3_ytgap":  "Content supply gap — ",
-        "t3_ytgapb": "Korean beauty (韓国コスメ) generates the strongest search signal (アヌア across 6 search terms) but has only 16 videos and 4.4M views in our dataset. Meanwhile かずのすけ (a science-focused beauty creator) dominates ingredient content with 71 videos and 43.4M views — ingredient education drives engagement. Korean brands have captured search and reviews; YouTube is still wide open.",
+        "t3_ytgapb": "Korean beauty (韓国コスメ) generates the largest rising-search signal (アヌア across 6 search terms) but has only 16 videos and 4.4M views in our dataset. Meanwhile かずのすけ (a science-focused beauty creator) dominates ingredient content with 71 videos and 43.4M views — ingredient education drives engagement. Korean brands top the fastest-rising searches; YouTube is still wide open.",
 
         "t3_yttfh": "YouTube comments — what are viewers actually saying?",
         "t3_yttfe": "The same text analysis applied to YouTube comments reveals a surprise: YouTube and @cosme are different conversations. Only 14 of the top 30 skincare terms overlap between the two platforms.",
@@ -211,18 +211,18 @@ STRINGS = {
         "t3_umap_note": "Labels show the key vocabulary of each region.\n\nCompare 2019 vs 2025 — where rose (cosmetics) dots mix into blue (skincare) territory, consumer vocabulary overlaps.",
 
         "f3_title": "Finding 3 — The review map reveals structure that survives scrutiny",
-        "f3_body":  "Unlike the convergence number, this is spatial structure — descriptive, and independent of sample size. The northeast zone is where skincare and cosmetics vocabulary overlap most: foundation reviews written in skincare language, cleansing reviews evaluated on moisture and texture.<br><br>More striking is the isolated top island: influencer and giveaway reviews (「プレゼント」/「当選」 template language) separated automatically from organic consumer reviews — without being told to. Brands measuring sentiment without filtering these populations are mixing two different signals. This is the most robust thing @cosme\'s text offers.",
+        "f3_body":  "Unlike the convergence number, this is spatial structure — descriptive, and independent of sample size. The northeast zone is where skincare and cosmetics vocabulary overlap most: foundation reviews written in skincare language, cleansing reviews evaluated on moisture and texture.<br><br>The isolated top island is influencer and giveaway reviews: (「プレゼント」/「当選」 template language) separated automatically from organic consumer reviews — without being told to. Brands measuring sentiment without filtering these populations are mixing two different signals.",
 
         # ── TAB 4: For brands ─────────────────────────────────────────────
         "t4_intro": "What the four findings imply if you sit inside a beauty company. These are directional hypotheses from attention and shelf data — search, reviews, catalog, YouTube — not from sales. Each card names the evidence it rests on.",
         "t4_c1h": "Lead with the ingredient, not the brand",
         "t4_c1b": "Ingredient-name search grew 6–7× and never receded (Finding 1), and COVID-era discovery searches were dominated by actives, not brands (Finding 4). The most-watched skincare creator in the dataset is a chemistry educator — かずのすけ\'s ingredient content drew 43.4M views, and his name out-ranks 化粧水 as a search term in YouTube comments. Product naming, PDP copy and ad creative that lead with the active and its concentration meet consumers where their literacy now is.",
         "t4_c2h": "Take the K-brand threat seriously — and learn its trick",
-        "t4_c2b": "Anua is the strongest rising-search signal in the recent window, surfacing from 6 independent seed terms (Finding 4). The pattern: Korean brands captured demand that Japanese consumers\' own ingredient education created. Tellingly, three *Japanese* brands (unlabel, CERAMIAID, KITEN) now position themselves so K-style that this analysis initially misclassified them as Korean. Meanwhile Korean beauty has just 16 videos · 4.4M views of YouTube supply against that search demand — the education-content lane is still open to whoever moves first.",
+        "t4_c2b": "Anua is the strongest rising-search signal in the recent window, surfacing from 6 independent seed terms (Finding 4). The pattern: Japanese consumers\' own ingredient education created the demand, and Korean-brand searches are the fastest-rising in that space. Three *Japanese* brands (unlabel, CERAMIAID, KITEN) now position themselves so K-style that this analysis initially misclassified them as Korean. Meanwhile Korean beauty has just 16 videos · 4.4M views of YouTube supply against that search demand — the education-content lane is still open to whoever moves first.",
         "t4_c3h": "Don\'t plan for a makeup rebound that isn\'t coming",
         "t4_c3b": "Two years after Japan relaxed mask guidance (March 2023), lipstick search sits at 36% of its 2019 baseline — below its COVID trough — and even eyeshadow, which *benefited* from masks, is 20% under baseline (mask test, Tab 1). The recovery scenario has had its window and didn\'t arrive. The convergence zone on the review map points to where the energy went: base makeup evaluated in skincare language — 保湿, 乾燥, ツヤ. Skincare-hybrid makeup is the defensible position; a pure colour-led lineup is fighting the tide.",
         "t4_c4h": "Filter giveaway reviews before you measure anything",
-        "t4_c4b": "Influencer/monitor reviews (「プレゼント」「当選」 template language) form their own island in vocabulary space, fully separated from organic consumer reviews (Finding 3). Any brand-health metric, sentiment tracker or VoC summary built on unfiltered @cosme data is averaging two different populations — one of which was paid in product. The template vocabulary makes them cheap to detect and exclude. This is the most immediately operational finding in the project.",
+        "t4_c4b": "Influencer/monitor reviews (「プレゼント」「当選」 template language) form their own island in vocabulary space, fully separated from organic consumer reviews (Finding 3). Any brand-health metric, sentiment tracker or VoC summary built on unfiltered @cosme data is averaging two different populations — one of which was paid in product. The template vocabulary makes them cheap to detect and exclude.",
         "t4_note": "Attention and shelf data lead sales data — they do not replace it. Before acting on any of these, triangulate against sales: 家計調査 household spend per item (e-Stat), METI shipment statistics, and your own sell-through.",
     },
     "jp": {
@@ -252,7 +252,7 @@ STRINGS = {
         "t1_c4e":    "化粧品低下の最有力な対立仮説はマスクである —— 「顔が隠れたから検索が落ちた。マスクが外れれば戻る」。このパネルはそれを直接検証する。各メイク用語は自身のスケールに正規化（用語間の比較はしない）。日本は2023年3月13日にマスク着用ルールを緩和した：純粋なマスク効果なら、この線の後に2019年水準へ回帰するはずである。実際には、口紅とファンデーションは2023年に小幅な反発を見せた後、再び低下に転じた —— 2025年の口紅検索は*コロナ期の底すら下回る*。アイシャドウは「マスクが効いていた」ことを証明する対照群である：マスクが目元を強調した期間に*上昇*し、解禁後は2019年水準を下回った。マスク効果は実在した —— だが残ったものは構造的である。",
         "t1_c4cap":  "月次検索関心度、各語は自身のピークに正規化 · グレー帯 = コロナ緊急期 · 破線 = マスク緩和（2023-03-13） · 2026年は1〜3月",
         "f1b_title": "これが重要な理由 — 低下は構造的であり、循環的ではない",
-        "f1b_body":  "各語自身の2019年を100とした年平均：口紅 100 → 42（2021年・マスク期）→ 53（2023年・反発）→ 36（2025年）。ファンデーション 100 → 77 → 86 → 69。アイシャドウ 100 → 128（2022年ピーク —— マスクの上の目元）→ 80（2025年）。マスクがすべての説明なら、3語とも2023年3月以降に100へ回帰するはずだった。どれも回帰しなかった。これはスキンケアシフトが構造的であることを示す最も強力な証拠である —— 「化粧品」の見出し指標より強い（あちらは消費者がより具体的な語を検索するようになった効果も含みうる）。",
+        "f1b_body":  "各語自身の2019年を100とした年平均：口紅 100 → 42（2021年・マスク期）→ 53（2023年・反発）→ 36（2025年）。ファンデーション 100 → 77 → 86 → 69。アイシャドウ 100 → 128（2022年ピーク —— マスクの上の目元）→ 80（2025年）。マスクがすべての説明なら、3語とも2023年3月以降に100へ回帰するはずだった。どれも回帰しなかった。各語を自身の2019年基準に揃えているため、構造的か循環的かを統制的に検証できる —— より具体的な語への移行も含みうる「化粧品」の見出し指標より交絡が少ない。",
 
         "t1_c5h":    "YouTube：スキンケアのコメント量がコスメを上回って成長",
         "t1_c5e":    "独立したプラットフォームでの確認：日本の美容動画へのYouTubeコメント量をスキンケア対コスメで分割。別のプラットフォームでも、おおむね同じ方向 —— 期間を通じてスキンケアの言論がコスメを上回って伸びる。",
@@ -279,11 +279,11 @@ STRINGS = {
         "t2_curvenote": "サンプル数を揃えると（各期間を249件に均一化）、収束は依然として残る：0.25 → 0.32、Δ +0.06（ブートストラップ95%CIはゼロを除外）。実在し統計的に頑健だが、初版の主張（Δ +0.31）の約5分の1の規模。",
 
         "f2_title":  "発見2 — 語彙はわずかに収束した。初版の見出しはサンプルサイズのアーティファクトだった",
-        "f2_body":   "初版は、スキンケアとコスメのレビュー言語が0.39から0.70へ収束したと報告し、これをプロジェクト最強の教師なし発見と称した。独立した監査により、プールされたコーパス間のTF-IDFコサインはサンプル数とともに上昇すること、そして固定サイズ内で再標本化した初版のブートストラップではそれを検出できないことが判明した。サンプル数を適切に揃えた比較では、収束は実在するが小さい：Δ +0.06（95%CIはゼロを除外）。正直な姿はより地味である —— 修正の全容はREADMEの改訂履歴に記録されている。",
+        "f2_body":   "初版は、スキンケアとコスメのレビュー言語が0.39から0.70へ収束したと報告し、これを見出し級の教師なし発見と称した。独立した監査により、プールされたコーパス間のTF-IDFコサインはサンプル数とともに上昇すること、そして固定サイズ内で再標本化した初版のブートストラップではそれを検出できないことが判明した。サンプル数を適切に揃えた比較では、収束は実在するが小さい：Δ +0.06（95%CIはゼロを除外）。サイズを揃えた値はより地味である —— 修正の全容はREADMEの改訂履歴に記録されている。",
 
         "t3_intro":  "2つの発見エンジンが「次に来るもの」を見る。Googleトレンドはレビューに現れる前に消費者が検索しているものを浮かび上がらせる。下のレビューマップは消費者語彙の空間的形状を示す —— 収束指標とは異なり、この記述的構造はサンプルサイズに依存しない。",
 
-        "t3_m1":     "直近の最強シグナル", "t3_m1d": "韓国ブランド · 6つの独立した検索語で出現",
+        "t3_m1":     "直近で最も急上昇した検索", "t3_m1d": "韓国ブランド · 6つの独立した検索語で出現",
         "t3_m2":     "COVID期リーダー",    "t3_m2d": "成分 · 5つの検索語 · 消費者が学習していた時期",
         "t3_m3":     "レビューコーパスの形状",  "t3_m3d": "約78%が単一の中心塊に集中 —— セグメントではなく連続体",
 
@@ -292,15 +292,15 @@ STRINGS = {
         "t3_win_r":  "直近（2023–2025）", "t3_win_c": "COVID期（2020–2021）",
         "t3_sig_kr": "韓国ブランド", "t3_sig_in": "成分", "t3_sig_ot": "その他",
 
-        "f4r_title": "発見4 — 韓国ブランドが日本の需要を取り込んでいる",
-        "f4r_body":  "COVID期は成分検索が支配的だった — 消費者が知識を蓄積していた（レチノールが5つの独立検索語で出現、ナイアシンアミドが4つ）。直近では、アヌア（韓国ブランド）が6つの独立した検索語に登場する最強シグナルとなっている。構造的変化が消費者を教育した。韓国ブランドがその恩恵を受けている。",
+        "f4r_title": "発見4 — 急上昇検索の最多シグナルは韓国ブランド",
+        "f4r_body":  "COVID期は成分検索が支配的だった — 消費者が知識を蓄積していた（レチノールが5つの独立検索語で出現、ナイアシンアミドが4つ）。直近では、アヌア（韓国ブランド）は6つの独立した検索語に登場し、ブランド別で最多である。構造的変化が消費者を教育し、急上昇検索で最多を占めるのが韓国ブランドである。",
         "f4c_title": "COVID期 — 消費者はブランドではなく成分を学んでいた",
-        "f4c_body":  "2020–2021年、日本の消費者はブランドを検索していたのではなく、成分を学んでいた。レチノール、ナイアシンアミド、セラミドが複数の起点から急上昇検索を独占した。この成分リテラシーこそ、後に韓国ブランドが活用する知識基盤となった。",
+        "f4c_body":  "2020–2021年、日本の消費者はブランドを検索していたのではなく、成分を学んでいた。レチノール、ナイアシンアミド、セラミドが複数の起点から急上昇検索の上位を占めた。この成分リテラシーこそ、後に韓国ブランドが活用する知識基盤となった。",
 
         "t3_ytch":   "YouTubeコンテンツ供給 — カテゴリ別トップチャンネル",
         "t3_ytche":  "総視聴数上位15チャンネルをスキンケア/コスメ別に表示。注目すべきギャップ：韓国コスメは検索需要が巨大（発見4）にもかかわらず、YouTubeコンテンツがほとんどない。",
         "t3_ytgap":  "コンテンツ供給ギャップ — ",
-        "t3_ytgapb": "韓国コスメは最強の検索シグナル（アヌアが6つの検索語で出現）を生成しているが、YouTube動画はわずか16本・視聴数440万。一方、かずのすけ（科学系美容クリエイター）は71本・4,340万回視聴で成分コンテンツを支配 —— 成分教育がエンゲージメントを駆動する。韓国ブランドは検索と@cosmeを掌握した。YouTubeはまだ開かれている。",
+        "t3_ytgapb": "韓国コスメは最大の急上昇検索シグナル（アヌアが6つの検索語で出現）を生成しているが、YouTube動画はわずか16本・視聴数440万。一方、かずのすけ（科学系美容クリエイター）は71本・4,340万回視聴で成分コンテンツを支配 —— 成分教育がエンゲージメントを駆動する。韓国ブランドは急上昇検索で最多シグナル。YouTubeはまだ開かれている。",
 
         "t3_yttfh":  "YouTubeコメント — 視聴者は実際に何を言っているのか？",
         "t3_yttfe":  "同じテキスト分析をYouTubeコメントに適用すると意外な発見がある。YouTubeと@cosmeは異なる会話空間である。スキンケア上位30語のうち、両プラットフォームで共通するのはわずか14語。",
@@ -316,18 +316,18 @@ STRINGS = {
         "t3_umap_note": "ラベルは各領域の主要語彙を示す。\n\n2019年と2025年を比較 — コスメ（ローズ）の点がスキンケア（ブルー）領域に混在している箇所が、消費者語彙の重なり。",
 
         "f3_title":  "発見3 — レビューマップは精査に耐える構造を示す",
-        "f3_body":   "収束の数値とは異なり、これは空間的構造 —— 記述的であり、サンプルサイズに依存しない。北東の領域はスキンケアとコスメの語彙が最も重なる場所：スキンケア言語で書かれたファンデーションレビュー、保湿とテクスチャーで評価されるクレンジングレビュー。<br><br>さらに顕著なのは上部の孤立アイランド：インフルエンサー・モニターレビュー（「プレゼント」「当選」テンプレート）が、指示なしにオーガニックレビューから自動的に分離された。この2集団を分けずにセンチメント測定を行うブランドは、2種類のシグナルを混在させている。これは@cosmeのテキストが提供する最も頑健な所見である。",
+        "f3_body":   "収束の数値とは異なり、これは空間的構造 —— 記述的であり、サンプルサイズに依存しない。北東の領域はスキンケアとコスメの語彙が最も重なる場所：スキンケア言語で書かれたファンデーションレビュー、保湿とテクスチャーで評価されるクレンジングレビュー。<br><br>上部の孤立アイランドはインフルエンサー・モニターレビューで、（「プレゼント」「当選」テンプレート）が、指示なしにオーガニックレビューから自動的に分離された。この2集団を分けずにセンチメント測定を行うブランドは、2種類のシグナルを混在させている。",
 
         # ── TAB 4: ブランドへの示唆 ────────────────────────────────────────
         "t4_intro": "4つの発見が、美容企業の中にいる人にとって何を意味するか。これらは検索・レビュー・カタログ・YouTubeという「注目と棚」のデータに基づく方向性の仮説であり、売上データではない。各カードは根拠とする発見を明記している。",
         "t4_c1h": "ブランドではなく、成分を主語にする",
         "t4_c1b": "成分の指名検索は6〜7倍に増え、その後も衰えていない（発見1）。コロナ期の発見的検索を支配したのはブランドではなく有効成分だった（発見4）。データセット中で最も視聴されたスキンケアクリエイターは化学の教育者 —— かずのすけの成分コンテンツは4,340万回視聴され、YouTubeコメントでは彼の名前が「化粧水」より上位の検索語になっている。製品名・商品ページ・広告クリエイティブは、有効成分とその濃度を主語にすることで、現在の消費者リテラシーに合流できる。",
         "t4_c2h": "韓国ブランドの脅威を直視し、その手法から学ぶ",
-        "t4_c2b": "直近ウィンドウの最強急上昇シグナルはアヌアで、6つの独立した起点語から浮上した（発見4）。構図：日本の消費者自身の成分教育が生んだ需要を、韓国ブランドが刈り取っている。象徴的なのは、日本ブランド3つ（アンレーベル・セラミエイド・キテン）がK-Beauty風のポジショニングを取るあまり、本分析が当初韓国と誤分類したことである。一方、韓国コスメのYouTube供給は16本・440万回視聴に留まる —— 検索需要に対して教育コンテンツのレーンはまだ空いている。先に動いた者が取る。",
+        "t4_c2b": "直近ウィンドウの最強急上昇シグナルはアヌアで、6つの独立した起点語から浮上した（発見4）。構図：日本の消費者自身の成分教育が需要を生み、その領域で急上昇検索の最多を占めるのが韓国ブランドである。日本ブランド3つ（アンレーベル・セラミエイド・キテン）がK-Beauty風のポジショニングを取るあまり、本分析が当初韓国と誤分類したことである。一方、韓国コスメのYouTube供給は16本・440万回視聴に留まる —— 検索需要に対して教育コンテンツのレーンはまだ空いている。先に動いた者が取る。",
         "t4_c3h": "「メイクの揺り戻し」を計画に織り込まない",
         "t4_c3b": "マスク緩和（2023年3月）から2年、口紅検索は2019年比36% —— コロナ期の底を下回る水準にある。マスクの恩恵を受けたアイシャドウでさえ基準比80%（タブ1のマスク検証）。回復シナリオには十分な時間が与えられ、実現しなかった。エネルギーの行き先はレビューマップの収束ゾーンが示している：保湿・乾燥・ツヤというスキンケア言語で評価されるベースメイクである。スキンケア・ハイブリッドのメイクが守れるポジションであり、純粋な色物主導のラインナップは潮流に逆らうことになる。",
         "t4_c4h": "測定の前に、モニターレビューを除外する",
-        "t4_c4b": "インフルエンサー・モニターレビュー（「プレゼント」「当選」テンプレート言語）は語彙空間で独自のアイランドを形成し、オーガニックレビューから完全に分離している（発見3）。未フィルタの@cosmeデータで構築されたブランドヘルス指標・センチメントトラッカー・VoCサマリーは、2つの異なる母集団 —— うち一方は商品で対価を得ている —— を平均している。テンプレート語彙のため検出と除外は容易である。本プロジェクトで最も即座に運用可能な発見。",
+        "t4_c4b": "インフルエンサー・モニターレビュー（「プレゼント」「当選」テンプレート言語）は語彙空間で独自のアイランドを形成し、オーガニックレビューから完全に分離している（発見3）。未フィルタの@cosmeデータで構築されたブランドヘルス指標・センチメントトラッカー・VoCサマリーは、2つの異なる母集団 —— うち一方は商品で対価を得ている —— を平均している。テンプレート語彙のため検出と除外は容易である。",
         "t4_note": "注目と棚のデータは売上データに先行するが、代替はしない。実行の前に売上側での三角測量を：家計調査の品目別支出（e-Stat）、経産省の出荷統計、そして自社のセルスルー。",
     },
 }
@@ -513,11 +513,11 @@ if lang == "en":
         f"of the magnitude v1 claimed (Δ +{_h['conv_v1']}).")
     S["f2_body"] = (
         f"v1 reported skincare and cosmetics review language converging from {_h['v1_lo']} to "
-        f"{_h['v1_hi']} and called it the project's strongest unsupervised finding. An "
+        f"{_h['v1_hi']} and called it a headline unsupervised finding. An "
         "independent audit showed TF-IDF cosine between pooled corpora inflates with sample "
         "size — and v1's bootstrap, which resampled within fixed sizes, could not see it. "
         f"Under a properly size-matched comparison the convergence is real but small: "
-        f"Δ +{_h['conv_delta']} (95% CI excludes zero). The honest version is less dramatic — "
+        f"Δ +{_h['conv_delta']} (95% CI excludes zero). The size-matched version is less dramatic — "
         "the full correction is documented in the README's revision history.")
 else:
     S["t2_m2d"] = f"そのうち約{100 - _h['conv_share']}%はサンプルサイズのアーティファクト"
@@ -533,10 +533,10 @@ else:
         f"実在し統計的に頑健だが、初版の主張（Δ +{_h['conv_v1']}）の約{_h['conv_share']}%の規模。")
     S["f2_body"] = (
         f"初版は、スキンケアとコスメのレビュー言語が{_h['v1_lo']}から{_h['v1_hi']}へ収束したと報告し、"
-        "これをプロジェクト最強の教師なし発見と称した。独立した監査により、プールされたコーパス間のTF-IDF"
+        "これを見出し級の教師なし発見と称した。独立した監査により、プールされたコーパス間のTF-IDF"
         "コサインはサンプル数とともに上昇すること、そして固定サイズ内で再標本化した初版のブートストラップでは"
         f"それを検出できないことが判明した。サンプル数を適切に揃えた比較では、収束は実在するが小さい："
-        f"Δ +{_h['conv_delta']}（95%CIはゼロを除外）。正直な姿はより地味である —— 修正の全容はREADMEの"
+        f"Δ +{_h['conv_delta']}（95%CIはゼロを除外）。サイズを揃えた値はより地味である —— 修正の全容はREADMEの"
         "改訂履歴に記録されている。")
 
 with _hdr_left:
@@ -674,7 +674,7 @@ with tab1:
         df_ing = load_ingredient_surge()
         df_ing_yr = (df_ing[df_ing["year"] <= 2026]
                      .groupby(["year", "term"])["interest"].mean().reset_index())
-        ESTABLISHED = ["ヒアルロン酸", "セラミド"]  # レチナール excluded: +11.4pp post-COVID, not pre-established
+        ESTABLISHED = ["ヒアルロン酸", "セラミド"]  # レチナール excluded: +11.4% post-COVID, not pre-established
         INGR_COLORS = {
             "ナイアシンアミド": "#2E7D32", "レチノール": "#1565C0",
             "グルタチオン": "#6A1B9A", "ビタミンC 美容": "#E65100",
