@@ -6,6 +6,47 @@ sudachipy
 sudachidict-core
 umap-learn
 hdbscan
+# xgboost on macOS also needs the OpenMP runtime, which pip does not supply:
+#     brew install libomp
+# Without it the wheel installs fine and `pip check` passes, but importing it
+# raises "XGBoost Library (libxgboost.dylib) could not be loaded."
 xgboost
 wordcloud
 pytrends
+
+# --- added 2026-09-01: direct imports that were never declared -------------
+# These went unnoticed because the original machine ran inside Anaconda, whose
+# base environment ships several of them regardless of what a project asks for.
+# All are analysis-side: dashboard/streamlit_app.py imports none of them and
+# does not import src/ at all.
+seaborn                  # src/viz.py, NB03, NB04, NB05
+squarify                 # NB05_the_shift, NB06_discovery
+python-dotenv            # src/utils.py
+PyYAML                   # src/config.py
+google-api-python-client # NB01e YouTube pulls (scrape + recon)
+ipython                  # IPython.display in NB04-NB07 and the three brand lenses
+ipykernel                # the Jupyter kernel VS Code attaches to for NB01-NB07
+nbformat                 # plotly's in-notebook renderer imports it for MIME-type
+                         # output (NB02c cell 19). Not pulled in by ipykernel:
+                         # without it fig.show() raises "Mime type rendering
+                         # requires nbformat>=4.2.0 but it is not installed".
+
+# --- added 2026-09-05: two more Anaconda freebies, found on the Mac ---------
+# Neither appears as an `import` anywhere, which is why the earlier import
+# sweep missed them: pandas and plotly load them lazily, by name.
+openpyxl                 # every pd.read_excel() in src/config.py -- the whole
+                         # config/ layer is .xlsx, so this blocks NB01a onward
+# Pinned, not floating: kaleido 1.x requires plotly>=6, and requirements.txt
+# pins plotly==5.24.1 for Streamlit Cloud. 0.2.1 is the last plotly-5 release.
+# Needed only by export_ingredient_chart{,_jp}.py (fig.write_image).
+#
+# macOS caveat: 0.2.1 ships a launcher shell script with an unquoted `cd $DIR`,
+# so it dies on any path containing a space -- ours does ("6. Beauty_ConsumerPulse").
+# After install, quote both lines in
+#     venv/lib/python3.12/site-packages/kaleido/executable/kaleido
+#     cd "$DIR"  /  ./bin/kaleido "$@"
+kaleido==0.2.1
+beautifulsoup4           # NB01b @cosme + NB01c Amazon JP scrapes
+# NB01c Amazon JP. Not interchangeable with requests: curl_cffi impersonates a
+# real browser's TLS fingerprint, which is the point on that source.
+curl_cffi

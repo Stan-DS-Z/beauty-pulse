@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import matplotlib.patches as mpatches
 import numpy as np
+import pathlib
 
 
 # ── Palette ───────────────────────────────────────────────────────────────────
@@ -30,20 +31,43 @@ PALETTE = {
 
 # ── Style helpers ─────────────────────────────────────────────────────────────
 
-def apply_style():
-    import matplotlib.font_manager as fm
+JP_FONT_PRIORITY = [
+    "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic",
+    "BIZ UDGothic", "Meiryo", "IPAexGothic",
+    "IPAGothic", "TakaoGothic", "MS Gothic",
+]
 
-    JP_FONT_PRIORITY = [
-        "Noto Sans CJK JP", "Hiragino Sans", "Yu Gothic",
-        "BIZ UDGothic", "Meiryo", "IPAexGothic",
-        "IPAGothic", "TakaoGothic", "MS Gothic",
-    ]
-    available_names = {f.name for f in fm.fontManager.ttflist}
-    jp_font = next((f for f in JP_FONT_PRIORITY if f in available_names), None)
+
+def pick_jp_font():
+    """Return (family_name, has_bold) for the best available CJK family.
+
+    Prefers a family that actually ships a bold face. The notebooks set
+    fontweight='bold' in ~100 places; a family without one (macOS's
+    "Noto Sans CJK JP" carries only weights 100 and 400) silently renders
+    those as regular and warns once per call. Hiragino Sans carries 100-900.
+    """
+    weights = {}
+    for f in fm.fontManager.ttflist:
+        weights.setdefault(f.name, set()).add(f.weight)
+
+    def has_bold(name):
+        return any(w == "bold" or (isinstance(w, (int, float)) and w >= 600)
+                   for w in weights.get(name, ()))
+
+    available = [f for f in JP_FONT_PRIORITY if f in weights]
+    font = next((f for f in available if has_bold(f)), None)
+    if font is None:
+        font = available[0] if available else None
+    return font, (has_bold(font) if font else False)
+
+
+def apply_style():
+    jp_font, bold_ok = pick_jp_font()
 
     if jp_font:
         plt.rcParams["font.family"] = jp_font
-        print(f"Font: {jp_font} ✓")
+        note = "" if bold_ok else "  (no bold face — bold text renders regular)"
+        print(f"Font: {jp_font} ✓{note}")
     else:
         print("Warning: no Japanese font found — text may render as boxes.")
 
@@ -112,7 +136,6 @@ def check_nlp_deps():
         ('sudachipy',           'SudachiPy tokeniser'),
         ('sudachidict_core',    'Sudachi dictionary (core)'),
         ('sklearn',             'scikit-learn (TF-IDF)'),
-        ('japanize_matplotlib', 'Japanese font helper'),
         ('wordcloud',           'WordCloud (optional, Section 7)'),
     ]
     print("NB04 — NLP dependency check")
@@ -126,6 +149,17 @@ def check_nlp_deps():
         except ImportError:
             print(f"  ✗  {label:<35} NOT INSTALLED")
             all_ok = False
+    # Not a package check: apply_style() resolves a CJK family from whatever the
+    # OS provides (Hiragino/Noto on macOS, Yu Gothic/Meiryo on Windows). Report
+    # what it will actually find rather than a helper library.
+    jp, bold_ok = pick_jp_font()
+    if jp:
+        print(f"  ✓  {'Japanese font (system)':<35} {jp}"
+              f"{'' if bold_ok else ' (no bold face)'}")
+    else:
+        print(f"  ✗  {'Japanese font (system)':<35} NONE FOUND")
+        all_ok = False
+
     print()
     if all_ok:
         print("All dependencies satisfied. ✓")
@@ -159,13 +193,22 @@ def wordcloud_jp(freq_dict, title="", colormap="Blues",
         print("wordcloud not installed. Run: pip install wordcloud")
         return
 
+    # wordcloud needs a font FILE, not a family name. Prefer the copy bundled
+    # in the repo — on macOS none of the IPA/MS families are installed, and
+    # falling through to wordcloud's default renders Japanese as empty boxes.
     font_path = None
-    try:
-        font_path = fm.findfont(
-            fm.FontProperties(family='IPAexGothic'), fallback_to_default=False
-        )
-    except Exception:
-        pass
+    bundled = pathlib.Path(__file__).resolve().parent.parent / 'dashboard' / 'assets' / 'fonts' / 'ipaexg.ttf'
+    if bundled.exists():
+        font_path = str(bundled)
+    else:
+        for family in ('IPAexGothic', 'Hiragino Sans', 'Noto Sans CJK JP', 'Yu Gothic'):
+            try:
+                font_path = fm.findfont(
+                    fm.FontProperties(family=family), fallback_to_default=False
+                )
+                break
+            except Exception:
+                continue
 
     wc = WordCloud(
         width=width,
