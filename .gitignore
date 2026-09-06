@@ -78,3 +78,6 @@ stamps_by_category.json
 
 # ── Claude Code memory (assistant notes, not project code) ────────────────
 memory/
+
+# ── recon reports — local working documents, never deployed ────────────────
+recon/
