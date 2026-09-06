@@ -1,7 +1,13 @@
 # Dashboard dependencies - Streamlit Community Cloud installs this file.
 # Analysis-pipeline dependencies live in requirements-analysis.txt.
-streamlit
-pandas
-numpy
+#
+# Pinned to the versions the dashboard is verified against. Streamlit Cloud
+# reinstalls from this file on every deploy, so anything left floating means a
+# rebuild can change behaviour with no commit behind it — pandas 3.0 and numpy
+# 2.x are both recent major releases, and plotly was already pinned for exactly
+# this reason. Bump deliberately, then re-run the dashboard before committing.
+streamlit==1.62.0
+pandas==3.0.5
+numpy==2.5.2
 plotly==5.24.1
-pillow
+pillow==12.3.0
