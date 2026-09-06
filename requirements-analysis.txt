@@ -38,7 +38,7 @@ openpyxl                 # every pd.read_excel() in src/config.py -- the whole
                          # config/ layer is .xlsx, so this blocks NB01a onward
 # Pinned, not floating: kaleido 1.x requires plotly>=6, and requirements.txt
 # pins plotly==5.24.1 for Streamlit Cloud. 0.2.1 is the last plotly-5 release.
-# Needed only by export_ingredient_chart{,_jp}.py (fig.write_image).
+# Needed only by export_ingredient_chart.py --lang en|jp (fig.write_image).
 #
 # macOS caveat: 0.2.1 ships a launcher shell script with an unquoted `cd $DIR`,
 # so it dies on any path containing a space -- ours does ("6. Beauty_ConsumerPulse").
