@@ -29,13 +29,17 @@ Search behaviour, product catalog, ingredient searches, YouTube discourse, and c
 
 ---
 
-## 検証結果：部分的に確認（限定的） / Verdict: Partially Confirmed
+## 検証結果：メイクでは確認、スキンケアでは測定不能 / Verdict: Confirmed for makeup, unmeasurable for skincare
 
-**方向性は支持されるが、規模は限定的である。**
-コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下した一方、スキンケアの検索はほぼ横ばい —— 両者の差は半減したが、化粧品が依然として上回る（「逆転」ではない）。楽天カタログの棚構成もスキンケアに偏るが、この比率はジャンル設計への依存が大きく、見出しの数値としては扱わない（[方法論](METHODOLOGY.md)の注意点5）。成分名検索は同じ暦年で上昇（ナイアシンアミド 5→81、レチノール 10→69、Googleトレンド指数）。マスク検証は循環的な「マスク効果」説を退ける：2023年3月のマスク緩和後もメイク検索は回復せず、2025年の口紅検索は2019年比36% —— コロナ期の底を下回る。
+**関心は動いた。金額の裏づけは半分しか取れない。**
+コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下し、スキンケアの検索はほぼ横ばいで推移した。公的な出荷統計（経産省 生産動態統計）を突き合わせると、この発見は二つに分かれる。**メイクは金額でも裏づけられた** —— ファンデーションと口紅の出荷金額は2019→2024年にいずれも42%減少し、落ち込みは2019→2021年に集中する。**スキンケアは裏づけられない** —— 金額系列は2022年1月に断層を持ち、そこをまたいで測った数値は断層の内側で測り直すと符号が反転する（美容液の出荷金額はまたげば-39%、内側なら+20%）。断層の原因は公表統計に記載がない。成分名検索は同じ期間に上昇したが（ナイアシンアミド 5→81、Googleトレンド指数）、こちらには行動側の対応物がそもそも存在しない —— 成分単位の需要を追う公的系列はない。
 
-**The direction holds, but the magnitude is limited.**
-Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat — the gap halved, but cosmetics still leads (not a "crossover"). Rakuten's catalog leans skincare too, but that ratio depends heavily on how the platform's genres map to product type, so it is not treated as a headline figure — see caveat 5 in [Methodology](METHODOLOGY.md). Ingredient-name search rose across the same years — niacinamide 5→81 and retinol 10→69 on the Trends index. A mask test rules out the cyclical "mask effect" explanation: makeup search did not recover after Japan relaxed mask guidance in March 2023 — by 2025 lipstick search sat at 36% of its 2019 baseline, below its COVID-era trough.
+**Attention moved. Only half of it can be checked against money.**
+Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat. Set against official shipment statistics (METI 生産動態統計), that finding splits in two. **Makeup is corroborated in yen** — foundation and lipstick shipped value both fell 42% over 2019→2024, with the collapse concentrated in 2019→2021, before the break and in lines it does not touch. **Skincare is not** — its money series steps in January 2022, and figures measured across that step reverse sign when measured inside it (serum shipped value reads -39% across the break and +20% after it). The cause is undocumented in the published statistics, so no skincare demand reading is offered. Ingredient-name search rose over the same years (niacinamide 5→81 on the Trends index) and has no behavioural counterpart at all — no official series tracks ingredient-level demand. A mask test rules out the cyclical explanation for the makeup decline: search did not recover after Japan relaxed mask guidance in March 2023.
+
+*何が測れるか / What is measured where:* この分析は二つの層を別々の測定として扱う。**関心層** —— Googleトレンド、楽天の掲載数、@cosmeレビュー、YouTube —— は検索と言葉を測る。**市場層** —— 経産省 生産動態統計と財務省 貿易統計 —— は金額と数量を測る。両者が一致する箇所だけが行動の裏づけを持つ。
+
+*The two layers:* the **attention layer** (Google Trends, Rakuten listings, @cosme reviews, YouTube — all self-built) measures what people search for and say. The **market layer** (METI shipments, 財務省 trade statistics HS 3304) measures what they buy, in yen and kilograms. They are different measurements and are never averaged together; only where they agree is a behavioural claim made. Full argument and the per-finding status: [METHODOLOGY.md](METHODOLOGY.md).
 
 *Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、その規模は小さく、サンプルサイズに敏感である。サンプル数を揃えた厳密な比較では Δ +0.065（0.252→0.317、ブートストラップ95%CI [+0.047, +0.083]）。  
 *Nuance:* skincare and cosmetics review language is converging slowly, but the effect is small and sample-size sensitive — Δ +0.065 (0.252→0.317, bootstrap 95% CI [+0.047, +0.083]) under a size-matched comparison.
@@ -48,7 +52,7 @@ Cosmetics search demand fell ~32% across full calendar years 2019→2025 while s
 
 | Tab | What it shows |
 |---|---|
-| 📈 The Shift / 市場変化 | Independent-signal evidence, the mask-rebound test, ingredient search surge, Rakuten treemap, YouTube trends |
+| 📈 The Shift / 市場変化 | Three panels: the attention layer (search, mask-rebound test, ingredient surge, Rakuten treemap, YouTube), the market layer (METI shipped value, the 2022 break), then the two set side by side |
 | 🔤 The Language / 消費者の言語 | Word clouds by year, size-matched vocabulary convergence |
 | 🔍 Discovery / 発見 | Google Trends rising searches, YouTube channel analysis, interactive review map |
 | 💡 For brands / ブランドへの示唆 | The four findings translated into prescriptive plays — with an explicit attention-data-≠-sales-data disclaimer |
@@ -62,6 +66,8 @@ Cosmetics search demand fell ~32% across full calendar years 2019→2025 while s
 All data self-sourced and self-collected. No Kaggle datasets.
 ```
 
+**関心層 / Attention layer** — 検索と言葉。自己収集。 What people search for and say; self-collected.
+
 | ソース / Source | 内容 / Contents | 規模 / Scale |
 |---|---|---|
 | @cosme | Consumer reviews — used for *language* analysis | 45,510 reviews |
@@ -69,6 +75,16 @@ All data self-sourced and self-collected. No Kaggle datasets.
 | Amazon | Name, price, aggregate rating, review count | 161 ASINs · 1,124 reviews |
 | Google Trends JP | Monthly search interest (2019–2026) | 4,842 rows |
 | YouTube Data API v3 | Beauty video comments | 296 videos · 74,679 comments |
+
+**市場層 / Market layer** — 金額と数量。公的統計、e-Stat API 経由。 What people buy, in yen and kilograms; official statistics via the e-Stat API.
+
+| ソース / Source | 内容 / Contents | 規模 / Scale |
+|---|---|---|
+| 経産省 生産動態統計「11.化粧品」 | Shipments by product line — value, volume, unit count | monthly 2019–2024, annual to 2015 |
+| 財務省 貿易統計 HS 3304 | Imports and exports by country | annual 2016–2025 |
+
+再現は `build_estat_shipments.py` と `build_estat_imports.py`（要 `ESTAT_APP_ID`）。両スクリプトは表IDを `getStatsList` から実行時に解決する —— IDは安定しておらず、広く引用されているMETIのIDは2010年の単月表を指す。  
+Rebuild with `build_estat_shipments.py` and `build_estat_imports.py` (`ESTAT_APP_ID` required). Both resolve table IDs from `getStatsList` at run time: the IDs are not stable, and the commonly cited METI one resolves to a single month of 2010.
 
 レビュー「量」は取得設計に依存するため市場シグナルとして用いず、レビュー「テキスト」のみを語彙分析に使用する。本文は一覧ページのプレビューであり全文ではない —— 詳細は[方法論](METHODOLOGY.md)。  
 Review *volume* depends on scraping design, so only review *text* is used, for vocabulary analysis. Bodies are listing-page previews, not full text — see [Methodology](METHODOLOGY.md).
@@ -141,10 +157,16 @@ questions resolve into against first-party data.
 | @cosmeのレビュー言語 / Review language (@cosme) | CRM・アプリ内行動・再購買率 / CRM, in-app behaviour, repeat rate |
 | 楽天のSKU棚シェア / Shelf share by SKU (Rakuten) | POS実売・在庫回転・粗利 / POS sell-through, stock turns, margin |
 
-これは[方法論](METHODOLOGY.md)の注意点12の延長線上にある —— 公開統計（家計調査・経産省生産動態統計）での
-検証が次の段階であり、1stパーティデータはその先にある。  
-This extends caveat 12 in [Methodology](METHODOLOGY.md): validating against public statistics
-(家計調査 household spending, METI shipment data) is the next step; first-party data is the one after.
+注意点12（公開統計での検証）は実行済みであり、その結果が上の検証結果である。残る限界は三つ:
+経産省統計は2024年までで、関心データは2026年まで —— 直近2年は関心のみ。皮膚用の金額系列は2022年1月に断層があり、
+またいだ測定はできない。家計調査は未取得で、かつ**美容液と日焼け止めの品目を持たない** ——
+最も動いたカテゴリを検証できる系列ではない。1stパーティデータはその先にある。  
+Caveat 12 — validate against public statistics — has been done, and the verdict above is its result.
+Three limits remain. METI runs to 2024 while the attention data runs to 2026, so the last two years
+are attention-only. The skincare money series breaks in January 2022, so it cannot be measured across
+that point. And 家計調査 (household spending) is not pulled — it would be immune to the tourist and
+export effects, but it carries **no 美容液 line and no sunscreen line**, so it cannot test the categories
+that moved most. First-party data is the step after.
 
 ---
 

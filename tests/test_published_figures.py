@@ -41,9 +41,24 @@ def test_ingredient_levels_match(docs, headline):
     expected = {
         (headline["nia_pre"], headline["nia_post"]),
         (headline["ret_pre"], headline["ret_post"]),
-        (headline["ing_y0"], headline["ing_y1"]),   # the "2019→2025" window
+        (headline["ing_y0"], headline["ing_y1"]),   # the attention window
+        # The market layer's windows. METI ends in 2024, two years before
+        # Trends, and it is split at the 2022 break — so the docs legitimately
+        # name three more windows, and each must be one compute_headline uses.
+        (headline["mkt_y0"], headline["mkt_y1"]),     # full METI span
+        (headline["mkt_y0"], headline["mkt_pre1"]),   # before the break
+        (headline["mkt_break"], headline["mkt_y1"]),  # after the break
     }
-    assert pairs == expected, f"docs {sorted(pairs)} vs headline {sorted(expected)}"
+    stray = pairs - expected
+    assert not stray, (
+        f"docs carry windows {sorted(stray)} that compute_headline does not "
+        f"define; it uses {sorted(expected)}")
+    # The reverse guard, kept narrow: the README is an index now and does not
+    # re-narrate every finding, but the ingredient endpoints are the one pair
+    # the docs still assert outright, so they must not drift out of them.
+    assert (headline["nia_pre"], headline["nia_post"]) in pairs, (
+        "the niacinamide endpoints have left the docs — either restore them or "
+        "drop this guard deliberately")
 
 
 def test_cosmetics_decline_matches(docs, headline):
