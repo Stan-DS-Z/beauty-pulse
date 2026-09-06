@@ -105,12 +105,25 @@ def compute_headline():
     df_cv = pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
     size_lo, size_hi = df_cv.iloc[0], df_cv.iloc[-1]
 
-    # Ingredient search surge — niacinamide, pre- vs post-COVID
+    # Ingredient search — same full-calendar-year anchors as cosm_decline above,
+    # so both headline figures rest on one window instead of two. A <=2020
+    # baseline would fold in the first COVID year and is not a pre-COVID read.
+    # Reported as levels, not a multiplier: niacinamide's baseline is ~5 on a
+    # 0-100 index, and a ratio off a base that small swings from 7x to 16x with
+    # the window while its level movement is stable.
     df_ing = pd.read_csv(ASSETS / "nb07_ingredient_surge.csv", parse_dates=["week_start"])
     df_ing["year"] = df_ing["week_start"].dt.year
-    nia = df_ing[df_ing["term"] == "ナイアシンアミド"]
-    nia_pre = int(round(nia[nia.year <= 2020]["interest"].mean()))
-    nia_post = int(round(nia[nia.year >= 2023]["interest"].mean()))
+    _ipy = df_ing.groupby("year")["week_start"].nunique()
+    _ifull = _ipy[_ipy >= 12].index
+    ing_y0, ing_y1 = int(_ifull.min()), int(_ifull.max())
+
+    def _levels(term):
+        t = df_ing[df_ing["term"] == term]
+        return (int(round(t[t.year == ing_y0]["interest"].mean())),
+                int(round(t[t.year == ing_y1]["interest"].mean())))
+
+    nia_pre, nia_post = _levels("ナイアシンアミド")
+    ret_pre, ret_post = _levels("レチノール")
 
     return {
         "sku_ratio":    sku_ratio,
@@ -135,6 +148,10 @@ def compute_headline():
         "size_hi_cos":  round(size_hi["cross_tier_cosine"], 2),
         "nia_pre":      nia_pre,
         "nia_post":     nia_post,
+        "ret_pre":      ret_pre,
+        "ret_post":     ret_post,
+        "ing_y0":       ing_y0,
+        "ing_y1":       ing_y1,
     }
 
 HEADLINE = compute_headline()
@@ -154,7 +171,7 @@ STRINGS = {
 
         "t1_c1h": "Cosmetics search fell about a third; skincare held flat — no crossover",
         "t1_c1e": "Monthly Google search interest, 2019–2026 (2026 = Jan–Mar). This uses the *anchored* query block — the only one where スキンケア and 化粧品 share a single comparable scale. Cosmetics (化粧品) search has fallen steadily; skincare (スキンケア) is roughly flat. The gap is closing — but cosmetics still leads in every year. There is no crossover.",
-        "t1_c2h": "Consumers now search ingredients by name — a 6–7× surge",
+        "t1_c2h": "",
         "t1_c2e": "Consumers aren\'t just searching for \'skincare\' — they\'re searching for specific ingredients by name. Each line tracks one ingredient\'s search popularity over time. The post-COVID climb shows consumers becoming educated about what goes into their products. Each term is normalised to its own scale, so this reads as growth-over-time, not cross-ingredient ranking.",
         "t1_c2cap": "Dashed lines = ingredients already known pre-COVID  ·  Solid lines = ingredients that broke out after 2020  ·  2026 = Jan–Mar only",
         "t1_ingr_sel": "Select ingredients",
@@ -174,7 +191,7 @@ STRINGS = {
         "t1_c5cap": "2022: cosmetics briefly edges skincare — the mask-off rebound is visible here too · by 2024 skincare comment volume is well ahead",
 
         "f1_title": "Finding 1 — The structural shift is supported, but modest",
-        "f1_body":  "Search demand, commercial supply, ingredient curiosity and YouTube discourse all lean the same way. In anchored Google Trends, cosmetics search fell ~32% across full years 2019→2025 while skincare held roughly flat — the gap halved, though cosmetics still leads. Rakuten lists 3.7× more skincare SKUs (shelf share). Ingredient searches surged 6–7×. And the mask test above rules out the strongest rival explanation: makeup search did not recover when masks came off. The direction is clear; the magnitude is moderate — this is a real shift, not a dramatic one.",
+        "f1_body": "",
 
         # ── TAB 2: The Language ───────────────────────────────────────────
         "t2_intro": "The shift shows up in the words consumers use too. Skincare and cosmetics review language has converged slightly — a small but real effect, once the comparison is matched for sample size.",
@@ -241,7 +258,7 @@ STRINGS = {
         # ── TAB 4: For brands ─────────────────────────────────────────────
         "t4_intro": "What the four findings imply if you sit inside a beauty company. These are directional hypotheses from attention and shelf data — search, reviews, catalog, YouTube — not from sales. Each card names the evidence it rests on.",
         "t4_c1h": "Lead with the ingredient, not the brand",
-        "t4_c1b": "Ingredient-name search grew 6–7× and never receded (Finding 1), and COVID-era discovery searches were dominated by actives, not brands (Finding 4). The most-watched skincare creator in the dataset is a chemistry educator — かずのすけ\'s ingredient content drew 43.4M views. Product naming, PDP copy and ad creative that lead with the active and its concentration meet consumers where their literacy now is.",
+        "t4_c1b": "",
         "t4_c2h": "Take the K-brand threat seriously — and learn its trick",
         "t4_c2b": "Anua is the strongest rising-search signal in the recent window, surfacing from 6 independent seed terms (Finding 4). The pattern: Japanese consumers\' own ingredient education created the demand, and Korean-brand searches are the fastest-rising in that space. Three *Japanese* brands (unlabel, CERAMIAID, KITEN) now position themselves so K-style that this analysis initially misclassified them as Korean. Meanwhile Korean beauty has just 16 videos · 4.4M views of YouTube supply against that search demand — the education-content lane is still open to whoever moves first.",
         "t4_c3h": "Don\'t plan for a makeup rebound that isn\'t coming",
@@ -264,7 +281,7 @@ STRINGS = {
 
         "t1_c1h":    "化粧品の検索は約3分の1低下 — スキンケアは横ばい（逆転なし）",
         "t1_c1e":    "2019〜2026年の月次Google検索関心度（2026年は1〜3月）。「スキンケア」と「化粧品」が共通の比較可能なスケールに乗る唯一のクエリブロック（アンカー付き）を用いている。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。差は縮まっているが、化粧品が毎年上回り、「逆転」は起きていない。",
-        "t1_c2h":    "消費者は成分を指名検索する — コロナ後6〜7倍に",
+        "t1_c2h": "",
         "t1_c2e":    "消費者は「スキンケア」だけでなく、成分名を指名検索している。各線は1つの成分の検索人気を経時的に追跡。コロナ後の上昇は、消費者が製品の中身について学び始めたことを示す。各語は自身のスケールに正規化されているため、これは経時的な伸びを示すもので、成分間の順位比較ではない。",
         "t1_c2cap":  "点線 = コロナ前から認知されていた成分  ·  実線 = 2020年以降に急浮上した成分  ·  2026年は1〜3月のみ",
         "t1_ingr_sel": "成分を選択",
@@ -284,7 +301,7 @@ STRINGS = {
         "t1_c5cap":  "2022年はコスメが一時的にスキンケアを上回る（マスク解禁効果はここでも可視）· 2024年にはスキンケアのコメント量が大きく先行",
 
         "f1_title":  "発見1 — 構造的変化は支持されるが、規模は控えめ",
-        "f1_body":   "検索需要・商業的供給・成分への関心・YouTube言論が、いずれも同じ方向を指す。アンカー付きGoogleトレンドでは、化粧品の検索が暦年ベース2019→2025年で約32%低下した一方、スキンケアはほぼ横ばい —— 差は半減したが化粧品が依然上回る。楽天はスキンケアSKUを3.7倍掲載（棚シェア）。成分検索は6〜7倍に急増。さらに上のマスク検証が最有力の対立仮説を棄却する：マスク解禁後もメイク検索は回復しなかった。方向は明確だが規模は中程度 —— これは実在する変化であり、劇的な変化ではない。",
+        "f1_body": "",
 
         "t2_intro":  "変化は消費者が使う「言葉」にも現れる。スキンケアとコスメのレビュー語彙はわずかに収束している —— サンプル数を揃えて比較すると、小さいが実在する効果である。",
 
@@ -349,7 +366,7 @@ STRINGS = {
         # ── TAB 4: ブランドへの示唆 ────────────────────────────────────────
         "t4_intro": "4つの発見が、美容企業の中にいる人にとって何を意味するか。これらは検索・レビュー・カタログ・YouTubeという「注目と棚」のデータに基づく方向性の仮説であり、売上データではない。各カードは根拠とする発見を明記している。",
         "t4_c1h": "ブランドではなく、成分を主語にする",
-        "t4_c1b": "成分の指名検索は6〜7倍に増え、その後も衰えていない（発見1）。コロナ期の発見的検索を支配したのはブランドではなく有効成分だった（発見4）。データセット中で最も視聴されたスキンケアクリエイターは化学の教育者 —— かずのすけの成分コンテンツは4,340万回視聴された。製品名・商品ページ・広告クリエイティブは、有効成分とその濃度を主語にすることで、現在の消費者リテラシーに合流できる。",
+        "t4_c1b": "",
         "t4_c2h": "韓国ブランドの脅威を直視し、その手法から学ぶ",
         "t4_c2b": "直近ウィンドウの最強急上昇シグナルはアヌアで、6つの独立した起点語から浮上した（発見4）。構図：日本の消費者自身の成分教育が需要を生み、その領域で急上昇検索の最多を占めるのが韓国ブランドである。日本ブランド3つ（アンレーベル・セラミエイド・キテン）がK-Beauty風のポジショニングを取るあまり、本分析が当初韓国と誤分類したことである。一方、韓国コスメのYouTube供給は16本・440万回視聴に留まる —— 検索需要に対して教育コンテンツのレーンはまだ空いている。先に動いた者が取る。",
         "t4_c3h": "「メイクの揺り戻し」を計画に織り込まない",
@@ -527,6 +544,26 @@ S = dict(STRINGS[lang])
 _h = HEADLINE
 if lang == "en":
     S["t2_m2d"] = f"each period equalised to {_h['matched_n']} reviews · {_h['conv_ci']}"
+    S["t1_c2h"] = (
+        f"Consumers now search ingredients by name — niacinamide "
+        f"{_h['nia_pre']} → {_h['nia_post']} on the Trends index, {_h['ing_y0']}→{_h['ing_y1']}")
+    S["t4_c1b"] = (
+        f"Ingredient-name search rose from {_h['nia_pre']} to {_h['nia_post']} "
+        f"(niacinamide) and {_h['ret_pre']} to {_h['ret_post']} (retinol) between "
+        f"{_h['ing_y0']} and {_h['ing_y1']}, and never receded (Finding 1); COVID-era "
+        "discovery searches were led by actives, not brands (Finding 4). The most-watched "
+        "skincare creator in the dataset is a chemistry educator — かずのすけ's ingredient "
+        "content drew 43.4M views. Product naming, PDP copy and ad creative that lead with "
+        "the active and its concentration meet consumers where their literacy now is.")
+    S["f1_body"] = (
+        "Search demand, commercial supply, ingredient curiosity and YouTube discourse all "
+        f"lean the same way. In anchored Google Trends, cosmetics search fell ~{abs(_h['cosm_decline'])}% "
+        f"across full years {_h['ing_y0']}→{_h['ing_y1']} while skincare held roughly flat — the gap "
+        f"halved, though cosmetics still leads. Rakuten lists {_h['sku_ratio']}× more skincare SKUs "
+        f"(shelf share). Ingredient search rose from {_h['nia_pre']} to {_h['nia_post']} for "
+        "niacinamide on the same index. And the mask test above rules out the leading rival "
+        "explanation: makeup search did not recover when masks came off. The direction is clear; "
+        "the magnitude is moderate — this is a real shift, not a dramatic one.")
     S["t2_curvee"] = (
         "Cosine similarity between *pooled* skincare and cosmetics reviews rises "
         "mechanically with sample size — a bigger pool simply covers more vocabulary. "
@@ -545,6 +582,24 @@ if lang == "en":
         "inflates with sample size, so periods of different sizes can't be compared directly.")
 else:
     S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
+    S["t1_c2h"] = (
+        f"消費者は成分を指名検索する — ナイアシンアミドは{_h['ing_y0']}年{_h['nia_pre']}"
+        f"→{_h['ing_y1']}年{_h['nia_post']}（トレンド指数）")
+    S["t4_c1b"] = (
+        f"成分の指名検索は{_h['ing_y0']}年から{_h['ing_y1']}年にかけて、ナイアシンアミドが"
+        f"{_h['nia_pre']}→{_h['nia_post']}、レチノールが{_h['ret_pre']}→{_h['ret_post']}へ上昇し、"
+        "その後も衰えていない（発見1）。コロナ期の発見的検索を牽引したのはブランドではなく有効成分だった"
+        "（発見4）。データセット中で最も視聴されたスキンケアクリエイターは化学の教育者 —— かずのすけの"
+        "成分コンテンツは4,340万回視聴された。製品名・商品ページ・広告クリエイティブは、有効成分とその"
+        "濃度を主語にすることで、現在の消費者リテラシーに合流できる。")
+    S["f1_body"] = (
+        "検索需要・商業的供給・成分への関心・YouTube言論が、いずれも同じ方向を指す。アンカー付き"
+        f"Googleトレンドでは、化粧品の検索が暦年ベース{_h['ing_y0']}→{_h['ing_y1']}年で"
+        f"約{abs(_h['cosm_decline'])}%低下した一方、スキンケアはほぼ横ばい —— 差は半減したが化粧品が依然上回る。"
+        f"楽天はスキンケアSKUを{_h['sku_ratio']}倍掲載（棚シェア）。成分検索は同じ指数でナイアシンアミドが"
+        f"{_h['nia_pre']}→{_h['nia_post']}へ上昇。さらに上のマスク検証が最有力の対立仮説を棄却する："
+        "マスク解禁後もメイク検索は回復しなかった。方向は明確だが規模は中程度 —— これは実在する変化であり、"
+        "劇的な変化ではない。")
     S["t2_curvee"] = (
         "プールしたスキンケアレビューとコスメレビューの間のコサイン類似度は、サンプル数とともに機械的に"
         "上昇する —— プールが大きいほど多くの語彙を被覆するためである。この線は同一の2023–25年レビューを"
