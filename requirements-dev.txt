@@ -1,0 +1,5 @@
+# Test dependencies. The suite needs only the dashboard stack, so install this
+# on top of requirements.txt — not requirements-analysis.txt, whose heavy
+# modelling deps (xgboost, umap-learn, hdbscan) no test touches.
+-r requirements.txt
+pytest==9.1.1
