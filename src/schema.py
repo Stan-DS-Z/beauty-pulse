@@ -326,6 +326,14 @@ CREATE TABLE IF NOT EXISTS yt_comments (
 
 DDL_INDEXES = [
     # reviews — the most queried table
+    # One row per (source, source_cat_id). Without this every ingest appended a
+    # fresh copy of each genre — 16 ingests left 352 rows for 22 genres, 330 of
+    # them orphans. Products always referenced the first copy, so joins on
+    # category_id were unaffected and nothing looked wrong; a join on
+    # source_cat_id fanned out 16x.
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_source_cat "
+    "ON categories(source_id, source_cat_id);",
+
     "CREATE INDEX IF NOT EXISTS idx_reviews_date       ON reviews(review_date);",
     "CREATE INDEX IF NOT EXISTS idx_reviews_year_month ON reviews(review_year, review_month);",
     "CREATE INDEX IF NOT EXISTS idx_reviews_category   ON reviews(category_id);",
@@ -398,6 +406,39 @@ def seed_kao_brands(conn: sqlite3.Connection) -> None:
         KAO_BRANDS_SEED,
     )
     conn.commit()
+
+
+def dedupe_categories(conn: sqlite3.Connection, dry_run: bool = True) -> dict:
+    """Collapse duplicate category rows to the copy the data actually points at.
+
+    Deletes only rows that (a) share (source_id, source_cat_id) with a lower
+    category_id and (b) are referenced by nothing. It refuses rather than
+    rewriting a foreign key, so it cannot silently move a product between
+    categories. Idempotent; call with dry_run=False to apply.
+    """
+    referenced = {r[0] for r in conn.execute("""
+        SELECT DISTINCT category_id FROM products  WHERE category_id IS NOT NULL
+        UNION SELECT DISTINCT category_id FROM reviews   WHERE category_id IS NOT NULL
+        UNION SELECT DISTINCT category_id FROM yt_videos WHERE category_id IS NOT NULL
+    """)}
+    keep = {r[0] for r in conn.execute(
+        "SELECT MIN(category_id) FROM categories GROUP BY source_id, source_cat_id")}
+
+    stranded = referenced - keep
+    if stranded:
+        raise RuntimeError(
+            f"{len(stranded)} referenced category rows are not the lowest-id copy "
+            f"of their genre: {sorted(stranded)[:10]}. Deduping would orphan them.")
+
+    doomed = [r[0] for r in conn.execute("SELECT category_id FROM categories")
+              if r[0] not in keep and r[0] not in referenced]
+    result = {"total": len(keep) + len(doomed), "keep": len(keep), "delete": len(doomed)}
+    if not dry_run and doomed:
+        conn.executemany("DELETE FROM categories WHERE category_id = ?",
+                         [(c,) for c in doomed])
+        conn.commit()
+        result["deleted"] = len(doomed)
+    return result
 
 
 def get_schema_info(conn: sqlite3.Connection) -> list[dict]:

@@ -32,6 +32,25 @@ def test_public_db_drops_identifying_columns(public_db):
         conn.close()
 
 
+def test_public_db_has_one_row_per_genre(public_db):
+    """categories must not fan out on a join by source_cat_id.
+
+    Every ingest used to append a fresh copy of each genre — 352 rows for 22
+    genres. Products always pointed at the first copy, so joins on category_id
+    stayed correct and nothing looked wrong, while any join on source_cat_id
+    multiplied its result by 16.
+    """
+    conn = sqlite3.connect(f"file:{public_db}?mode=ro", uri=True)
+    try:
+        dupes = conn.execute("""
+            SELECT source_id, source_cat_id, COUNT(*) n FROM categories
+            GROUP BY 1, 2 HAVING n > 1
+        """).fetchall()
+        assert not dupes, f"duplicate genre rows: {dupes[:5]}"
+    finally:
+        conn.close()
+
+
 def test_private_db_is_not_tracked():
     tracked = subprocess.run(
         ["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True
