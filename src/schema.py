@@ -10,27 +10,71 @@ not just DDL.
 Schema version: 1.0
 """
 
+import gzip
+import shutil
 import sqlite3
 import logging
 from pathlib import Path
 
 log = logging.getLogger("signal_pulse.schema")
 
-# ── Database path ──────────────────────────────────────────────────────────────
+# ── Database paths ─────────────────────────────────────────────────────────────
+#
+# The primary DB is gitignored (it carries product_name and raw_json), so it is
+# absent from a clone. The stripped public DB ships gzipped in dashboard/assets
+# and is what a reader auditing NB03-NB07 actually has. resolve_db_path() picks
+# whichever is present, so the analysis notebooks run either way.
 
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "signal_pulse.db"
+PUBLIC_DB_PATH = ROOT / "data" / "signal_pulse_public.db"
+PUBLIC_DB_GZ = ROOT / "dashboard" / "assets" / "signal_pulse_public.db.gz"
 
 
-def get_connection(path: Path = DB_PATH) -> sqlite3.Connection:
+def resolve_db_path() -> tuple[Path, bool]:
+    """Return (path, is_public) for the best available database.
+
+    Order: the primary DB, then an already-extracted public DB, then the shipped
+    archive (extracted once into data/, which is gitignored). If none exists we
+    return the primary path so NB02 can still create a database from scratch.
+    """
+    if DB_PATH.exists():
+        return DB_PATH, False
+    if PUBLIC_DB_PATH.exists():
+        return PUBLIC_DB_PATH, True
+    if PUBLIC_DB_GZ.exists():
+        log.info("No primary DB — extracting %s (one-off, ~105 MB)", PUBLIC_DB_GZ.name)
+        PUBLIC_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with gzip.open(PUBLIC_DB_GZ, "rb") as src, open(PUBLIC_DB_PATH, "wb") as dst:
+            shutil.copyfileobj(src, dst)
+        return PUBLIC_DB_PATH, True
+    return DB_PATH, False
+
+
+def get_connection(path: Path | None = None) -> sqlite3.Connection:
     """
     Return a sqlite3 connection with foreign key enforcement and
     WAL mode (better concurrent read performance during ingestion).
+
+    With no argument the database is resolved via resolve_db_path(). The public
+    DB is opened read-only: it is a published artefact and has no product_name
+    or raw_json, so an ingestion or schema write against it would fail anyway —
+    better it fails on the first write than half-way through.
     """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.execute("PRAGMA journal_mode = WAL")
+    read_only = False
+    if path is None:
+        path, read_only = resolve_db_path()
+        if read_only:
+            log.info("Using the public database (read-only): %s", path.name)
+
+    if read_only:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        conn.execute("PRAGMA foreign_keys = ON")
+    else:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(path)
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("PRAGMA journal_mode = WAL")
     conn.row_factory = sqlite3.Row   # dict-like access to rows
     return conn
 

@@ -163,11 +163,20 @@ pip install -r requirements.txt
 streamlit run dashboard/streamlit_app.py
 ```
 
-**分析を検証・再実行する / Interrogate or re-run the analysis (NB02 → NB07):**
+**分析を検証・再実行する / Interrogate or re-run the analysis (NB03 → NB07):**
 
 ```bash
 pip install -r requirements-analysis.txt
 ```
+
+主データベースはgitignoreされているため、クローンには含まれない。`src.schema.get_connection()`
+は同梱の公開DBに自動でフォールバックし（初回のみ`dashboard/assets/`から`data/`へ展開）、
+読み取り専用で開く。NB03〜NB07はクローンから実行順どおりに動作する。NB02は未公開の生データを要するため動かない。
+
+The primary database is gitignored, so a clone does not have it.
+`src.schema.get_connection()` falls back to the bundled public DB — extracting it from
+`dashboard/assets/` into `data/` once — and opens it read-only. NB03–NB07 therefore run from
+a clone in the stated order. NB02 does not: it ingests raw data that is not published.
 
 **リポジトリの範囲 / Repository scope:**  
 公開：分析ノートブック（NB02〜NB07）、ダッシュボード、CSVアセット、`signal_pulse_public.db.gz`（商品名・生JSONを削除した照会可能なデータセット。`gunzip`して利用）。  
