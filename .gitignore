@@ -81,3 +81,6 @@ memory/
 
 # ── recon reports — local working documents, never deployed ────────────────
 recon/
+
+# Working documents ferried to and from the Claude app — same reason recon/ is ignored
+Claude outputs/
