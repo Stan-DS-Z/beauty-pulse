@@ -75,6 +75,19 @@ def get_apify_token() -> Optional[str]:
     return os.getenv("APIFY_API_TOKEN", None)
 
 
+def get_estat_app_id() -> str:
+    """e-Stat application ID for the official statistics pulls.
+
+    Free registration at e-Stat マイページ (新規登録 → アプリケーションID発行).
+    Used for 生産動態統計 (METI shipments) and 家計調査 (household spend), which
+    are how the Trends findings get validated against actual volumes.
+    """
+    v = os.getenv("ESTAT_APP_ID", "")
+    if not v:
+        raise EnvironmentError("ESTAT_APP_ID not set. See .env.example.")
+    return v
+
+
 # ── HTTP with retry ───────────────────────────────────────────────────────────
 
 SESSION = requests.Session()
