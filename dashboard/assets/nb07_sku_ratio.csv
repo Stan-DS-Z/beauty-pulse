@@ -1,7 +1,8 @@
 basis,skin_skus,cosm_skus,ratio,note
-as_labelled,36032,9758,3.69,Rakuten genre labels as-is; 564517 counted wholly as cosmetics
-reclassified,38975,5888,6.62,564517 split by hand-labelled proportions (n=150)
-reclassified_lo,,,6.07,bootstrap 2.5% on the label sample
-reclassified_hi,,,7.25,bootstrap 97.5% on the label sample
-origin_genre_dropped,36032,3711,9.71,564517 removed from both sides
+as_labelled,36032,9758,3.69,Rakuten genre labels as-is; both genres counted wholly as cosmetics
+reclassified_564517_only,,,6.62,only the origin genre split (n=150)
+reclassified,38996,5115,7.62,both labelled genres split by hand proportions (n=150+150)
+reclassified_lo,,,6.87,"bootstrap 2.5%, resampling both label sets"
+reclassified_hi,,,8.55,"bootstrap 97.5%, resampling both label sets"
+origin_genre_dropped,36032,3711,9.71,"564517 removed from both sides, nothing else changed"
 product_type_genres,33637,3135,10.73,only genres whose name determines product type (8 skincare vs 1 makeup)

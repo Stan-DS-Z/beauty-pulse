@@ -63,8 +63,9 @@ def compute_headline():
     # The SKU ratio is not one number. Genre 564517 韓国コスメ carries
     # tier='cosmetics' but is a country-of-origin genre: 150 of its products
     # labelled by hand are 49% skincare, 36% makeup, 15% neither. It is also
-    # 62% of the cosmetics denominator, so its treatment moves the ratio from
-    # 3.7x to 9.7x. build_sku_ratio.py writes every treatment; we report the
+    # 62% of the cosmetics denominator. The one real makeup genre is 24%
+    # out of scope as well, so both sides are hand-measured now.
+    # build_sku_ratio.py writes every treatment; we report the
     # reclassified figure with its bootstrap CI and keep the span for the
     # caveat. Older assets predate the file — fall back to the raw ratio.
     _sr_path = ASSETS / "nb07_sku_ratio.csv"
@@ -590,14 +591,16 @@ if lang == "en":
         f"Rakuten shelf: {_h['sku_measured']}× more skincare SKUs than makeup, "
         f"after reclassifying the Korean-cosmetics genre")
     S["t1_c3e"] = (
-        f"The Korean-cosmetics genre is tagged as makeup but is a country-of-origin "
-        f"genre: 150 of its products labelled by hand are 49% skincare, 36% makeup and "
-        f"15% neither, and it is 62% of the makeup total. Reclassifying on those "
-        f"proportions gives {_h['sku_measured']}× (95% CI {_h['sku_lo']}–{_h['sku_hi']}); "
-        f"leaving it as tagged gives {_h['sku_span_lo']}×, and counting only genres whose "
-        f"name fixes the product type gives {_h['sku_span_hi']}×. The catalogue holds eight "
-        f"skincare genres and one makeup genre, so this ratio measures shelf supply and "
-        f"scrape design, not demand. " + S["t1_c3e"])
+        f"Both genres on the makeup side were sampled and labelled by hand, 150 products "
+        f"each. The Korean-cosmetics genre is tagged as makeup but names a country of "
+        f"origin: it is 49% skincare, 36% makeup, 15% neither, and 62% of the makeup "
+        f"total. The base-makeup genre is 75% makeup, 24% neither — mostly "
+        f"lash-extension supplies and double-eyelid products. Reclassifying both gives "
+        f"{_h['sku_measured']}× (95% CI {_h['sku_lo']}–{_h['sku_hi']}); leaving them as "
+        f"tagged gives {_h['sku_span_lo']}×, and counting only genres whose name fixes the "
+        f"product type gives {_h['sku_span_hi']}×. The catalogue holds eight skincare "
+        f"genres and one makeup genre, so this ratio measures shelf supply and scrape "
+        f"design, not demand. " + S["t1_c3e"])
     S["t1_c2h"] = (
         f"Consumers now search ingredients by name — niacinamide "
         f"{_h['nia_pre']} → {_h['nia_post']} on the Trends index, {_h['ing_y0']}→{_h['ing_y1']}")
@@ -640,9 +643,11 @@ else:
     S["t1_c3h"] = (
         f"楽天の棚：韓国コスメジャンル再分類後、スキンケアSKUはメイクの{_h['sku_measured']}倍")
     S["t1_c3e"] = (
-        f"韓国コスメジャンルはメイクとして分類されているが、実際は原産国別ジャンルである。"
-        f"無作為抽出150件を手作業で分類したところ、スキンケア49%・メイク36%・対象外15%であり、"
-        f"かつメイク総数の62%を占める。この比率で再分類すると{_h['sku_measured']}倍"
+        f"メイク側の2ジャンルとも各150件を無作為抽出し、手作業で分類した。"
+        f"韓国コスメジャンルはメイクとして分類されているが実際は原産国別ジャンルであり、"
+        f"スキンケア49%・メイク36%・対象外15%、かつメイク総数の62%を占める。"
+        f"ベースメイクジャンルはメイク75%・対象外24%で、対象外の大半はまつげエクステ用品と"
+        f"二重まぶた用品である。両ジャンルを再分類すると{_h['sku_measured']}倍"
         f"（95%CI {_h['sku_lo']}〜{_h['sku_hi']}）、分類のままなら{_h['sku_span_lo']}倍、"
         f"商品種別が名称で定まるジャンルのみに限ると{_h['sku_span_hi']}倍となる。"
         f"カタログはスキンケア8ジャンルに対しメイクは1ジャンルであり、"
