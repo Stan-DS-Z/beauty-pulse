@@ -26,6 +26,10 @@ data/*.db-wal
 notebooks/NB01*.ipynb
 notebooks/recon/
 
+# Local tooling — reads data/raw/ and writes outputs/, both gitignored, so it
+# cannot run from a clone and is not part of the NB02→NB07 public pipeline
+build_brand_reference.py
+
 # Company-specific analysis — private
 notebooks/NB05a_*.ipynb
 notebooks/NB05b_*.ipynb
