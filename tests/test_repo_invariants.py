@@ -88,7 +88,10 @@ def test_no_pp_abbreviation():
         cwd=ROOT, capture_output=True, text=True, check=True
     ).stdout.split()
     offenders = []
+    this_file = str(Path(__file__).resolve().relative_to(ROOT))
     for rel in files:
+        if rel == this_file:
+            continue        # states the rule, so it necessarily contains it
         text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
         for n, line in enumerate(text.split("\n"), 1):
             if re.search(r"(?<![A-Za-z])pp(?![A-Za-z])", line):
