@@ -72,3 +72,26 @@ def test_dashboard_string_table_hardcodes_no_ratio(app):
     blob = "\n".join(str(v) for lang in app.STRINGS.values() for v in lang.values())
     found = {m.group(1) for m in re.finditer(r"(\d+\.\d+)\s*[×x倍]", blob)}
     assert not found, f"STRINGS hardcodes ratios {sorted(found)}; build them from HEADLINE"
+
+
+def test_size_curve_copy_uses_the_asset_window(app):
+    """The size-curve explanation must name the window the CSV defines.
+
+    It said 2023–25 while nb06_cosine_salvage.csv said 2023–26, understating it
+    by the largest year in the corpus. Other windows on the page (word clouds,
+    the tier comparison, the data subtitle) are different analyses with their
+    own spans, so this checks only the string the cosine asset governs.
+    """
+    for lang in ("en", "jp"):
+        assert not app.STRINGS[lang]["t2_curvee"] or "2023" not in app.STRINGS[lang]["t2_curvee"], (
+            "t2_curvee hardcodes a window; it must be rebuilt from conv_p1")
+
+
+def test_period_labels_match_the_asset(app):
+    import pandas as pd
+    from pathlib import Path
+    sm = pd.read_csv(Path(__file__).resolve().parent.parent
+                     / "dashboard" / "assets" / "nb06_cosine_salvage.csv")
+    sm = sm[sm["method"] == "size_matched"]
+    assert app.HEADLINE["conv_p0"] == str(sm["period"].iloc[0])
+    assert app.HEADLINE["conv_p1"] == str(sm["period"].iloc[1])

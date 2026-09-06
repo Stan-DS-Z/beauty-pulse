@@ -108,6 +108,11 @@ def compute_headline():
     conv_delta = round(sm[1] - sm[0], 3)
     conv_v1 = round(v1[1] - v1[0], 3)
     v1_lo, v1_hi = round(v1[0], 2), round(v1[1], 2)
+    # Period labels come from the CSV, not from prose. NB06 re-runs as the corpus
+    # grows and the late window moves with it; the size-curve copy said 2023-25
+    # while the data said 2023-26, dropping the largest year in the corpus.
+    _sm = df_sv[df_sv["method"] == "size_matched"]
+    conv_p0, conv_p1 = str(_sm["period"].iloc[0]), str(_sm["period"].iloc[1])
     _mn = df_sv[df_sv["method"] == "matched_n"]["cosine"]
     matched_n = int(_mn.iloc[0]) if len(_mn) else 249
     # Bootstrap CI on the delta, exported by NB06 §2. Older assets predate the
@@ -163,6 +168,8 @@ def compute_headline():
         "v1_lo":        v1_lo,
         "v1_hi":        v1_hi,
         "matched_n":    matched_n,
+        "conv_p0":      conv_p0,
+        "conv_p1":      conv_p1,
         "conv_ci":      conv_ci,
         "conv_ci_jp":   conv_ci_jp,
         "conv_share":   conv_share,
@@ -614,7 +621,7 @@ if lang == "en":
     S["t2_curvee"] = (
         "Cosine similarity between *pooled* skincare and cosmetics reviews rises "
         "mechanically with sample size — a bigger pool simply covers more vocabulary. "
-        "This line uses the *identical* 2023–25 reviews, subsampled to different sizes: "
+        f"This line uses the *identical* {_h['conv_p1']} reviews, subsampled to different sizes: "
         f"the similarity climbs from ~{_h['size_lo_cos']} to ~{_h['size_hi_cos']} with no "
         "change in the underlying language. So convergence must be compared at matched sizes.")
     S["t2_curvenote"] = (
@@ -660,7 +667,7 @@ else:
         "劇的な変化ではない。")
     S["t2_curvee"] = (
         "プールしたスキンケアレビューとコスメレビューの間のコサイン類似度は、サンプル数とともに機械的に"
-        "上昇する —— プールが大きいほど多くの語彙を被覆するためである。この線は同一の2023–25年レビューを"
+        f"上昇する —— プールが大きいほど多くの語彙を被覆するためである。この線は同一の{_h['conv_p1']}年レビューを"
         f"異なるサイズにサブサンプルしたもの：基となる言語は何も変えていないのに、類似度は約{_h['size_lo_cos']}"
         f"から約{_h['size_hi_cos']}まで上昇する。ゆえに収束はサイズを揃えて比較する必要がある。")
     S["t2_curvenote"] = (
