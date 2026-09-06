@@ -117,3 +117,31 @@ def test_attention_asset_has_whole_years_only(app):
     assert set(d["n_months"]) == {12}, (
         "a partial year reached the attention asset — check that "
         "build_attention_annual.py still derives the year from week_start")
+
+
+def test_the_break_year_is_located_from_the_data(app, meti):
+    """METI_BREAK must be where the discontinuity is, not where we assumed.
+
+    For each candidate year, measure how far the three affected lines moved
+    against how far the rest of the market moved in the same year. The break is
+    the year that gap is widest. If a revision to the source moves it, this
+    fails rather than letting every regime window quietly point at the wrong
+    boundary.
+    """
+    val, _ = meti
+    affected = ["化粧水", "美容液", "乳液"]
+    others = [i for i in val.index
+              if not str(i).endswith("計") and i != "化粧品合計" and i not in affected]
+
+    gaps = {}
+    for year in range(int(val.columns.min()) + 1, int(val.columns.max()) + 1):
+        prev = year - 1
+        moved = (val.loc[affected, year] / val.loc[affected, prev] - 1).mean()
+        rest = (val.loc[others, year] / val.loc[others, prev] - 1).mean()
+        gaps[year] = moved - rest
+
+    located = min(gaps, key=gaps.get)
+    assert located == app.METI_BREAK, (
+        f"the discontinuity is at {located} (gap {gaps[located]:+.0%}) but "
+        f"METI_BREAK says {app.METI_BREAK}; per-year gaps: "
+        + ", ".join(f"{y}: {g:+.0%}" for y, g in gaps.items()))
