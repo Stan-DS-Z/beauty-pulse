@@ -47,8 +47,9 @@ def compute_headline():
     The Google Trends comparison uses the anchored block_B (cross-comparable
     scale); convergence is the size-matched cosine."""
     # Rakuten SKU counts — full in-scope (ALL_TIERS) from NB07's headline export.
-    # The treemap CSV excludes beauty_all-categorised products, which understates
-    # the catalogue (4.0x vs the headline 4.1x); fall back to it only if missing.
+    # The treemap CSV excludes beauty_all-categorised products, so it undercounts
+    # the catalogue (28,983 vs 36,032 skincare SKUs) and lands on a different
+    # ratio (4.0x vs the headline 3.7x); fall back to it only if missing.
     _hl_path = ASSETS / "nb07_headline.csv"
     if _hl_path.exists():
         _hl = pd.read_csv(_hl_path).set_index("metric")["value"]
@@ -79,13 +80,26 @@ def compute_headline():
     df_sv = pd.read_csv(ASSETS / "nb06_cosine_salvage.csv")
     sm = df_sv[df_sv["method"] == "size_matched"]["cosine"].tolist()
     v1 = df_sv[df_sv["method"] == "v1_full_data"]["cosine"].tolist()
-    conv_lo, conv_hi = round(sm[0], 2), round(sm[1], 2)
-    conv_delta = round(sm[1] - sm[0], 2)
-    conv_v1 = round(v1[1] - v1[0], 2)
+    # 3 decimals, and every derived figure computed from the raw values. At 2
+    # decimals the size-matched delta sits on a rounding boundary (0.0650) and
+    # flips 0.06/0.07 between runs on a 0.001 move in one endpoint; the share
+    # then compounds it (0.07/0.31 = 23% vs the raw 0.065/0.307 = 21%, which is
+    # what NB06 reports). Keep NB06 and the dashboard on the same arithmetic.
+    conv_lo, conv_hi = round(sm[0], 3), round(sm[1], 3)
+    conv_delta = round(sm[1] - sm[0], 3)
+    conv_v1 = round(v1[1] - v1[0], 3)
     v1_lo, v1_hi = round(v1[0], 2), round(v1[1], 2)
     _mn = df_sv[df_sv["method"] == "matched_n"]["cosine"]
     matched_n = int(_mn.iloc[0]) if len(_mn) else 249
-    conv_share = round(100 * conv_delta / conv_v1) if conv_v1 else 0
+    # Bootstrap CI on the delta, exported by NB06 §2. Older assets predate the
+    # row, so fall back to the qualitative phrasing rather than inventing bounds.
+    _dl = df_sv[df_sv["method"] == "size_matched_delta"]
+    if len(_dl):
+        conv_ci = f"95% CI [+{float(_dl['ci_lo'].iloc[0]):.3f}, +{float(_dl['ci_hi'].iloc[0]):.3f}]"
+        conv_ci_jp = f"95%CI [+{float(_dl['ci_lo'].iloc[0]):.3f}, +{float(_dl['ci_hi'].iloc[0]):.3f}]"
+    else:
+        conv_ci, conv_ci_jp = "95% CI excludes zero", "95%CIはゼロを除外"
+    conv_share = round(100 * (sm[1] - sm[0]) / (v1[1] - v1[0])) if v1[1] != v1[0] else 0
 
     # Sample-size effect — identical data, cosine vs N
     df_cv = pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
@@ -112,6 +126,8 @@ def compute_headline():
         "v1_lo":        v1_lo,
         "v1_hi":        v1_hi,
         "matched_n":    matched_n,
+        "conv_ci":      conv_ci,
+        "conv_ci_jp":   conv_ci_jp,
         "conv_share":   conv_share,
         "size_lo_n":    int(size_lo["sample_size"]),
         "size_lo_cos":  round(size_lo["cross_tier_cosine"], 2),
@@ -142,7 +158,7 @@ STRINGS = {
         "t1_c2e": "Consumers aren\'t just searching for \'skincare\' — they\'re searching for specific ingredients by name. Each line tracks one ingredient\'s search popularity over time. The post-COVID climb shows consumers becoming educated about what goes into their products. Each term is normalised to its own scale, so this reads as growth-over-time, not cross-ingredient ranking.",
         "t1_c2cap": "Dashed lines = ingredients already known pre-COVID  ·  Solid lines = ingredients that broke out after 2020  ·  2026 = Jan–Mar only",
         "t1_ingr_sel": "Select ingredients",
-        "t1_c3h": "Rakuten shelf: skincare outnumbers cosmetics 4.1×",
+        "t1_c3h": "Rakuten shelf: skincare outnumbers cosmetics 3.7×",
         "t1_c3e": "Every rectangle is a product subcategory on Rakuten Ichiba (Japan\'s largest e-commerce platform). Size = number of products listed · colour = the lens you select below. Skincare dominates the shelf — though SKU count reflects catalog supply and scraping depth, not sales or demand. Ratings average *rated* SKUs only (an unreviewed listing is not a zero-star one); price is the median, since listings range from ¥1 junk to ¥300k+ outliers.",
         "t1_lens": "Colour by",
         "t1_lens_opts": {"Engagement": "avg_reviews", "Competition": "sku_count", "Price point": "med_price", "Quality": "avg_rating"},
@@ -158,13 +174,13 @@ STRINGS = {
         "t1_c5cap": "2022: cosmetics briefly edges skincare — the mask-off rebound is visible here too · by 2024 skincare comment volume is well ahead",
 
         "f1_title": "Finding 1 — The structural shift is supported, but modest",
-        "f1_body":  "Search demand, commercial supply, ingredient curiosity and YouTube discourse all lean the same way. In anchored Google Trends, cosmetics search fell ~32% across full years 2019→2025 while skincare held roughly flat — the gap halved, though cosmetics still leads. Rakuten lists 4.1× more skincare SKUs (shelf share). Ingredient searches surged 6–7×. And the mask test above rules out the strongest rival explanation: makeup search did not recover when masks came off. The direction is clear; the magnitude is moderate — this is a real shift, not a dramatic one.",
+        "f1_body":  "Search demand, commercial supply, ingredient curiosity and YouTube discourse all lean the same way. In anchored Google Trends, cosmetics search fell ~32% across full years 2019→2025 while skincare held roughly flat — the gap halved, though cosmetics still leads. Rakuten lists 3.7× more skincare SKUs (shelf share). Ingredient searches surged 6–7×. And the mask test above rules out the strongest rival explanation: makeup search did not recover when masks came off. The direction is clear; the magnitude is moderate — this is a real shift, not a dramatic one.",
 
         # ── TAB 2: The Language ───────────────────────────────────────────
         "t2_intro": "The shift shows up in the words consumers use too. Skincare and cosmetics review language has converged slightly — a small but real effect, once the comparison is matched for sample size.",
 
         "t2_m1": "Vocabulary convergence",  "t2_m1d": "size-matched Δ — small but statistically robust (95% CI excludes 0)",
-        "t2_m2": "Size-matched cosine",     "t2_m2d": "each period equalised to 249 reviews · 95% CI excludes 0",
+        "t2_m2": "Size-matched cosine",     "t2_m2d": "",
         "t2_m3": "Sample-size effect",       "t2_m3d": "identical data: cosine inflates as N grows 150→6,000",
 
         "t2_wch": "Consumer vocabulary by year",
@@ -175,11 +191,14 @@ STRINGS = {
         "t2_wc_late":  "2024–2026: skincare vocabulary prominent — 乾燥 (dryness), 保湿 (moisture), 香り (scent), クリーム (cream), 洗顔 (face wash). 2026 is a partial, mid-year snapshot.",
 
         "t2_curveh": "The sample-size effect — why convergence must be measured at matched sizes",
-        "t2_curvee": "Cosine similarity between *pooled* skincare and cosmetics reviews rises mechanically with sample size — a bigger pool simply covers more vocabulary. This line uses the *identical* 2023–25 reviews, subsampled to different sizes: the similarity climbs from ~0.31 to ~0.66 with no change in the underlying language. So convergence must be compared at matched sizes.",
-        "t2_curvenote": "Size-matched — every period equalised to 249 reviews — a convergence remains: 0.25 → 0.32, Δ +0.06 (bootstrap 95% CI excludes zero). Real and statistically robust, but small.",
+        # t2_m2d / t2_curvee / t2_curvenote / f2_body carry live figures and are
+        # rebuilt from HEADLINE in the _h block below. Empty here on purpose: a
+        # missing rebuild then fails visibly instead of shipping a stale number.
+        "t2_curvee": "",
+        "t2_curvenote": "",
 
         "f2_title": "Finding 2 — Vocabulary converged slightly",
-        "f2_body":  "Under a size-matched comparison (each period equalised to 249 reviews), skincare and cosmetics review language converges by Δ +0.06 (0.25 → 0.32, 95% CI excludes zero) — real and statistically robust, but small. Size-matching is essential: TF-IDF cosine between pooled corpora inflates with sample size, so periods of different sizes can't be compared directly.",
+        "f2_body": "",
 
         # ── TAB 3: Discovery ──────────────────────────────────────────────
         "t3_intro": "Two discovery engines look at what\'s coming next. Google Trends surfaces what consumers search for before it shows up in reviews. The review map below shows the spatial shape of consumer vocabulary.",
@@ -249,7 +268,7 @@ STRINGS = {
         "t1_c2e":    "消費者は「スキンケア」だけでなく、成分名を指名検索している。各線は1つの成分の検索人気を経時的に追跡。コロナ後の上昇は、消費者が製品の中身について学び始めたことを示す。各語は自身のスケールに正規化されているため、これは経時的な伸びを示すもので、成分間の順位比較ではない。",
         "t1_c2cap":  "点線 = コロナ前から認知されていた成分  ·  実線 = 2020年以降に急浮上した成分  ·  2026年は1〜3月のみ",
         "t1_ingr_sel": "成分を選択",
-        "t1_c3h":    "楽天の棚：スキンケアSKUはコスメの4.1倍",
+        "t1_c3h":    "楽天の棚：スキンケアSKUはコスメの3.7倍",
         "t1_c3e":    "各長方形は楽天市場（日本最大のECプラットフォーム）のサブカテゴリ。サイズ = 商品掲載数 · 色 = 選択レンズ。スキンケアが棚を支配している —— ただしSKU数はカタログ供給と取得の深さを反映し、売上や需要そのものではない。評価は「評価のあるSKU」のみの平均（未レビュー＝星ゼロではない）。価格は中央値（¥1のジャンク出品や¥30万超の外れ値があるため）。",
         "t1_lens":   "色分け基準",
         "t1_lens_opts": {"エンゲージメント": "avg_reviews", "競合状況": "sku_count", "価格帯": "med_price", "品質": "avg_rating"},
@@ -265,12 +284,12 @@ STRINGS = {
         "t1_c5cap":  "2022年はコスメが一時的にスキンケアを上回る（マスク解禁効果はここでも可視）· 2024年にはスキンケアのコメント量が大きく先行",
 
         "f1_title":  "発見1 — 構造的変化は支持されるが、規模は控えめ",
-        "f1_body":   "検索需要・商業的供給・成分への関心・YouTube言論が、いずれも同じ方向を指す。アンカー付きGoogleトレンドでは、化粧品の検索が暦年ベース2019→2025年で約32%低下した一方、スキンケアはほぼ横ばい —— 差は半減したが化粧品が依然上回る。楽天はスキンケアSKUを4.1倍掲載（棚シェア）。成分検索は6〜7倍に急増。さらに上のマスク検証が最有力の対立仮説を棄却する：マスク解禁後もメイク検索は回復しなかった。方向は明確だが規模は中程度 —— これは実在する変化であり、劇的な変化ではない。",
+        "f1_body":   "検索需要・商業的供給・成分への関心・YouTube言論が、いずれも同じ方向を指す。アンカー付きGoogleトレンドでは、化粧品の検索が暦年ベース2019→2025年で約32%低下した一方、スキンケアはほぼ横ばい —— 差は半減したが化粧品が依然上回る。楽天はスキンケアSKUを3.7倍掲載（棚シェア）。成分検索は6〜7倍に急増。さらに上のマスク検証が最有力の対立仮説を棄却する：マスク解禁後もメイク検索は回復しなかった。方向は明確だが規模は中程度 —— これは実在する変化であり、劇的な変化ではない。",
 
         "t2_intro":  "変化は消費者が使う「言葉」にも現れる。スキンケアとコスメのレビュー語彙はわずかに収束している —— サンプル数を揃えて比較すると、小さいが実在する効果である。",
 
         "t2_m1":     "語彙収束",  "t2_m1d": "サンプル数を揃えたΔ —— 小さいが統計的に頑健（95%CIがゼロを除外）",
-        "t2_m2":     "サイズを揃えたコサイン", "t2_m2d": "各期間を249件に均一化 · 95%CIはゼロを除外",
+        "t2_m2":     "サイズを揃えたコサイン", "t2_m2d": "",
         "t2_m3":     "サンプルサイズ効果", "t2_m3d": "同一データ：Nが150→6,000と増えるとコサインが上昇",
 
         "t2_wch":    "年別消費者語彙",
@@ -281,11 +300,14 @@ STRINGS = {
         "t2_wc_late":   "2024–2026：スキンケア語彙が目立つ — 乾燥、保湿、香り、クリーム、洗顔。2026年は途中集計（年央時点）。",
 
         "t2_curveh": "サンプルサイズの影響 — なぜ収束はサイズを揃えて測る必要があるのか",
-        "t2_curvee": "プールしたスキンケアレビューとコスメレビューの間のコサイン類似度は、サンプル数とともに機械的に上昇する —— プールが大きいほど多くの語彙を被覆するためである。この線は同一の2023–25年レビューを異なるサイズにサブサンプルしたもの：基となる言語は何も変えていないのに、類似度は約0.31から約0.66まで上昇する。ゆえに収束はサイズを揃えて比較する必要がある。",
-        "t2_curvenote": "サンプル数を揃えると（各期間を249件に均一化）、収束は依然として残る：0.25 → 0.32、Δ +0.06（ブートストラップ95%CIはゼロを除外）。実在し統計的に頑健だが、規模は小さい。",
+        # t2_m2d / t2_curvee / t2_curvenote / f2_body carry live figures and are
+        # rebuilt from HEADLINE in the _h block below. Empty here on purpose: a
+        # missing rebuild then fails visibly instead of shipping a stale number.
+        "t2_curvee": "",
+        "t2_curvenote": "",
 
         "f2_title":  "発見2 — 語彙はわずかに収束した",
-        "f2_body":   "サンプル数を揃えた比較（各期間を249件に均一化）では、スキンケアとコスメのレビュー言語はΔ +0.06（0.25→0.32、95%CIはゼロを除外）収束している —— 実在し統計的に頑健だが、小さい。サンプル数を揃えるのは必須である：プールされたコーパス間のTF-IDFコサインはサンプル数とともに上昇するため、サイズの異なる期間をそのまま比較できない。",
+        "f2_body": "",
 
         "t3_intro":  "2つの発見エンジンが「次に来るもの」を見る。Googleトレンドはレビューに現れる前に消費者が検索しているものを浮かび上がらせる。下のレビューマップは消費者語彙の空間的形状を示す。",
 
@@ -504,7 +526,7 @@ S = dict(STRINGS[lang])
 # drift out of sync with the KPI cards or the size-curve chart.
 _h = HEADLINE
 if lang == "en":
-    S["t2_m2d"] = f"each period equalised to {_h['matched_n']} reviews · 95% CI excludes 0"
+    S["t2_m2d"] = f"each period equalised to {_h['matched_n']} reviews · {_h['conv_ci']}"
     S["t2_curvee"] = (
         "Cosine similarity between *pooled* skincare and cosmetics reviews rises "
         "mechanically with sample size — a bigger pool simply covers more vocabulary. "
@@ -514,15 +536,15 @@ if lang == "en":
     S["t2_curvenote"] = (
         f"Size-matched — every period equalised to {_h['matched_n']} reviews — a convergence "
         f"remains: {_h['conv_lo']} → {_h['conv_hi']}, Δ +{_h['conv_delta']} (bootstrap "
-        "95% CI excludes zero). Real and statistically robust, but small.")
+        f"{_h['conv_ci']}). Real and statistically robust, but small.")
     S["f2_body"] = (
         f"Under a size-matched comparison (each period equalised to {_h['matched_n']} reviews), "
         f"skincare and cosmetics review language converges by Δ +{_h['conv_delta']} "
-        f"({_h['conv_lo']} → {_h['conv_hi']}, 95% CI excludes zero) — real and statistically "
+        f"({_h['conv_lo']} → {_h['conv_hi']}, {_h['conv_ci']}) — real and statistically "
         "robust, but small. Size-matching is essential: TF-IDF cosine between pooled corpora "
         "inflates with sample size, so periods of different sizes can't be compared directly.")
 else:
-    S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · 95%CIはゼロを除外"
+    S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
     S["t2_curvee"] = (
         "プールしたスキンケアレビューとコスメレビューの間のコサイン類似度は、サンプル数とともに機械的に"
         "上昇する —— プールが大きいほど多くの語彙を被覆するためである。この線は同一の2023–25年レビューを"
@@ -530,11 +552,11 @@ else:
         f"から約{_h['size_hi_cos']}まで上昇する。ゆえに収束はサイズを揃えて比較する必要がある。")
     S["t2_curvenote"] = (
         f"サンプル数を揃えると（各期間を{_h['matched_n']}件に均一化）、収束は依然として残る："
-        f"{_h['conv_lo']} → {_h['conv_hi']}、Δ +{_h['conv_delta']}（ブートストラップ95%CIはゼロを除外）。"
+        f"{_h['conv_lo']} → {_h['conv_hi']}、Δ +{_h['conv_delta']}（ブートストラップ{_h['conv_ci_jp']}）。"
         "実在し統計的に頑健だが、規模は小さい。")
     S["f2_body"] = (
         f"サンプル数を揃えた比較（各期間を{_h['matched_n']}件に均一化）では、スキンケアとコスメのレビュー言語は"
-        f"Δ +{_h['conv_delta']}（{_h['conv_lo']}→{_h['conv_hi']}、95%CIはゼロを除外）収束している —— "
+        f"Δ +{_h['conv_delta']}（{_h['conv_lo']}→{_h['conv_hi']}、{_h['conv_ci_jp']}）収束している —— "
         "実在し統計的に頑健だが、小さい。サンプル数を揃えるのは必須である：プールされたコーパス間のTF-IDF"
         "コサインはサンプル数とともに上昇するため、サイズの異なる期間をそのまま比較できない。")
 

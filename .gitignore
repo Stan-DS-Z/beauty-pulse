@@ -12,8 +12,11 @@ dashboard/assets/signal_pulse.db
 
 # Private DB — contains product_name and raw_json
 data/*.db
-# Public DB exception — needed for dashboard
-!dashboard/assets/signal_pulse_public.db
+# Public DB — shipped gzipped: the raw file crossed GitHub's 100 MB limit
+# once the corpus grew. The dashboard reads CSVs, never the DB, so this only
+# affects readers querying it directly (gunzip first).
+dashboard/assets/signal_pulse_public.db
+!dashboard/assets/signal_pulse_public.db.gz
 
 # SQLite WAL artefacts
 data/*.db-shm
