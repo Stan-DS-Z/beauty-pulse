@@ -50,3 +50,10 @@ beautifulsoup4           # NB01b @cosme + NB01c Amazon JP scrapes
 # NB01c Amazon JP. Not interchangeable with requests: curl_cffi impersonates a
 # real browser's TLS fingerprint, which is the point on that source.
 curl_cffi
+
+# --- added 2026-09-06: the official-statistics validation layer (NB04b) -------
+requests                 # already used by src/utils.py's retry session; declared
+                         # here because build_estat_shipments.py calls e-Stat directly
+nbclient                 # executes notebooks headlessly so a committed notebook
+                         # ships with its outputs; not needed to read or run one
+                         # interactively in VS Code
