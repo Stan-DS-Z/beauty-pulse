@@ -209,6 +209,8 @@ def compute_headline():
     lip_d = _pct(_mv.loc["口紅"], mkt_y0, mkt_y1)
     found_d_pre = _pct(_mv.loc["ファンデーション"], mkt_y0, _pre1)
     lip_d_pre = _pct(_mv.loc["口紅"], mkt_y0, _pre1)
+    found_d_post = _pct(_mv.loc["ファンデーション"], METI_BREAK, mkt_y1)
+    lip_d_post = _pct(_mv.loc["口紅"], METI_BREAK, mkt_y1)
 
     # Serum: the case where measuring across the break reverses the sign.
     _sv, _su = _mv.loc["美容液"], _mu.loc["美容液"]
@@ -283,6 +285,8 @@ def compute_headline():
         "lip_d":          lip_d,
         "found_d_pre":    found_d_pre,
         "lip_d_pre":      lip_d_pre,
+        "found_d_post":   found_d_post,
+        "lip_d_post":     lip_d_post,
         "serum_att_span": serum_att_span,
         "serum_val_span": serum_val_span,
         "serum_val_post": serum_val_post,
@@ -840,6 +844,25 @@ if lang == "en":
         "figure measured across that step reverses when measured inside it. "
         "<br><br>The attention shift is real. Its behavioural counterpart is confirmed for makeup "
         "and unavailable for skincare.")
+    S["t4_c3b"] = (
+        "Two years after Japan relaxed mask guidance (March 2023), lipstick search sits at 36% of "
+        "its 2019 baseline — below its COVID trough — and even eyeshadow, which <i>benefited</i> "
+        "from masks, is 20% under baseline (mask test, Tab 1). "
+        f"<br><br>Money qualifies this rather than contradicting it. From the {_h['mkt_break']} "
+        f"trough, lipstick shipped value has risen {_h['lip_d_post']}% and foundation "
+        f"{_h['found_d_post']}% — a real recovery off the bottom — but both still sit "
+        f"{abs(_h['found_d'])}% below {_h['mkt_y0']}. Search keeps falling while the yen partially "
+        "recovers, so the category is stabilising well under its pre-COVID level, not returning to "
+        "it. Plan for the lower plateau, not the round trip. "
+        "<br><br>The convergence zone on the review map points to where the rest of the energy "
+        "went: base makeup evaluated in skincare language — 保湿, 乾燥, ツヤ. Skincare-hybrid "
+        "makeup is the defensible position; a pure colour-led lineup is fighting the tide.")
+    S["t4_note"] = (
+        "Attention and shelf data lead sales data — they do not replace it. The METI shipment check "
+        "is now built in (Tab 1, market panel) and covers the makeup categories; it cannot settle "
+        f"the skincare ones across the {_h['mkt_break']} break. Before acting, triangulate the rest "
+        "against 家計調査 household spend per item (e-Stat) — noting it carries no 美容液 or "
+        "sunscreen line — and your own sell-through.")
     S["t1_m4d"] = (
         f"foundation {_h['found_d']}% and lipstick {_h['lip_d']}%, {_h['mkt_y0']}→{_h['mkt_y1']} · "
         "METI shipments — the search decline confirmed in yen")
@@ -938,6 +961,22 @@ else:
         f"金額系列は{_h['mkt_break']}年1月に段差を持ち、その理由は統計自身が記録していない。段差をまたいで測った"
         "数値は、内側で測り直すと反転する。"
         "<br><br>関心の移動は実在する。その行動側の対応物は、メイクでは確認され、スキンケアでは得られない。")
+    S["t4_c3b"] = (
+        "マスク緩和（2023年3月）から2年、口紅検索は2019年比36% —— コロナ期の底を下回る水準にある。"
+        "マスクの恩恵を受けたアイシャドウでさえ基準比80%（タブ1のマスク検証）。"
+        f"<br><br>金額データはこれを否定するのではなく、限定する。{_h['mkt_break']}年の底からは、"
+        f"口紅の出荷金額が{_h['lip_d_post']}%、ファンデーションが{_h['found_d_post']}%回復している —— "
+        f"底打ちは実在する。ただし両者とも依然として{_h['mkt_y0']}年比{abs(_h['found_d'])}%減の水準にある。"
+        "検索は下げ続け、金額は部分的に戻る。カテゴリはコロナ前を大きく下回る水準で安定しつつあるのであり、"
+        "戻りつつあるのではない。計画は往復ではなく、低い踊り場に対して立てるべきである。"
+        "<br><br>残りのエネルギーの行き先はレビューマップの収束ゾーンが示している：保湿・乾燥・ツヤという"
+        "スキンケア言語で評価されるベースメイクである。スキンケア・ハイブリッドのメイクが守れるポジションであり、"
+        "純粋な色物主導のラインナップは潮流に逆らうことになる。")
+    S["t4_note"] = (
+        "注目と棚のデータは売上データに先行するが、代替はしない。経産省出荷統計による検証はタブ1の市場パネルに"
+        f"組み込み済みであり、メイク系カテゴリを裏づける。ただし{_h['mkt_break']}年の断層をまたぐスキンケア側は"
+        "確定できない。残りは家計調査の品目別支出（e-Stat、ただし美容液と日焼け止めの品目を持たない）と"
+        "自社のセルスルーで三角測量されたい。")
     S["t1_m4d"] = (
         f"ファンデーション{_h['found_d']}%、口紅{_h['lip_d']}%（{_h['mkt_y0']}→{_h['mkt_y1']}年）· "
         "経産省出荷統計 —— 検索の低下が金額でも確認された")
