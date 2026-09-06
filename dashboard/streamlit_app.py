@@ -40,6 +40,34 @@ C = {
     "cosm_lt": "#F5DDE3",
 }
 
+# ── Market layer: METI 生産動態統計 product lines ──────────────────────────
+# The 計 subtotal rows exist only for 2019-2020; from the 2021 table onward
+# e-Stat ships the 33 component lines and drops the five subtotals. Aggregates
+# are therefore summed from components. This partition reproduces both subtotal
+# years exactly (皮膚用 8,875.9 / 仕上用 3,729.8 億円 in 2019) and matches JCIA's
+# published 2024 shares to the decimal — 皮膚用 44.5%, 仕上用 20.9%. Two traps:
+# リップクリーム is 仕上用, not skincare, and ひげそり用・浴用化粧品 is 特殊用途.
+# Derivation: recon/2026-09-06_gate-findings_meti-grouping-and-2022-break.md
+METI_SKIN = ["化粧水", "美容液", "乳液", "モイスチャークリーム",
+             "マッサージ・コールドクリーム", "クレンジングクリーム",
+             "洗顔クリーム・フォーム", "パック", "男性皮膚用化粧品",
+             "その他の皮膚用化粧品"]
+METI_MAKE = ["ファンデーション", "おしろい", "口紅", "ほほ紅", "アイメークアップ",
+             "まゆ墨・まつ毛化粧料", "つめ化粧料(除光液を含む)", "リップクリーム",
+             "その他の仕上用化粧品"]
+
+# The series breaks between December 2021 and January 2022. Yen per kg for
+# 化粧水, 美容液 and 乳液 steps down 25-35% and stays down, after eight stable
+# years (2015-2021), while their volume holds and the makeup lines show no
+# such step. It is not the misreporting correction JCIA footnotes — those
+# restate other lines, and the step survives on the restated vintage. Cause
+# unattributed. Nothing is measured across this boundary: every skincare money
+# figure on this dashboard is computed inside one regime, because the same
+# figures reverse sign when measured across it (美容液 value 2019->2024 -39%,
+# 2022->2024 +20%).
+METI_BREAK = 2022
+
+
 @st.cache_data
 def compute_headline():
     """Headline metrics — single source of truth, computed live from dashboard assets.
@@ -150,6 +178,64 @@ def compute_headline():
     nia_pre, nia_post = _levels("ナイアシンアミド")
     ret_pre, ret_post = _levels("レチノール")
 
+    # ── Market layer — METI shipments and 財務省 trade ────────────────────
+    # Money, not attention. Kept in its own block and labelled as a different
+    # measurement everywhere it is shown.
+    _meti = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
+    _mv = (_meti[(_meti["month"] >= 1) & (_meti["measure"] == "販売金額")]
+           .groupby(["item", "year"])["value"].sum().unstack() / 1e5)   # 千円 → 億円
+    _mu = (_meti[(_meti["month"] >= 1) & (_meti["measure"] == "販売個数")]
+           .groupby(["item", "year"])["value"].sum().unstack())         # 十個
+    mkt_y0, mkt_y1 = int(_mv.columns.min()), int(_mv.columns.max())
+    _skin, _make = _mv.loc[METI_SKIN].sum(), _mv.loc[METI_MAKE].sum()
+    _pre1 = METI_BREAK - 1
+
+    def _pct(s_, a, b):
+        return int(round(100 * (s_[b] - s_[a]) / s_[a]))
+
+    # The ratio, reported inside each regime rather than across the break.
+    # Endpoint-to-endpoint it reads 2.38 -> 2.13, a narrowing; the path is
+    # 2.38 -> 3.22 (widening) then a one-year step down then flat. The step is
+    # the break, so the narrowing is not published as a finding.
+    mkt_ratio_pre0 = round(_skin[mkt_y0] / _make[mkt_y0], 2)
+    mkt_ratio_pre1 = round(_skin[_pre1] / _make[_pre1], 2)
+    mkt_ratio_post0 = round(_skin[METI_BREAK] / _make[METI_BREAK], 2)
+    mkt_ratio_post1 = round(_skin[mkt_y1] / _make[mkt_y1], 2)
+
+    # Makeup is the clean half: its collapse is 2019->2021, entirely before the
+    # break, in lines the break does not touch. Both the full window and the
+    # pre-break window are honest here; the full window is what the KPI shows.
+    found_d = _pct(_mv.loc["ファンデーション"], mkt_y0, mkt_y1)
+    lip_d = _pct(_mv.loc["口紅"], mkt_y0, mkt_y1)
+    found_d_pre = _pct(_mv.loc["ファンデーション"], mkt_y0, _pre1)
+    lip_d_pre = _pct(_mv.loc["口紅"], mkt_y0, _pre1)
+
+    # Serum: the case where measuring across the break reverses the sign.
+    _sv, _su = _mv.loc["美容液"], _mu.loc["美容液"]
+    serum_val_span = _pct(_sv, mkt_y0, mkt_y1)
+    serum_val_post = _pct(_sv, METI_BREAK, mkt_y1)
+    _ppu = _sv / _su
+    serum_ppu_span = _pct(_ppu, mkt_y0, mkt_y1)
+    serum_ppu_post = _pct(_ppu, METI_BREAK, mkt_y1)
+
+    _all_items = [i for i in _mv.index if not str(i).endswith("計") and i != "化粧品合計"]
+    mkt_total = _mv.loc[_all_items].sum()
+    mkt_total_y1 = int(round(mkt_total[mkt_y1]))
+    skin_share_y1 = round(100 * _skin[mkt_y1] / mkt_total[mkt_y1], 1)
+    make_share_y1 = round(100 * _make[mkt_y1] / mkt_total[mkt_y1], 1)
+
+    # Attention on the same categories, anchored block_B (cross-comparable).
+    _att = (pd.read_csv(ASSETS / "nb04b_attention_annual.csv")
+            .pivot(index="year", columns="term", values="interest"))
+    serum_att_span = _pct(_att["美容液"], mkt_y0, mkt_y1)
+
+    # 財務省 貿易統計 HS 3304 — imports never absorb the domestic fall.
+    _tr = pd.read_csv(ASSETS / "estat_trade_hs3304.csv")
+    _flow = (_tr.groupby(["flow", "year"])["value_1000jpy"].sum() / 1e5)
+    imp_y0, imp_y1 = int(round(_flow["import"][mkt_y0])), int(round(_flow["import"][mkt_y1]))
+    imp_share_y1 = round(100 * _flow["import"][mkt_y1] / mkt_total[mkt_y1], 1)
+
+
     return {
         "sku_ratio":     sku_ratio,
         "sku_measured":  sku_measured,
@@ -184,6 +270,30 @@ def compute_headline():
         "ret_post":     ret_post,
         "ing_y0":       ing_y0,
         "ing_y1":       ing_y1,
+        # market layer
+        "mkt_y0":         mkt_y0,
+        "mkt_y1":         mkt_y1,
+        "mkt_break":      METI_BREAK,
+        "mkt_pre1":       _pre1,
+        "mkt_ratio_pre0": mkt_ratio_pre0,
+        "mkt_ratio_pre1": mkt_ratio_pre1,
+        "mkt_ratio_post0": mkt_ratio_post0,
+        "mkt_ratio_post1": mkt_ratio_post1,
+        "found_d":        found_d,
+        "lip_d":          lip_d,
+        "found_d_pre":    found_d_pre,
+        "lip_d_pre":      lip_d_pre,
+        "serum_att_span": serum_att_span,
+        "serum_val_span": serum_val_span,
+        "serum_val_post": serum_val_post,
+        "serum_ppu_span": serum_ppu_span,
+        "serum_ppu_post": serum_ppu_post,
+        "mkt_total_y1":   mkt_total_y1,
+        "skin_share_y1":  skin_share_y1,
+        "make_share_y1":  make_share_y1,
+        "imp_y0":         imp_y0,
+        "imp_y1":         imp_y1,
+        "imp_share_y1":   imp_share_y1,
     }
 
 HEADLINE = compute_headline()
