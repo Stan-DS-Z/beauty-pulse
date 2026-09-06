@@ -23,8 +23,10 @@ def test_app_renders_without_exception(rendered):
     assert not rendered.exception, rendered.exception
 
 
-def test_app_renders_the_headline_ratio(rendered, headline):
-    """The SKU ratio reaches the page, not just the computation."""
+def test_app_renders_the_measured_ratio_and_its_range(rendered, headline):
+    """The reclassified figure and its sensitivity both reach the page."""
     body = "\n".join(str(e.value) for e in rendered.markdown) \
          + "\n".join(str(e.value) for e in rendered.metric)
-    assert f"{headline['sku_ratio']:.1f}" in body
+    assert f"{headline['sku_measured']:.1f}" in body
+    assert f"{headline['sku_lo']:.1f}" in body, "the CI must be shown, not just the point"
+    assert f"{headline['sku_span_hi']:.1f}" in body, "the sensitivity span must be shown"

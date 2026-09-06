@@ -32,10 +32,10 @@ Search behaviour, product catalog, ingredient searches, YouTube discourse, and c
 ## 検証結果：部分的に確認（限定的） / Verdict: Partially Confirmed
 
 **方向性は支持されるが、規模は限定的である。**
-コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下した一方、スキンケアの検索はほぼ横ばい —— 両者の差は半減したが、化粧品が依然として上回る（「逆転」ではない）。楽天市場のカタログはスキンケアSKUがコスメの3.7倍。成分名検索は同じ暦年で上昇（ナイアシンアミド 5→81、レチノール 10→69、Googleトレンド指数）。マスク検証は循環的な「マスク効果」説を退ける：2023年3月のマスク緩和後もメイク検索は回復せず、2025年の口紅検索は2019年比36% —— コロナ期の底を下回る。
+コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下した一方、スキンケアの検索はほぼ横ばい —— 両者の差は半減したが、化粧品が依然として上回る（「逆転」ではない）。楽天カタログの棚構成もスキンケアに偏るが、この比率はジャンル設計への依存が大きく、見出しの数値としては扱わない（[方法論](METHODOLOGY.md)の注意点5）。成分名検索は同じ暦年で上昇（ナイアシンアミド 5→81、レチノール 10→69、Googleトレンド指数）。マスク検証は循環的な「マスク効果」説を退ける：2023年3月のマスク緩和後もメイク検索は回復せず、2025年の口紅検索は2019年比36% —— コロナ期の底を下回る。
 
 **The direction holds, but the magnitude is limited.**
-Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat — the gap halved, but cosmetics still leads (not a "crossover"). Rakuten Ichiba's catalog carries 3.7× more skincare SKUs than cosmetics. Ingredient-name search rose across the same years — niacinamide 5→81 and retinol 10→69 on the Trends index. A mask test rules out the cyclical "mask effect" explanation: makeup search did not recover after Japan relaxed mask guidance in March 2023 — by 2025 lipstick search sat at 36% of its 2019 baseline, below its COVID-era trough.
+Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat — the gap halved, but cosmetics still leads (not a "crossover"). Rakuten's catalog leans skincare too, but that ratio depends heavily on how the platform's genres map to product type, so it is not treated as a headline figure — see caveat 5 in [Methodology](METHODOLOGY.md). Ingredient-name search rose across the same years — niacinamide 5→81 and retinol 10→69 on the Trends index. A mask test rules out the cyclical "mask effect" explanation: makeup search did not recover after Japan relaxed mask guidance in March 2023 — by 2025 lipstick search sat at 36% of its 2019 baseline, below its COVID-era trough.
 
 *Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、その規模は小さく、サンプルサイズに敏感である。サンプル数を揃えた厳密な比較では Δ +0.065（0.252→0.317、ブートストラップ95%CI [+0.047, +0.083]）。  
 *Nuance:* skincare and cosmetics review language is converging slowly, but the effect is small and sample-size sensitive — Δ +0.065 (0.252→0.317, bootstrap 95% CI [+0.047, +0.083]) under a size-matched comparison.

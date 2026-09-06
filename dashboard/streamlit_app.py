@@ -60,6 +60,25 @@ def compute_headline():
         cosm_skus = int(df_sku[df_sku["tier_group"] == "cosmetics"]["sku_count"].sum())
     sku_ratio = round(skin_skus / max(cosm_skus, 1), 1)
 
+    # The SKU ratio is not one number. Genre 564517 韓国コスメ carries
+    # tier='cosmetics' but is a country-of-origin genre: 150 of its products
+    # labelled by hand are 49% skincare, 36% makeup, 15% neither. It is also
+    # 62% of the cosmetics denominator, so its treatment moves the ratio from
+    # 3.7x to 9.7x. build_sku_ratio.py writes every treatment; we report the
+    # reclassified figure with its bootstrap CI and keep the span for the
+    # caveat. Older assets predate the file — fall back to the raw ratio.
+    _sr_path = ASSETS / "nb07_sku_ratio.csv"
+    if _sr_path.exists():
+        _sr = pd.read_csv(_sr_path).set_index("basis")["ratio"]
+        sku_measured = round(float(_sr["reclassified"]), 1)
+        sku_lo = round(float(_sr["reclassified_lo"]), 1)
+        sku_hi = round(float(_sr["reclassified_hi"]), 1)
+        sku_span_lo = round(float(_sr["as_labelled"]), 1)
+        sku_span_hi = round(float(_sr["product_type_genres"]), 1)
+    else:
+        sku_measured = sku_lo = sku_hi = sku_ratio
+        sku_span_lo = sku_span_hi = sku_ratio
+
     # Google Trends — anchored block_B (the only cross-term-comparable block)
     df_tr = pd.read_csv(ASSETS / "nb07_trends_crossover.csv", parse_dates=["week_start"])
     df_tr["year"] = df_tr["week_start"].dt.year
@@ -126,7 +145,12 @@ def compute_headline():
     ret_pre, ret_post = _levels("レチノール")
 
     return {
-        "sku_ratio":    sku_ratio,
+        "sku_ratio":     sku_ratio,
+        "sku_measured":  sku_measured,
+        "sku_lo":        sku_lo,
+        "sku_hi":        sku_hi,
+        "sku_span_lo":   sku_span_lo,
+        "sku_span_hi":   sku_span_hi,
         "skin_skus":    skin_skus,
         "cosm_skus":    cosm_skus,
         "cosm_decline": cosm_decline,
@@ -175,7 +199,10 @@ STRINGS = {
         "t1_c2e": "Consumers aren\'t just searching for \'skincare\' — they\'re searching for specific ingredients by name. Each line tracks one ingredient\'s search popularity over time. The post-COVID climb shows consumers becoming educated about what goes into their products. Each term is normalised to its own scale, so this reads as growth-over-time, not cross-ingredient ranking.",
         "t1_c2cap": "Dashed lines = ingredients already known pre-COVID  ·  Solid lines = ingredients that broke out after 2020  ·  2026 = Jan–Mar only",
         "t1_ingr_sel": "Select ingredients",
-        "t1_c3h": "Rakuten shelf: skincare outnumbers cosmetics 3.7×",
+        # Rebuilt live from HEADLINE below. A figure left here is dead code if
+        # the rebuild covers it and a silent contradiction if it does not;
+        # empty means a missing rebuild shows up as a blank heading.
+        "t1_c3h": "",
         "t1_c3e": "Every rectangle is a product subcategory on Rakuten Ichiba (Japan\'s largest e-commerce platform). Size = number of products listed · colour = the lens you select below. Skincare dominates the shelf — though SKU count reflects catalog supply and scraping depth, not sales or demand. Ratings average *rated* SKUs only (an unreviewed listing is not a zero-star one); price is the median, since listings range from ¥1 junk to ¥300k+ outliers.",
         "t1_lens": "Colour by",
         "t1_lens_opts": {"Engagement": "avg_reviews", "Competition": "sku_count", "Price point": "med_price", "Quality": "avg_rating"},
@@ -285,7 +312,7 @@ STRINGS = {
         "t1_c2e":    "消費者は「スキンケア」だけでなく、成分名を指名検索している。各線は1つの成分の検索人気を経時的に追跡。コロナ後の上昇は、消費者が製品の中身について学び始めたことを示す。各語は自身のスケールに正規化されているため、これは経時的な伸びを示すもので、成分間の順位比較ではない。",
         "t1_c2cap":  "点線 = コロナ前から認知されていた成分  ·  実線 = 2020年以降に急浮上した成分  ·  2026年は1〜3月のみ",
         "t1_ingr_sel": "成分を選択",
-        "t1_c3h":    "楽天の棚：スキンケアSKUはコスメの3.7倍",
+        "t1_c3h":    "",   # rebuilt live from HEADLINE below
         "t1_c3e":    "各長方形は楽天市場（日本最大のECプラットフォーム）のサブカテゴリ。サイズ = 商品掲載数 · 色 = 選択レンズ。スキンケアが棚を支配している —— ただしSKU数はカタログ供給と取得の深さを反映し、売上や需要そのものではない。評価は「評価のあるSKU」のみの平均（未レビュー＝星ゼロではない）。価格は中央値（¥1のジャンク出品や¥30万超の外れ値があるため）。",
         "t1_lens":   "色分け基準",
         "t1_lens_opts": {"エンゲージメント": "avg_reviews", "競合状況": "sku_count", "価格帯": "med_price", "品質": "avg_rating"},
@@ -551,6 +578,19 @@ S = dict(STRINGS[lang])
 _h = HEADLINE
 if lang == "en":
     S["t2_m2d"] = f"each period equalised to {_h['matched_n']} reviews · {_h['conv_ci']}"
+    S["t1_m3"] = "Rakuten SKU ratio (adjusted)"
+    S["t1_c3h"] = (
+        f"Rakuten shelf: {_h['sku_measured']}× more skincare SKUs than makeup, "
+        f"after reclassifying the Korean-cosmetics genre")
+    S["t1_c3e"] = (
+        f"The Korean-cosmetics genre is tagged as makeup but is a country-of-origin "
+        f"genre: 150 of its products labelled by hand are 49% skincare, 36% makeup and "
+        f"15% neither, and it is 62% of the makeup total. Reclassifying on those "
+        f"proportions gives {_h['sku_measured']}× (95% CI {_h['sku_lo']}–{_h['sku_hi']}); "
+        f"leaving it as tagged gives {_h['sku_span_lo']}×, and counting only genres whose "
+        f"name fixes the product type gives {_h['sku_span_hi']}×. The catalogue holds eight "
+        f"skincare genres and one makeup genre, so this ratio measures shelf supply and "
+        f"scrape design, not demand. " + S["t1_c3e"])
     S["t1_c2h"] = (
         f"Consumers now search ingredients by name — niacinamide "
         f"{_h['nia_pre']} → {_h['nia_post']} on the Trends index, {_h['ing_y0']}→{_h['ing_y1']}")
@@ -589,6 +629,17 @@ if lang == "en":
         "inflates with sample size, so periods of different sizes can't be compared directly.")
 else:
     S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
+    S["t1_m3"] = "楽天SKU比率（補正後）"
+    S["t1_c3h"] = (
+        f"楽天の棚：韓国コスメジャンル再分類後、スキンケアSKUはメイクの{_h['sku_measured']}倍")
+    S["t1_c3e"] = (
+        f"韓国コスメジャンルはメイクとして分類されているが、実際は原産国別ジャンルである。"
+        f"無作為抽出150件を手作業で分類したところ、スキンケア49%・メイク36%・対象外15%であり、"
+        f"かつメイク総数の62%を占める。この比率で再分類すると{_h['sku_measured']}倍"
+        f"（95%CI {_h['sku_lo']}〜{_h['sku_hi']}）、分類のままなら{_h['sku_span_lo']}倍、"
+        f"商品種別が名称で定まるジャンルのみに限ると{_h['sku_span_hi']}倍となる。"
+        f"カタログはスキンケア8ジャンルに対しメイクは1ジャンルであり、"
+        f"この比率は需要ではなく棚の供給と取得設計を測っている。" + S["t1_c3e"])
     S["t1_c2h"] = (
         f"消費者は成分を指名検索する — ナイアシンアミドは{_h['ing_y0']}年{_h['nia_pre']}"
         f"→{_h['ing_y1']}年{_h['nia_post']}（トレンド指数）")
@@ -653,8 +704,12 @@ with tab1:
     with m2:
         kpi_card(S["t1_m2"], f"{HEADLINE['nia_pre']} → {HEADLINE['nia_post']}", S["t1_m2d"])
     with m3:
-        _sub3 = f"{HEADLINE['skin_skus']:,} vs {HEADLINE['cosm_skus']:,} {'SKUs' if lang == 'en' else 'SKU'}"
-        kpi_card(S["t1_m3"], f"{HEADLINE['sku_ratio']}x", _sub3)
+        _sub3 = (f"95% CI {HEADLINE['sku_lo']}–{HEADLINE['sku_hi']} · "
+                 f"{HEADLINE['sku_span_lo']}–{HEADLINE['sku_span_hi']} across genre treatments"
+                 if lang == "en" else
+                 f"95%CI {HEADLINE['sku_lo']}〜{HEADLINE['sku_hi']} · "
+                 f"ジャンル処理により{HEADLINE['sku_span_lo']}〜{HEADLINE['sku_span_hi']}倍")
+        kpi_card(S["t1_m3"], f"{HEADLINE['sku_measured']}x", _sub3)
     with m4:
         kpi_card(S["t1_m4"], f"{HEADLINE['ratio_0']} → {HEADLINE['ratio_1']}", S["t1_m4d"])
 

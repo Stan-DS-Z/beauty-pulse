@@ -9,13 +9,28 @@ These tests fail when the prose and the computation disagree.
 
 import re
 
+import pandas as pd
 
-def test_sku_ratio_is_one_value_everywhere(docs, headline):
-    """Any "N.N x/×/倍" in the docs is the SKU ratio and must match."""
+
+def test_every_sku_ratio_in_the_docs_is_a_computed_one(docs):
+    """Any "N.N x/×/倍" in the docs must be a value build_sku_ratio.py produced.
+
+    The ratio is deliberately published as a range now — 6.6x measured, 3.7x as
+    Rakuten tags it, 9.7x and 10.7x under the other two treatments — so a single
+    expected value no longer describes the docs. What must still hold is that
+    every figure traces to the asset; a hand-typed or stale one fails.
+    """
+    from pathlib import Path
+    ratios = pd.read_csv(
+        Path(__file__).resolve().parent.parent / "dashboard" / "assets" / "nb07_sku_ratio.csv"
+    )["ratio"]
+    allowed = {f"{round(float(r), 1):.1f}" for r in ratios}
+
     found = {m.group(1) for m in re.finditer(r"(\d+\.\d+)\s*[×x倍]", docs)}
-    expected = f"{headline['sku_ratio']:.1f}"
-    assert found == {expected}, (
-        f"docs carry ratios {sorted(found)}; compute_headline says {expected}")
+    stray = found - allowed
+    assert not stray, (
+        f"docs carry ratios {sorted(stray)} that build_sku_ratio.py does not "
+        f"produce; it computes {sorted(allowed)}")
 
 
 def test_ingredient_levels_match(docs, headline):
@@ -47,10 +62,13 @@ def test_convergence_figures_match(docs, headline):
 # rendered only by the dashboard, computed live, so there is nothing to drift.
 
 
-def test_dashboard_prose_carries_no_stale_ratio(app):
-    """The EN/JP string table must not hardcode a ratio that disagrees."""
+def test_dashboard_string_table_hardcodes_no_ratio(app):
+    """Every ratio the page shows is rebuilt from HEADLINE, so none is stored.
+
+    The static table is where stale figures used to hide: a heading that the
+    live block overwrites is dead code, and one it does not overwrite silently
+    disagrees with the KPI card.
+    """
     blob = "\n".join(str(v) for lang in app.STRINGS.values() for v in lang.values())
     found = {m.group(1) for m in re.finditer(r"(\d+\.\d+)\s*[×x倍]", blob)}
-    expected = f"{app.HEADLINE['sku_ratio']:.1f}"
-    assert found <= {expected}, (
-        f"dashboard strings carry ratios {sorted(found)}; expected {expected}")
+    assert not found, f"STRINGS hardcodes ratios {sorted(found)}; build them from HEADLINE"
