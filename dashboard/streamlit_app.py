@@ -502,6 +502,13 @@ st.markdown(f"""
 # st.markdown cannot execute <script> tags (React strips them).
 # components.html runs inside an iframe where scripts execute; we reach
 # the parent document via window.parent to attach the floating tooltip.
+#
+# Deprecated in favour of st.iframe, but not migrated: st.iframe rejects
+# height=0 (positive int, 'stretch' or 'content' only) and this element is
+# a zero-height script host with nothing to show. Streamlit renders that
+# error into the page rather than failing the server, so it is caught by
+# tests/test_dashboard_runs.py, not by a boot check. Revisit when the
+# streamlit pin moves.
 _components.html("""
 <script>
 var doc = window.parent.document;
@@ -687,7 +694,7 @@ with tab1:
                                    xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
                        xaxis=_xax(range=[date_range[0], date_range[1]]),
                        yaxis=_yax(title="Search interest (0–100)"))
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width="stretch")
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
 
@@ -737,7 +744,7 @@ with tab1:
                                     xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
                         xaxis=_xax(),
                         yaxis=_yax(title="Search interest, own 2019 = 100"))
-    st.plotly_chart(fig1b, use_container_width=True)
+    st.plotly_chart(fig1b, width="stretch")
     st.caption(S["t1_c4cap"])
     st.markdown(f'<div style="background:{C["cosm_lt"]};border-left:4px solid {C["cosm"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:8px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["f1b_title"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["f1b_body"]}</p></div>', unsafe_allow_html=True)
 
@@ -781,7 +788,7 @@ with tab1:
                                        font=dict(size=10)),
                            xaxis=_xax(dtick=1, range=[2018.8, 2026.2]),
                            yaxis=_yax(title="Avg search interest (0–100)"))
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
         st.caption(S["t1_c2cap"])
 
     # Chart 3 — Rakuten treemap
@@ -857,7 +864,7 @@ with tab1:
             ),
         )
         rak_sel = st.plotly_chart(
-            fig3, use_container_width=True,
+            fig3, width="stretch",
             on_select="rerun", key="rak_treemap",
         )
 
@@ -963,7 +970,7 @@ with tab1:
             xaxis=_xax(dtick=1, tickformat="d"),
             yaxis=_yax(title="Comment count"),
         )
-        st.plotly_chart(fig5, use_container_width=True)
+        st.plotly_chart(fig5, width="stretch")
         st.caption(S["t1_c5cap"])
     except FileNotFoundError:
         st.info("nb07_yt_volume.csv not found — run the NB07 YouTube export cells to generate it.", icon="ℹ️")
@@ -1007,7 +1014,7 @@ with tab2:
         if wc_path.exists():
             from PIL import Image as PILImage
             img = PILImage.open(wc_path)
-            st.image(img, use_container_width=True)
+            st.image(img, width="stretch")
         else:
             st.caption(f"wordcloud_{year}.png not found")
 
@@ -1058,7 +1065,7 @@ with tab2:
             yaxis=_yax(title="Skincare ↔ cosmetics cosine",
                        range=[0, 0.8]),
         )
-        st.plotly_chart(fig_cv, use_container_width=True)
+        st.plotly_chart(fig_cv, width="stretch")
 
         st.markdown(f'<div style="background:{C["skin_lt"]};border-left:3px solid {C["skin"]};border-radius:0 6px 6px 0;padding:10px 14px;margin-top:4px;"><span style="font-size:12px;color:{C["text"]};font-weight:600;">+{HEADLINE["conv_delta"]}</span><span style="font-size:12px;color:{C["muted"]};">  — {S["t2_curvenote"]}</span></div>', unsafe_allow_html=True)
 
@@ -1161,7 +1168,7 @@ with tab3:
 
     bc_selection = st.plotly_chart(
         fig_bc,
-        use_container_width=True,
+        width="stretch",
         on_select="rerun",
         key="bc_treemap",
     )
@@ -1312,7 +1319,7 @@ with tab3:
                 linecolor="rgba(0,0,0,0)",
             ),
         )
-        st.plotly_chart(fig_yt_ch, use_container_width=True)
+        st.plotly_chart(fig_yt_ch, width="stretch")
 
         yt_leg1, yt_leg2, yt_leg3, _ = st.columns([1, 1, 1, 3])
         for col, (lbl, clr) in zip([yt_leg1, yt_leg2, yt_leg3],
@@ -1399,7 +1406,7 @@ with tab3:
                 gridcolor="rgba(0,0,0,0)", linecolor="rgba(0,0,0,0)",
             ),
         )
-        st.plotly_chart(fig_yt_div, use_container_width=True)
+        st.plotly_chart(fig_yt_div, width="stretch")
 
         st.markdown(f'<div style="background:{C["grid"]};border-left:3px solid {C["muted"]};border-radius:0 6px 6px 0;padding:10px 14px;margin-top:4px;"><span style="font-size:12px;color:{C["text"]};font-weight:600;">{S["t3_ytreg"]}</span><span style="font-size:12px;color:{C["muted"]};">{S["t3_ytregb"]}</span></div>', unsafe_allow_html=True)
 
@@ -1603,7 +1610,7 @@ with tab3:
             yaxis=dict(showgrid=False, showticklabels=False,
                        linecolor="rgba(0,0,0,0)", zeroline=False),
         )
-        st.plotly_chart(fig_umap, use_container_width=True)
+        st.plotly_chart(fig_umap, width="stretch")
 
     # Finding callout
     st.markdown(f'<div style="background:{C["skin_lt"]};border-left:4px solid {C["skin"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:8px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["f3_title"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["f3_body"]}</p></div>', unsafe_allow_html=True)
