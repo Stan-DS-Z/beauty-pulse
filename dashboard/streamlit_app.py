@@ -56,10 +56,11 @@ METI_MAKE = ["ファンデーション", "おしろい", "口紅", "ほほ紅", 
              "まゆ墨・まつ毛化粧料", "つめ化粧料(除光液を含む)", "リップクリーム",
              "その他の仕上用化粧品"]
 
-# The series breaks between December 2021 and January 2022. Yen per kg for
-# 化粧水, 美容液 and 乳液 steps down 20-35% and stays down, after eight stable
-# years (2015-2021), while their volume holds and the makeup lines show no
-# such step. It is not the misreporting correction JCIA footnotes — those
+# The series breaks at January 2022. Yen per kg for 化粧水, 美容液 and 乳液
+# falls 21-35% from 2021 to 2022, after seven years inside a range (2015-2021);
+# 化粧水 and 美容液 stay below that range through 2024, 乳液 is back in it by
+# 2024. Compare January with January: January is the low month in most years,
+# so a December-to-January fall shows up in the control lines too. It is not the misreporting correction JCIA footnotes — those
 # restate other lines, and the step survives on the restated vintage. Cause
 # unattributed. Nothing is measured across this boundary: every skincare money
 # figure on this dashboard is computed inside one regime, because the same
@@ -349,11 +350,11 @@ STRINGS = {
 
         "t1_mkh": "Shipped value by group, with the January 2022 break marked",
         "t1_mke": "",
-        "t1_mkcap": "Shaded from 2022 = after the break · METI data end in 2024; the search charts above run to 2026",
-        "t1_brkh": "化粧水, 美容液 and 乳液 yen per kg fell 20–35% in January 2022 while volume held",
+        "t1_mkcap": "Monthly, January 2019 – December 2024 · shaded from January 2022 = after the break · skincare peaks in December in 2021–2024, makeup in November in five of six years",
+        "t1_brkh": "化粧水, 美容液 and 乳液 yen per kg fell 21–35% from 2021 to 2022",
         "t1_brkb": "",
         "t1_brkfnh": "About the January 2022 break",
-        "t1_brkfn": "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, units and kilograms for each product line. Yen divided by kilograms gives an average price per kg. For 化粧水, 美容液 and 乳液 that price drops at January 2022 and stays lower. Comparing January 2022 with January 2021, shipped value fell 38% for 化粧水 (116 → 72 億円), 34% for 美容液 (102 → 67 億円) and 40% for 乳液 (53 → 32 億円), while モイスチャークリーム rose 6% and ファンデーション 18%. A change in which companies or products are counted in these three lines would produce this pattern; METI has published no such change. A skincare yen comparison between a year before 2022 and a year after includes the drop, so skincare yen changes on this tab are measured within 2019–2021 or within 2022–2024. The makeup declines are measured in 2019–2021 and in lines without the drop.",
+        "t1_brkfn": "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, units and kilograms for each product line. Yen divided by kilograms gives an average price per kg. For 化粧水, 美容液 and 乳液 that price drops at January 2022. 化粧水 and 美容液 stay below their 2015–2021 range through 2024; 乳液 is back inside its range by 2024. Comparing January 2022 with January 2021, shipped value fell 38% for 化粧水 (116 → 72 億円), 34% for 美容液 (102 → 67 億円) and 40% for 乳液 (53 → 32 億円), while モイスチャークリーム rose 6% and ファンデーション 18%. A change in which companies or products are counted in these three lines would produce this pattern; METI has published no such change. A skincare yen comparison between a year before 2022 and a year after includes the drop, so skincare yen changes on this tab are measured within 2019–2021 or within 2022–2024. The makeup declines are measured in 2019–2021 and in lines without the drop.",
         "t1_dvh": "Search interest and shipped value, measured within each period",
         "t1_dve": "",
         "t1_dv_pre": "Before the break",
@@ -470,11 +471,11 @@ STRINGS = {
 
         "t1_mkh":   "区分別の出荷金額と2022年1月の断層",
         "t1_mke":   "",
-        "t1_mkcap": "2022年以降の網掛け = 断層後 · 経産省統計は2024年まで、上段の検索データは2026年まで",
-        "t1_brkh":  "化粧水・美容液・乳液のkg単価は2022年1月に20〜35%下落し、数量は横ばい",
+        "t1_mkcap": "月次、2019年1月〜2024年12月 · 2022年1月以降の網掛け = 断層後 · 皮膚用は2021〜2024年に12月がピーク、仕上用は6年中5年で11月がピーク",
+        "t1_brkh":  "化粧水・美容液・乳液のkg単価は2021年から2022年に21〜35%下落",
         "t1_brkb":  "",
         "t1_brkfnh": "2022年1月の断層について",
-        "t1_brkfn": "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落し、その後も低い水準にある。2021年1月と2022年1月を比べると、出荷金額は化粧水が38%（116→72億円）、美容液が34%（102→67億円）、乳液が40%（53→32億円）減少し、モイスチャークリームは6%、ファンデーションは18%増加した。この3品目で集計対象の企業や製品が変わった場合にこの形になるが、経産省はそのような変更を公表していない。2022年より前の年と後の年を比べるスキンケアの金額にはこの下落が含まれるため、このタブのスキンケアの金額変化は2019〜2021年または2022〜2024年の内側で測っている。メイクの減少は2019〜2021年、下落のない品目で測っている。",
+        "t1_brkfn": "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落する。化粧水と美容液は2024年まで2015〜2021年の範囲を下回り、乳液は2024年に範囲内へ戻る。2021年1月と2022年1月を比べると、出荷金額は化粧水が38%（116→72億円）、美容液が34%（102→67億円）、乳液が40%（53→32億円）減少し、モイスチャークリームは6%、ファンデーションは18%増加した。この3品目で集計対象の企業や製品が変わった場合にこの形になるが、経産省はそのような変更を公表していない。2022年より前の年と後の年を比べるスキンケアの金額にはこの下落が含まれるため、このタブのスキンケアの金額変化は2019〜2021年または2022〜2024年の内側で測っている。メイクの減少は2019〜2021年、下落のない品目で測っている。",
         "t1_dvh":   "検索関心度と出荷金額、各区間の内側で測定",
         "t1_dve":   "",
         "t1_dv_pre":  "断層前",
@@ -633,36 +634,24 @@ def load_meti_annual():
 
 
 @st.cache_data
-def load_meti_unit_price():
-    """Yen per kg by product line, 2015 onward.
+def load_meti_monthly():
+    """Monthly shipped value by group (億円) and yen per kg by product line.
 
-    Monthly rows exist only from 2019; 2015-2018 comes from the annual 時系列表
-    rows, which are the only source that far back. Monthly wins wherever both
-    exist, so the seam is at 2019 and no year mixes the two."""
+    Monthly rows exist from January 2019; the annual loaders above reach back to
+    2015 through the 時系列表 rows, which carry no month."""
     d = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
-    out = {}
-    for meas in ("販売金額", "販売数量"):
-        mon = (d[(d["month"] >= 1) & (d["measure"] == meas)]
-               .groupby(["item", "year"])["value"].sum().unstack())
-        ann = (d[(d["month"] == 0) & (d["measure"] == meas)]
-               .pivot_table(index="item", columns="year", values="value"))
-        idx = sorted(set(mon.index) | set(ann.index))
-        cols = sorted(set(mon.columns) | set(ann.columns))
-        out[meas] = (mon.reindex(index=idx, columns=cols)
-                     .combine_first(ann.reindex(index=idx, columns=cols)))
-    return (out["販売金額"] * 1000 / out["販売数量"]).sort_index(axis=1)
-
-
-@st.cache_data
-def load_market_groups():
-    """Shipped value by product group, 億円 per year."""
-    val, _ = load_meti_annual()
-    items = [i for i in val.index if not str(i).endswith("計") and i != "化粧品合計"]
-    return pd.DataFrame({
-        "skincare": val.loc[METI_SKIN].sum(),
-        "makeup":   val.loc[METI_MAKE].sum(),
-        "total":    val.loc[items].sum(),
-    }).rename_axis("year").reset_index()
+    d = d[d["month"] >= 1].assign(date=lambda x: pd.to_datetime(
+        dict(year=x["year"], month=x["month"], day=1)))
+    wide = lambda m: d[d["measure"] == m].pivot_table(index="date", columns="item",
+                                                      values="value", aggfunc="sum")
+    val, kg = wide("販売金額"), wide("販売数量")
+    items = [i for i in val.columns if not str(i).endswith("計") and i != "化粧品合計"]
+    groups = pd.DataFrame({
+        "skincare": val[METI_SKIN].sum(axis=1) / 1e5,
+        "makeup":   val[METI_MAKE].sum(axis=1) / 1e5,
+        "total":    val[items].sum(axis=1) / 1e5,
+    })
+    return groups, val * 1000 / kg
 
 
 @st.cache_data
@@ -842,9 +831,11 @@ if lang == "en":
         f"published {_h['mkt_y1']} shares. The vertical line marks January {_h['mkt_break']}.")
     S["t1_brkb"] = (
         "化粧水 yen per kg ranged 6,787–7,824 in every year from 2015 to 2021, fell to 5,256 in "
-        "2022 and stayed there. 美容液 ranged 32,563–42,781, then fell to 23,874. In 2022 美容液 "
-        "shipped 2% more kilograms while its shipped value fell 34%. 22 of METI's 33 component "
-        "lines rose that year, and the five largest falls are all in this group. JCIA's "
+        "2022 and was 5,168–5,608 through 2024. 美容液 ranged 32,563–42,781, fell to 23,874, and "
+        "was 27,184 in 2024. 乳液 ranged 9,347–12,233, fell to 7,426, and was 9,523 in 2024. In "
+        "2022 美容液 shipped 2% more kilograms while its shipped value fell 34%; 化粧水 kilograms "
+        "fell 12% and its value 36%. 22 of METI's 33 component lines rose that year, and the "
+        "three largest falls were 化粧水 (−36%), 美容液 (−34%) and 乳液 (−27%). JCIA's "
         "misreporting correction restates other lines, and the step remains in the restated "
         "series. METI publishes no reason for it."
         f"<br><br>Serum shipped value: {_h['serum_val_span']}% over {_h['mkt_y0']}→{_h['mkt_y1']}, "
@@ -916,10 +907,12 @@ else:
         "経産省の33品目を合算した、皮膚用と仕上用の出荷金額。この区分は2019年と2020年の「計」小計を再現し、"
         f"日本化粧品工業会が公表する{_h['mkt_y1']}年の構成比と一致する。縦線は{_h['mkt_break']}年1月。")
     S["t1_brkb"] = (
-        "化粧水のkg単価は2015年から2021年まで毎年6,787〜7,824円の範囲にあり、2022年に5,256円へ下落して"
-        "以後その水準にある。美容液は32,563〜42,781円から23,874円へ下落した。2022年の美容液は数量が2%増え、"
-        "出荷金額は34%減った。経産省の33品目のうち22品目がこの年に増加し、下落幅の大きい上位5品目はいずれも"
-        "この品目群に入る。日本化粧品工業会が注記する誤報告の修正は他の品目を対象としており、段差は修正後の"
+        "化粧水のkg単価は2015年から2021年まで毎年6,787〜7,824円の範囲にあり、2022年に5,256円へ下落し、"
+        "2024年までは5,168〜5,608円。美容液は32,563〜42,781円から23,874円へ下落し、2024年は27,184円。"
+        "乳液は9,347〜12,233円から7,426円へ下落し、2024年は9,523円。2022年の美容液は数量が2%増え、"
+        "出荷金額は34%減った。化粧水は数量が12%、出荷金額が36%減った。経産省の33品目のうち22品目がこの年に"
+        "増加し、下落幅の上位3品目は化粧水（−36%）、美容液（−34%）、乳液（−27%）。"
+        "日本化粧品工業会が注記する誤報告の修正は他の品目を対象としており、段差は修正後の"
         "系列にも残る。経産省は段差の理由を公表していない。"
         f"<br><br>美容液の出荷金額：{_h['mkt_y0']}→{_h['mkt_y1']}年で{_h['serum_val_span']}%、"
         f"{_h['mkt_break']}→{_h['mkt_y1']}年で+{_h['serum_val_post']}%。美容液の個数単価：同じ二区間で"
@@ -1310,29 +1303,34 @@ with tab1:
     # Chart M1 — shipped value by group, with the break marked
     st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t1_mkh"]}</h3><p class="expl">{S["t1_mke"]}</p>', unsafe_allow_html=True)
 
-    df_grp = load_market_groups()
+    df_grp, px_kg_m = load_meti_monthly()
     _brk = HEADLINE["mkt_break"]
+    # The rule sits between December and January so each month's point falls
+    # on its own side of it.
+    _brk_x = pd.Timestamp(_brk, 1, 1) - pd.Timedelta(days=15)
+    _mon_hover = "%{x|%b %Y}: %{y:,.0f} 億円<extra></extra>" if lang == "en" else "%{x|%Y年%-m月}：%{y:,.0f}億円<extra></extra>"
     figM1 = go.Figure()
-    figM1.add_vrect(x0=_brk - 0.5, x1=df_grp["year"].max() + 0.5,
+    figM1.add_vrect(x0=_brk_x, x1=df_grp.index.max() + pd.Timedelta(days=15),
                     fillcolor=C["grid"], opacity=0.55, layer="below", line_width=0)
-    figM1.add_vline(x=_brk - 0.5, line_dash="dash", line_color=C["muted"], line_width=1.5)
-    figM1.add_annotation(x=_brk - 0.5, y=0.97, yref="paper", xanchor="left", xshift=5,
+    figM1.add_shape(type="line", x0=_brk_x, x1=_brk_x, y0=0, y1=1, yref="paper",
+                    line=dict(dash="dash", color=C["muted"], width=1.5))
+    figM1.add_annotation(x=_brk_x, y=0.97, yref="paper", xanchor="left", xshift=5,
                          text=("series break<br>Jan 2022" if lang == "en" else "断層<br>2022年1月"),
                          showarrow=False, font=dict(size=9, color=C["muted"]))
     for col, color, lab_en, lab_ja in [
             ("skincare", C["skin"], "皮膚用 (skincare)", "皮膚用化粧品"),
             ("makeup",   C["cosm"], "仕上用 (makeup)",   "仕上用化粧品")]:
         figM1.add_trace(go.Scatter(
-            x=df_grp["year"], y=df_grp[col], mode="lines+markers",
+            x=df_grp.index, y=df_grp[col], mode="lines",
             name=lab_en if lang == "en" else lab_ja,
-            line=dict(color=color, width=2.5), marker=dict(size=6),
-            hovertemplate="%{y:,.0f} 億円<extra></extra>"))
+            line=dict(color=color, width=2),
+            hovertemplate=_mon_hover))
     figM1.update_layout(**_base(height=340))
     figM1.update_layout(margin=dict(l=20, r=20, t=20, b=40),
                         legend=dict(orientation="h", yanchor="top", y=-0.14,
                                     xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
-                        xaxis=_xax(dtick=1),
-                        yaxis=_yax(title="Shipped value (億円)" if lang == "en" else "出荷金額（億円）"))
+                        xaxis=_xax(dtick="M12", tickformat="%Y"),
+                        yaxis=_yax(title="Shipped value per month (億円)" if lang == "en" else "月間出荷金額（億円）"))
     st.plotly_chart(figM1, width="stretch")
     st.caption(S["t1_mkcap"])
 
@@ -1341,38 +1339,39 @@ with tab1:
     # Chart M2 — the break itself: yen per kg, broken lines against controls
     st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t1_brkh"]}</h3>', unsafe_allow_html=True)
 
-    px_kg = load_meti_unit_price()
+    px_kg = px_kg_m
     BROKEN = [("化粧水", C["skin"], "toner"), ("美容液", "#2E6E8E", "serum"),
               ("乳液", "#7FB2CE", "emulsion")]
     CONTROL = [("モイスチャークリーム", C["muted"], "moisture cream"),
                ("ファンデーション", C["gold"], "foundation")]
     figM2 = go.Figure()
     for item, color, gloss in BROKEN + CONTROL:
-        if item not in px_kg.index:
+        if item not in px_kg.columns:
             continue
-        row = px_kg.loc[item].dropna()
+        row = px_kg[item].dropna()
         dashed = item not in [b[0] for b in BROKEN]
         figM2.add_trace(go.Scatter(
-            x=row.index, y=row.values, mode="lines+markers",
+            x=row.index, y=row.values, mode="lines",
             name=f"{item} ({gloss})" if lang == "en" else item,
-            line=dict(color=color, width=2.5,
+            line=dict(color=color, width=2 if dashed else 2.5,
                       dash="dot" if dashed else "solid"),
-            marker=dict(size=5),
-            hovertemplate="¥%{y:,.0f}/kg<extra></extra>"))
-    figM2.add_vline(x=_brk - 0.5, line_dash="dash", line_color=C["cosm"], line_width=1.5)
-    figM2.add_annotation(x=_brk - 0.5, y=0.97, yref="paper", xanchor="left", xshift=5,
+            hovertemplate=("%{x|%b %Y}: ¥%{y:,.0f}/kg<extra></extra>" if lang == "en"
+                           else "%{x|%Y年%-m月}：¥%{y:,.0f}/kg<extra></extra>")))
+    figM2.add_shape(type="line", x0=_brk_x, x1=_brk_x, y0=0, y1=1, yref="paper",
+                    line=dict(dash="dash", color=C["cosm"], width=1.5))
+    figM2.add_annotation(x=_brk_x, y=0.97, yref="paper", xanchor="left", xshift=5,
                          text=("Jan 2022" if lang == "en" else "2022年1月"),
                          showarrow=False, font=dict(size=9, color=C["cosm"]))
     figM2.update_layout(**_base(height=360))
     figM2.update_layout(margin=dict(l=20, r=20, t=20, b=40),
                         legend=dict(orientation="h", yanchor="top", y=-0.14,
                                     xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
-                        xaxis=_xax(dtick=1),
+                        xaxis=_xax(dtick="M12", tickformat="%Y"),
                         yaxis=_yax(title="¥ / kg", type="log"))
     st.plotly_chart(figM2, width="stretch")
-    st.caption("Solid = the three lines with the step · dotted = control lines · log scale: equal vertical distance = equal percentage change"
+    st.caption("Monthly, January 2019 – December 2024 · solid = the three lines with the step · dotted = comparison lines · log scale: equal vertical distance = equal percentage change"
                if lang == "en" else
-               "実線＝段差のある3品目 · 点線＝対照品目 · 対数軸：縦方向の同じ距離＝同じ変化率")
+               "月次、2019年1月〜2024年12月 · 実線＝段差のある3品目 · 点線＝比較品目 · 対数軸：縦方向の同じ距離＝同じ変化率")
 
     st.markdown(f'<div style="background:{C["cosm_lt"]};border-left:4px solid {C["cosm"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:12px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["t1_brkh"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["t1_brkb"]}</p></div>', unsafe_allow_html=True)
     st.markdown(f'<div style="border-top:1px solid {C["border"]};margin-top:10px;padding-top:8px;"><p style="margin:0;font-size:11px;color:{C["muted"]};font-weight:600;">{S["t1_brkfnh"]}</p><p style="margin:4px 0 0 0;font-size:11px;color:{C["muted"]};line-height:1.6;">{S["t1_brkfn"]}</p></div>', unsafe_allow_html=True)
