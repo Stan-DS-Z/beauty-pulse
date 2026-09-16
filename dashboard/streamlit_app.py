@@ -352,6 +352,8 @@ STRINGS = {
         "t1_mkcap": "Shaded from 2022 = after the break · METI data end in 2024; the search charts above run to 2026",
         "t1_brkh": "化粧水, 美容液 and 乳液 yen per kg fell 20–35% in January 2022 while volume held",
         "t1_brkb": "",
+        "t1_brkfnh": "About the January 2022 break",
+        "t1_brkfn": "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, units and kilograms for each product line. Yen divided by kilograms gives an average price per kg. For 化粧水, 美容液 and 乳液 that price drops at January 2022 and stays lower. Comparing January 2022 with January 2021, shipped value fell 38% for 化粧水 (116 → 72 億円), 34% for 美容液 (102 → 67 億円) and 40% for 乳液 (53 → 32 億円), while モイスチャークリーム rose 6% and ファンデーション 18%. A change in which companies or products are counted in these three lines would produce this pattern; METI has published no such change. A skincare yen comparison between a year before 2022 and a year after includes the drop, so skincare yen changes on this tab are measured within 2019–2021 or within 2022–2024. The makeup declines are measured in 2019–2021 and in lines without the drop.",
         "t1_dvh": "Search interest and shipped value, measured within each period",
         "t1_dve": "",
         "t1_dv_pre": "Before the break",
@@ -471,6 +473,8 @@ STRINGS = {
         "t1_mkcap": "2022年以降の網掛け = 断層後 · 経産省統計は2024年まで、上段の検索データは2026年まで",
         "t1_brkh":  "化粧水・美容液・乳液のkg単価は2022年1月に20〜35%下落し、数量は横ばい",
         "t1_brkb":  "",
+        "t1_brkfnh": "2022年1月の断層について",
+        "t1_brkfn": "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落し、その後も低い水準にある。2021年1月と2022年1月を比べると、出荷金額は化粧水が38%（116→72億円）、美容液が34%（102→67億円）、乳液が40%（53→32億円）減少し、モイスチャークリームは6%、ファンデーションは18%増加した。この3品目で集計対象の企業や製品が変わった場合にこの形になるが、経産省はそのような変更を公表していない。2022年より前の年と後の年を比べるスキンケアの金額にはこの下落が含まれるため、このタブのスキンケアの金額変化は2019〜2021年または2022〜2024年の内側で測っている。メイクの減少は2019〜2021年、下落のない品目で測っている。",
         "t1_dvh":   "検索関心度と出荷金額、各区間の内側で測定",
         "t1_dve":   "",
         "t1_dv_pre":  "断層前",
@@ -1371,6 +1375,7 @@ with tab1:
                "実線＝段差のある3品目 · 点線＝対照品目 · 対数軸：縦方向の同じ距離＝同じ変化率")
 
     st.markdown(f'<div style="background:{C["cosm_lt"]};border-left:4px solid {C["cosm"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:12px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["t1_brkh"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["t1_brkb"]}</p></div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="border-top:1px solid {C["border"]};margin-top:10px;padding-top:8px;"><p style="margin:0;font-size:11px;color:{C["muted"]};font-weight:600;">{S["t1_brkfnh"]}</p><p style="margin:4px 0 0 0;font-size:11px;color:{C["muted"]};line-height:1.6;">{S["t1_brkfn"]}</p></div>', unsafe_allow_html=True)
 
     # ═══════════════════════════════════════════════════════════════════════
     # TAB 1 · SYNTHESIS — the two measurements side by side
