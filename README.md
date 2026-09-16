@@ -32,10 +32,10 @@ Search behaviour, product catalog, ingredient searches, YouTube discourse, and c
 ## 検証結果：メイクでは確認、スキンケアでは測定不能 / Verdict: Confirmed for makeup, unmeasurable for skincare
 
 **関心は動いた。金額の裏づけは半分しか取れない。**
-コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下し、スキンケアの検索はほぼ横ばいで推移した。公的な出荷統計（経産省 生産動態統計）を突き合わせると、この発見は二つに分かれる。**メイクは金額でも裏づけられた** —— ファンデーションと口紅の出荷金額は2019→2024年にいずれも42%減少し、落ち込みは2019→2021年に集中する。**スキンケアは裏づけられない** —— 金額系列は2022年1月に断層を持ち、そこをまたいで測った数値は断層の内側で測り直すと符号が反転する（美容液の出荷金額はまたげば-39%、内側なら+20%）。断層の原因は公表統計に記載がない。成分名検索は同じ期間に上昇したが（ナイアシンアミド 5→81、Googleトレンド指数）、こちらには行動側の対応物がそもそも存在しない —— 成分単位の需要を追う公的系列はない。
+コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下し、スキンケアの検索はほぼ横ばいで推移した。公的な出荷統計（経産省 生産動態統計）を突き合わせると、この発見は二つに分かれる。**メイクは金額でも裏づけられた** —— 2019→2025年にファンデーションの出荷金額は40%、口紅は44%減少し、落ち込みは2019→2021年に集中する。**スキンケアは裏づけられない** —— 金額系列は2022年1月に断層を持ち、そこをまたいで測った数値は断層の内側で測り直すと符号が反転する（美容液の出荷金額はまたげば-38%、内側なら+23%）。断層の原因は公表統計に記載がない。2026年1〜7月の出荷金額は前年同期比で皮膚用+7.7%、仕上用-0.3%（月次確報）。成分名検索は同じ期間に上昇したが（ナイアシンアミド 5→81、Googleトレンド指数）、こちらには行動側の対応物がそもそも存在しない —— 成分単位の需要を追う公的系列はない。
 
 **Attention moved. Only half of it can be checked against money.**
-Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat. Set against official shipment statistics (METI 生産動態統計), that finding splits in two. **Makeup is corroborated in yen** — foundation and lipstick shipped value both fell 42% over 2019→2024, with the collapse concentrated in 2019→2021, before the break and in lines it does not touch. **Skincare is not** — its money series steps in January 2022, and figures measured across that step reverse sign when measured inside it (serum shipped value reads -39% across the break and +20% after it). The cause is undocumented in the published statistics, so no skincare demand reading is offered. Ingredient-name search rose over the same years (niacinamide 5→81 on the Trends index) and has no behavioural counterpart at all — no official series tracks ingredient-level demand. A mask test rules out the cyclical explanation for the makeup decline: search did not recover after Japan relaxed mask guidance in March 2023.
+Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat. Set against official shipment statistics (METI 生産動態統計), that finding splits in two. **Makeup is corroborated in yen** — foundation shipped value fell 40% and lipstick 44% over 2019→2025, with the fall concentrated in 2019→2021, before the break and in lines it does not touch. **Skincare is not** — its money series steps in January 2022, and figures measured across that step reverse sign when measured inside it (serum shipped value reads -38% across the break and +23% after it). The cause is undocumented in the published statistics, so no skincare demand reading is offered. January–July 2026 against the same months of 2025: skincare shipped value +7.7%, makeup -0.3% (METI monthly 確報). Ingredient-name search rose over the same years (niacinamide 5→81 on the Trends index) and has no behavioural counterpart at all — no official series tracks ingredient-level demand. A mask test rules out the cyclical explanation for the makeup decline: search did not recover after Japan relaxed mask guidance in March 2023.
 
 *何が測れるか / What is measured where:* この分析は二つの層を別々の測定として扱う。**関心層** —— Googleトレンド、楽天の掲載数、@cosmeレビュー、YouTube —— は検索と言葉を測る。**市場層** —— 経産省 生産動態統計と財務省 貿易統計 —— は金額と数量を測る。両者が一致する箇所だけが行動の裏づけを持つ。
 
@@ -79,11 +79,11 @@ All data self-sourced and self-collected. No Kaggle datasets.
 
 | ソース / Source | 内容 / Contents | 規模 / Scale |
 |---|---|---|
-| 経産省 生産動態統計「11.化粧品」 | Shipments by product line — value, volume, unit count | monthly 2019–2024, annual to 2015 |
+| 経産省 生産動態統計「11.化粧品」 | Shipments by product line — value, volume, unit count | monthly January 2019 – July 2026, annual from 2015 |
 | 財務省 貿易統計 HS 3304 | Imports and exports by country | annual 2016–2025 |
 
 再現は `build_estat_shipments.py` と `build_estat_imports.py`（要 `ESTAT_APP_ID`）。両スクリプトは表IDを `getStatsList` から実行時に解決する —— IDは安定しておらず、広く引用されているMETIのIDは2010年の単月表を指す。  
-Rebuild with `build_estat_shipments.py` and `build_estat_imports.py` (`ESTAT_APP_ID` required). Both resolve table IDs from `getStatsList` at run time: the IDs are not stable, and the commonly cited METI one resolves to a single month of 2010.
+Rebuild with `build_estat_shipments.py` and `build_estat_imports.py` (`ESTAT_APP_ID` required). Both resolve table IDs from `getStatsList` at run time: the IDs are not stable, and the commonly cited METI one resolves to a single month of 2010. Months after the last yearly table come from METI's monthly 確報 workbook, found through `getDataCatalog`.
 
 レビュー「量」は取得設計に依存するため市場シグナルとして用いず、レビュー「テキスト」のみを語彙分析に使用する。本文は一覧ページのプレビューであり全文ではない —— 詳細は[方法論](METHODOLOGY.md)。  
 Review *volume* depends on scraping design, so only review *text* is used, for vocabulary analysis. Bodies are listing-page previews, not full text — see [Methodology](METHODOLOGY.md).
@@ -157,12 +157,12 @@ questions resolve into against first-party data.
 | 楽天のSKU棚シェア / Shelf share by SKU (Rakuten) | POS実売・在庫回転・粗利 / POS sell-through, stock turns, margin |
 
 注意点12（公開統計での検証）は実行済みであり、その結果が上の検証結果である。残る限界は三つ:
-経産省統計は2024年までで、関心データは2026年まで —— 直近2年は関心のみ。皮膚用の金額系列は2022年1月に断層があり、
+経産省統計の年次値は2025年まで、2026年は1〜7月の月次確報で、年報の公表時に改定される。皮膚用の金額系列は2022年1月に断層があり、
 またいだ測定はできない。家計調査は未取得で、かつ**美容液と日焼け止めの品目を持たない** ——
 最も動いたカテゴリを検証できる系列ではない。1stパーティデータはその先にある。  
 Caveat 12 — validate against public statistics — has been done, and the verdict above is its result.
-Three limits remain. METI runs to 2024 while the attention data runs to 2026, so the last two years
-are attention-only. The skincare money series breaks in January 2022, so it cannot be measured across
+Three limits remain. METI annual figures run to 2025; 2026 is January–July from the monthly 確報
+release and is revised when the yearly table opens. The skincare money series breaks in January 2022, so it cannot be measured across
 that point. And 家計調査 (household spending) is not pulled — it would be immune to the tourist and
 export effects, but it carries **no 美容液 line and no sunscreen line**, so it cannot test the categories
 that moved most. First-party data is the step after.

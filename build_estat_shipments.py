@@ -6,6 +6,13 @@ is evidence; the two diverging is also evidence.
 
     python build_estat_shipments.py           # writes dashboard/assets/estat_meti_cosmetics.csv
 
+Two channels. Complete years come from the per-year 時系列表 in the e-Stat
+database. Months after the last of those come from the newest monthly 確報
+workbook, which e-Stat lists in its data catalog rather than the database. 確報
+figures are revised when the year's 時系列表 opens: checked on 2025, the
+monthly total moved by under 0.2% and single lines by up to 4% (口紅). The
+`edition` column records which channel each row came from.
+
 Table IDs are NOT stable across survey revisions, so they are listed with the
 date they were confirmed and the script re-resolves each one's metadata rather
 than assuming a layout — the 2019/2020 tables and the 2021+ 化粧品月報 tables
@@ -25,10 +32,15 @@ sys.path.insert(0, str(ROOT))
 from src.utils import load_env, get_estat_app_id          # noqa: E402
 
 BASE = "https://api.e-stat.go.jp/rest/3.0/app/json"
+STATS_CODE = "00550200"                     # 経済産業省生産動態統計調査
+FORM = "6175"                               # 調査票番号: 化粧品
+FILE_DL = "https://www.e-stat.go.jp/stat-search/file-download"
+RAW_DIR = Path(__file__).resolve().parent / "data" / "raw" / "estat"
 
-# statsDataId per survey year, confirmed against getStatsList on 2026-09-06.
-# 2025 onward is not published as an annual table yet (METI runs ~2 months behind
-# and the annual 時系列表 lands later still).
+# statsDataId per survey year, confirmed against getStatsList (2019–2024 on
+# 2026-09-06, 2025 on 2026-09-16). Each year's 時系列表 opens around the end of
+# June the following year; months after the last table come from the monthly
+# 確報 workbooks (see file_channel below).
 TABLES = {
     2019: "0003416134",   # 2019年 製品統計表(時系列) (10)化粧品
     2020: "0003437034",   # 2020年 同上
@@ -36,6 +48,7 @@ TABLES = {
     2022: "0004014489",
     2023: "0004019835",
     2024: "0004032992",
+    2025: "0004061875",   # opened 2026-06-30
 }
 
 # The two table generations name things differently; both normalise to these.
@@ -158,6 +171,94 @@ def _decode(v: dict, cls: dict):
     return period[0], period[1], item, measure, UNIT_BY_MEASURE.get(measure, unit or "")
 
 
+def _field(v) -> str:
+    return str(v.get("$", "")).strip() if isinstance(v, dict) else ("" if v is None else str(v).strip())
+
+
+def _as_list(x) -> list:
+    return [] if x is None else (x if isinstance(x, list) else [x])
+
+
+def newest_kakuho(app_id: str) -> tuple[int, str] | None:
+    """(yyyymm, statInfId) of the newest monthly 確報 統計表 workbook.
+
+    The statInfId is read from the resource's download URL; the resource @id is
+    a different identifier and does not resolve against file-download."""
+    found, start = {}, 1
+    while True:
+        j = requests.get(f"{BASE}/getDataCatalog",
+                         params={"appId": app_id, "statsCode": STATS_CODE, "lang": "J",
+                                 "limit": 100, "startPosition": start},
+                         timeout=120).json()["GET_DATA_CATALOG"]
+        dl = j.get("DATA_CATALOG_LIST_INF", {})
+        for ds in _as_list(dl.get("DATA_CATALOG_INF")):
+            title = (ds.get("DATASET") or {}).get("TITLE") or {}
+            ym = _field(title.get("SURVEY_DATE"))
+            if "確報_月次" not in _field(title.get("NAME")) or not re.fullmatch(r"\d{6}", ym):
+                continue
+            for res in _as_list((ds.get("RESOURCES") or {}).get("RESOURCE")):
+                name = _field((res.get("TITLE") or {}).get("NAME"))
+                m = re.search(r"statInfId=(\d+)", str(res.get("URL") or ""))
+                if m and "統計表_確報" in name and "機械" not in name:
+                    found[int(ym)] = m.group(1)
+        nxt = dl.get("RESULT_INF", {}).get("NEXT_KEY")
+        if not nxt:
+            break
+        start = int(nxt)
+    if not found:
+        return None
+    ym = max(found)
+    return ym, found[ym]
+
+
+def kakuho_rows(app_id: str, after_year: int, items: set) -> list:
+    """Cosmetics rows from the newest 確報 workbook, for years after after_year."""
+    hit = newest_kakuho(app_id)
+    if not hit or hit[0] // 100 <= after_year:
+        return []
+    ym, sid = hit
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    path = RAW_DIR / f"seidou_kakuho_{ym}.xlsx"
+    if not path.exists():
+        blob = requests.get(FILE_DL, params={"statInfId": sid, "fileKind": "0"},
+                            timeout=300).content
+        if not blob.startswith(b"PK"):             # error pages arrive as HTTP 200
+            raise RuntimeError(f"statInfId {sid}: response is not an xlsx")
+        path.write_bytes(blob)
+
+    raw = pd.read_excel(path, sheet_name="実数表", header=None, dtype=object, engine="openpyxl")
+    hdr = next(i for i in range(6) if str(raw.iat[i, 0]).strip() == "調査票番号")
+    raw.columns = [str(h).strip() for h in raw.iloc[hdr]]
+    body = raw.iloc[hdr + 1:]
+    body = body[body["調査票番号"].astype(str).str.replace(".0", "", regex=False) == FORM]
+    months = [c for c in raw.columns if re.fullmatch(r"\d{6}", c) and int(c[:4]) > after_year]
+
+    rows, unknown = [], set()
+    for _, r in body.iterrows():
+        item = _canon_item(str(r["品目名"]))
+        measure = MEASURE_MAP.get(str(r["アイテム名"]).strip())
+        if not measure:
+            continue                               # 従事者数, regional 生産金額
+        if item not in items:
+            unknown.add(item)
+            continue
+        for c in months:
+            v = r[c]
+            if v is None or (isinstance(v, float) and v != v) or str(v).strip() == "":
+                continue                           # month not yet published
+            try:
+                val = float(str(v).replace(",", ""))
+            except ValueError:
+                continue                           # suppressed (X)
+            rows.append((int(c[:4]), int(c[4:]), item, measure,
+                         UNIT_BY_MEASURE[measure], val, int(c[:4]), f"確報 {ym}"))
+    regions = {"企業", "全国計"} | {u for u in unknown if u.endswith(("県", "都", "府", "道", "局"))}
+    if unknown - regions - {"化粧品部門"}:
+        raise RuntimeError(f"確報 {ym}: product lines not in the 時系列表: {sorted(unknown - regions)}")
+    print(f"  確報 {ym} ({sid}): {len(rows):>6} values for months after {after_year}", flush=True)
+    return rows
+
+
 def main() -> Path:
     load_env()
     app = get_estat_app_id()
@@ -174,13 +275,16 @@ def main() -> Path:
                 val = float(str(v["$"]).replace(",", ""))
             except ValueError:
                 continue
-            rows.append((*d, val, year))
+            rows.append((*d, val, year, "時系列表"))
             kept += 1
         print(f"  {year} ({sid}): {len(vals):>6} values -> {kept:>6} decoded", flush=True)
         time.sleep(0.5)
 
+    known = {r[2] for r in rows}
+    rows += kakuho_rows(app, max(TABLES), known)
+
     df = pd.DataFrame(rows, columns=["year", "month", "item", "measure", "unit",
-                                     "value", "source_table_year"])
+                                     "value", "source_table_year", "edition"])
     # Later tables restate earlier years; keep the most recent publication.
     df = (df.sort_values("source_table_year")
             .drop_duplicates(subset=["year", "month", "item", "measure"], keep="last"))

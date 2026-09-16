@@ -58,15 +58,26 @@ METI_MAKE = ["ファンデーション", "おしろい", "口紅", "ほほ紅", 
 
 # The series breaks at January 2022. Yen per kg for 化粧水, 美容液 and 乳液
 # falls 21-35% from 2021 to 2022, after seven years inside a range (2015-2021);
-# 化粧水 and 美容液 stay below that range through 2024, 乳液 is back in it by
-# 2024. Compare January with January: January is the low month in most years,
+# 化粧水 and 美容液 stay below that range through July 2026; 乳液 was back in it
+# in 2024 and below it in 2025. 口紅 and アイメークアップ yen per kg also fall
+# in 2022, but through kilograms rising, with shipped value continuing to rise.
+# Compare January with January: January is the low month in most years,
 # so a December-to-January fall shows up in the control lines too. It is not the misreporting correction JCIA footnotes — those
 # restate other lines, and the step survives on the restated vintage. Cause
 # unattributed. Nothing is measured across this boundary: every skincare money
 # figure on this dashboard is computed inside one regime, because the same
-# figures reverse sign when measured across it (美容液 value 2019->2024 -39%,
-# 2022->2024 +20%).
+# figures reverse sign when measured across it (美容液 value 2019->2025 -38%,
+# 2022->2025 +23%).
 METI_BREAK = 2022
+
+
+def _full_years(d):
+    """Drop years whose monthly rows stop short of December.
+
+    The newest months arrive from the 確報 workbook before their year is
+    complete; summed as a year they would read as a collapse."""
+    months = d[d["month"] >= 1].groupby("year")["month"].nunique()
+    return d[d["year"].isin(months[months == 12].index)]
 
 
 @st.cache_data
@@ -182,7 +193,7 @@ def compute_headline():
     # ── Market layer — METI shipments and 財務省 trade ────────────────────
     # Money, not attention. Kept in its own block and labelled as a different
     # measurement everywhere it is shown.
-    _meti = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
+    _meti = _full_years(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"))
     _mv = (_meti[(_meti["month"] >= 1) & (_meti["measure"] == "販売金額")]
            .groupby(["item", "year"])["value"].sum().unstack() / 1e5)   # 千円 → 億円
     _mu = (_meti[(_meti["month"] >= 1) & (_meti["measure"] == "販売個数")]
@@ -237,6 +248,23 @@ def compute_headline():
     _flow = (_tr.groupby(["flow", "year"])["value_1000jpy"].sum() / 1e5)
     imp_y0, imp_y1 = int(round(_flow["import"][mkt_y0])), int(round(_flow["import"][mkt_y1]))
     imp_share_y1 = round(100 * _flow["import"][mkt_y1] / mkt_total[mkt_y1], 1)
+    _imp = _flow["import"].loc[mkt_y0:mkt_y1]
+    imp_peak_y, imp_peak = int(_imp.idxmax()), int(round(_imp.max()))
+
+    # The newest months, from the 確報 workbook, compared on the same months of
+    # the year before. A part-year is never set against a full one.
+    _raw = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
+    _raw = _raw[(_raw["month"] >= 1) & (_raw["measure"] == "販売金額")]
+    ytd_y = int(_raw["year"].max())
+    ytd_m = int(_raw.loc[_raw["year"] == ytd_y, "month"].max())
+    _ytd = (_raw[_raw["month"] <= ytd_m].groupby(["item", "year"])["value"].sum().unstack())
+
+    def _ytd_pct(items):
+        a, b = _ytd.loc[items, ytd_y - 1].sum(), _ytd.loc[items, ytd_y].sum()
+        return round(100 * (b - a) / a, 1)
+
+    ytd_skin, ytd_make, ytd_total = (_ytd_pct(METI_SKIN), _ytd_pct(METI_MAKE),
+                                     _ytd_pct(_all_items))
 
 
     return {
@@ -299,6 +327,13 @@ def compute_headline():
         "imp_y0":         imp_y0,
         "imp_y1":         imp_y1,
         "imp_share_y1":   imp_share_y1,
+        "imp_peak_y":     imp_peak_y,
+        "imp_peak":       imp_peak,
+        "ytd_y":          ytd_y,
+        "ytd_m":          ytd_m,
+        "ytd_skin":       ytd_skin,
+        "ytd_make":       ytd_make,
+        "ytd_total":      ytd_total,
     }
 
 HEADLINE = compute_headline()
@@ -309,7 +344,7 @@ STRINGS = {
         "tab1": "📈  The shift", "tab2": "🔤  The language", "tab3": "🔍  Discovery",
 
         # ── TAB 1: The Shift ──────────────────────────────────────────────
-        "t1_intro":  "After 2020, Japanese beauty search, Rakuten listings, @cosme reviews and YouTube comments moved toward skincare. METI shipment statistics record the makeup side in yen: foundation and lipstick shipped value each fell 42% from 2019 to 2024. METI's skincare lines step down in January 2022, and serum shipped value falls when measured across that step and rises when measured after it.",
+        "t1_intro":  "",
 
         "t1_m1": "Cosmetics search",  "t1_m1d": "化粧品 search interest, full years 2019→2025 (anchored Google Trends)",
         "t1_m2": "Niacinamide search",   "t1_m2d": "",
@@ -350,11 +385,11 @@ STRINGS = {
 
         "t1_mkh": "Shipped value by group, with the January 2022 break marked",
         "t1_mke": "",
-        "t1_mkcap": "Monthly, January 2019 – December 2024 · shaded from January 2022 = after the break · skincare peaks in December in 2021–2024, makeup in November in five of six years",
+        "t1_mkcap": "",
         "t1_brkh": "化粧水, 美容液 and 乳液 yen per kg fell 21–35% from 2021 to 2022",
         "t1_brkb": "",
         "t1_brkfnh": "About the January 2022 break",
-        "t1_brkfn": "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, units and kilograms for each product line. Yen divided by kilograms gives an average price per kg. For 化粧水, 美容液 and 乳液 that price drops at January 2022. 化粧水 and 美容液 stay below their 2015–2021 range through 2024; 乳液 is back inside its range by 2024. Comparing January 2022 with January 2021, shipped value fell 38% for 化粧水 (116 → 72 億円), 34% for 美容液 (102 → 67 億円) and 40% for 乳液 (53 → 32 億円), while モイスチャークリーム rose 6% and ファンデーション 18%. A change in which companies or products are counted in these three lines would produce this pattern; METI has published no such change. A skincare yen comparison between a year before 2022 and a year after includes the drop, so skincare yen changes on this tab are measured within 2019–2021 or within 2022–2024. The makeup declines are measured in 2019–2021 and in lines without the drop.",
+        "t1_brkfn": "",
         "t1_dvh": "Search interest and shipped value, measured within each period",
         "t1_dve": "",
         "t1_dv_pre": "Before the break",
@@ -433,7 +468,7 @@ STRINGS = {
         "subtitle":       "@cosme · 楽天市場 · Google Trends JP · YouTube · 2019–2026 · 45,510件レビュー · 39,436 SKU",
         "tab1": "📈  市場変化", "tab2": "🔤  消費者の言語", "tab3": "🔍  発見",
 
-        "t1_intro":  "2020年以降、美容の検索、楽天の掲載、@cosmeレビュー、YouTubeコメントはスキンケアの比重を高めた。経産省の出荷統計はメイク側を金額で記録しており、ファンデーションと口紅の出荷金額は2019年から2024年にかけていずれも42%減少した。スキンケアの品目は2022年1月に段差があり、美容液の出荷金額は段差をまたいで測ると減少、段差の後で測ると増加となる。",
+        "t1_intro":  "",
 
         "t1_m1":     "化粧品の検索",  "t1_m1d": "化粧品の検索関心度、暦年ベース2019→2025年（アンカー付きトレンド）",
         "t1_m2":     "ナイアシンアミドの検索",  "t1_m2d": "",
@@ -471,11 +506,11 @@ STRINGS = {
 
         "t1_mkh":   "区分別の出荷金額と2022年1月の断層",
         "t1_mke":   "",
-        "t1_mkcap": "月次、2019年1月〜2024年12月 · 2022年1月以降の網掛け = 断層後 · 皮膚用は2021〜2024年に12月がピーク、仕上用は6年中5年で11月がピーク",
+        "t1_mkcap": "",
         "t1_brkh":  "化粧水・美容液・乳液のkg単価は2021年から2022年に21〜35%下落",
         "t1_brkb":  "",
         "t1_brkfnh": "2022年1月の断層について",
-        "t1_brkfn": "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落する。化粧水と美容液は2024年まで2015〜2021年の範囲を下回り、乳液は2024年に範囲内へ戻る。2021年1月と2022年1月を比べると、出荷金額は化粧水が38%（116→72億円）、美容液が34%（102→67億円）、乳液が40%（53→32億円）減少し、モイスチャークリームは6%、ファンデーションは18%増加した。この3品目で集計対象の企業や製品が変わった場合にこの形になるが、経産省はそのような変更を公表していない。2022年より前の年と後の年を比べるスキンケアの金額にはこの下落が含まれるため、このタブのスキンケアの金額変化は2019〜2021年または2022〜2024年の内側で測っている。メイクの減少は2019〜2021年、下落のない品目で測っている。",
+        "t1_brkfn": "",
         "t1_dvh":   "検索関心度と出荷金額、各区間の内側で測定",
         "t1_dve":   "",
         "t1_dv_pre":  "断層前",
@@ -626,7 +661,7 @@ def load_meti_annual():
     Annual figures are summed from the monthly rows (month >= 1) rather than
     read from the month == 0 annual rows: the annual rows are a 時系列表 restated
     in a later table, so mixing the two would put two vintages in one series."""
-    d = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
+    d = _full_years(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"))
     d = d[d["month"] >= 1]
     val = d[d["measure"] == "販売金額"].groupby(["item", "year"])["value"].sum().unstack() / 1e5
     units = d[d["measure"] == "販売個数"].groupby(["item", "year"])["value"].sum().unstack()
@@ -771,6 +806,8 @@ S = dict(STRINGS[lang])
 # so the prose is generated from HEADLINE rather than hardcoded — it can never
 # drift out of sync with the KPI cards or the size-curve chart.
 _h = HEADLINE
+_MON_EN = [None, "January", "February", "March", "April", "May", "June", "July",
+           "August", "September", "October", "November", "December"]
 if lang == "en":
     S["t2_intro"] = (
         f"Measured at equal sample sizes, skincare and cosmetics reviews shared more vocabulary "
@@ -793,19 +830,49 @@ if lang == "en":
         f"Niacinamide search rose from {_h['nia_pre']} to {_h['nia_post']} on the Trends "
         f"index, {_h['ing_y0']}→{_h['ing_y1']}")
     S["f1_title"] = "Finding 1 — Makeup fell in search and in shipped value; skincare shipped value steps down in 2022"
+    S["t1_intro"] = (
+        "After 2020, Japanese beauty search, Rakuten listings, @cosme reviews and YouTube comments "
+        "moved toward skincare. METI shipment statistics record the makeup side in yen: foundation "
+        f"shipped value fell {abs(_h['found_d'])}% and lipstick {abs(_h['lip_d'])}% from "
+        f"{_h['mkt_y0']} to {_h['mkt_y1']}. METI's skincare lines step down in January "
+        f"{_h['mkt_break']}, and serum shipped value falls when measured across that step and rises "
+        f"when measured after it. January–{_MON_EN[_h['ytd_m']]} {_h['ytd_y']} against the same "
+        f"months of {_h['ytd_y'] - 1}: skincare {_h['ytd_skin']:+}%, makeup {_h['ytd_make']:+}%.")
+    S["t1_mkcap"] = (
+        f"Monthly, January 2019 – {_MON_EN[_h['ytd_m']]} {_h['ytd_y']} · shaded from January "
+        f"{_h['mkt_break']} = after the break · skincare peaks in December in 2021–2024 and October "
+        "in 2025; makeup peaks in November in six of seven years")
+    S["t1_brkfn"] = (
+        "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, "
+        "units and kilograms for each product line. Yen divided by kilograms gives an average price "
+        "per kg. For 化粧水, 美容液 and 乳液 that price drops at January 2022. 化粧水 and 美容液 stay "
+        f"below their 2015–2021 range through {_MON_EN[_h['ytd_m']]} {_h['ytd_y']}; 乳液 was inside "
+        "its range in 2024 and below it in 2025. Comparing January 2022 with January 2021, shipped "
+        "value fell 38% for 化粧水 (116 → 72 億円), 34% for 美容液 (102 → 67 億円) and 40% for 乳液 "
+        "(53 → 32 億円), while モイスチャークリーム rose 6% and ファンデーション 18%. 口紅 and "
+        "アイメークアップ yen per kg also fall in 2022, with a different pattern: their kilograms rose "
+        "149% and 44% while shipped value rose 49% and 11%. A change in which companies or products "
+        "are counted would produce the skincare pattern; METI has published no such change and no "
+        "link coefficients for cosmetics. A skincare yen comparison between a year before 2022 and a "
+        f"year after includes the drop, so skincare yen changes on this tab are measured within "
+        f"2019–2021 or within 2022–{_h['mkt_y1']}. {_h['ytd_y']} figures come from METI's monthly "
+        "確報 release.")
     S["f1_body"] = (
         f"Google Trends: 化粧品 search fell ~{abs(_h['cosm_decline'])}% over full years "
         f"{_h['ing_y0']}→{_h['ing_y1']}, and スキンケア search held roughly flat. Rakuten lists "
         f"{_h['sku_measured']}× more skincare SKUs than makeup SKUs. Niacinamide search rose from "
         f"{_h['nia_pre']} to {_h['nia_post']}. Lipstick, foundation and eyeshadow search stayed "
         "below 2019 after mask guidance was relaxed."
-        "<br><br>METI shipments: foundation and lipstick shipped value each fell "
-        f"{abs(_h['found_d'])}% from {_h['mkt_y0']} to {_h['mkt_y1']}. Most of the fall came in "
+        f"<br><br>METI shipments: foundation shipped value fell {abs(_h['found_d'])}% and lipstick "
+        f"{abs(_h['lip_d'])}% from {_h['mkt_y0']} to {_h['mkt_y1']}. Most of the fall came in "
         f"{_h['mkt_y0']}→{_h['mkt_pre1']} ({_h['found_d_pre']}% and {_h['lip_d_pre']}%), in lines "
         f"without the {_h['mkt_break']} step; from {_h['mkt_break']} to {_h['mkt_y1']} they rose "
         f"+{_h['found_d_post']}% and +{_h['lip_d_post']}%. Toner, serum and emulsion yen per kg "
         f"step down in January {_h['mkt_break']}, and METI publishes no reason. Serum shipped "
-        f"value changes {_h['serum_val_span']}% across the step and +{_h['serum_val_post']}% after it.")
+        f"value changes {_h['serum_val_span']}% across the step and +{_h['serum_val_post']}% after it."
+        f"<br><br>January–{_MON_EN[_h['ytd_m']]} {_h['ytd_y']} against the same months of "
+        f"{_h['ytd_y'] - 1}: skincare shipped value {_h['ytd_skin']:+}%, makeup {_h['ytd_make']:+}%, "
+        f"all cosmetics {_h['ytd_total']:+}%.")
     S["t1_m4d"] = (
         f"foundation {_h['found_d']}%, lipstick {_h['lip_d']}%, {_h['mkt_y0']}→{_h['mkt_y1']} · "
         "METI shipments")
@@ -823,16 +890,21 @@ if lang == "en":
         f"経済産業省生産動態統計, shipped value in 億円, {_h['mkt_y0']}–{_h['mkt_y1']}. Of the "
         f"{_h['mkt_total_y1']:,} 億円 shipped in {_h['mkt_y1']}, skincare was {_h['skin_share_y1']}% "
         f"and makeup {_h['make_share_y1']}%. Imports (財務省 貿易統計, HS 3304) were "
-        f"{_h['imp_share_y1']}% of the market: {_h['imp_y0']:,} 億円 in {_h['mkt_y0']} and "
-        f"{_h['imp_y1']:,} 億円 in {_h['mkt_y1']}.")
+        f"{_h['imp_share_y1']}% of the market in {_h['mkt_y1']}: {_h['imp_y0']:,} 億円 in "
+        f"{_h['mkt_y0']}, {_h['imp_peak']:,} 億円 at the {_h['imp_peak_y']} peak, {_h['imp_y1']:,} 億円 "
+        f"in {_h['mkt_y1']}. January–{_MON_EN[_h['ytd_m']]} {_h['ytd_y']} against the same months of "
+        f"{_h['ytd_y'] - 1}: skincare {_h['ytd_skin']:+}%, makeup {_h['ytd_make']:+}%, total "
+        f"{_h['ytd_total']:+}% (monthly 確報).")
     S["t1_mke"] = (
         "Shipped value for skincare (皮膚用) and makeup (仕上用), summed from METI's 33 component "
         "product lines. The grouping reproduces METI's 計 subtotals for 2019 and 2020 and JCIA's "
-        f"published {_h['mkt_y1']} shares. The vertical line marks January {_h['mkt_break']}.")
+        f"published 2024 shares. The vertical line marks January {_h['mkt_break']}.")
     S["t1_brkb"] = (
         "化粧水 yen per kg ranged 6,787–7,824 in every year from 2015 to 2021, fell to 5,256 in "
-        "2022 and was 5,168–5,608 through 2024. 美容液 ranged 32,563–42,781, fell to 23,874, and "
-        "was 27,184 in 2024. 乳液 ranged 9,347–12,233, fell to 7,426, and was 9,523 in 2024. In "
+        "2022, and was 5,967 in 2025 and 6,686 in January–July 2026. 美容液 ranged 32,563–42,781, "
+        "fell to 23,874, and was 28,933 in 2025. 乳液 ranged 9,347–12,233, fell to 7,426, was "
+        "9,523 in 2024 and 9,049 in 2025. 口紅 and アイメークアップ yen per kg fell 40% and 23% in "
+        "2022 as their kilograms rose 149% and 44%. In "
         "2022 美容液 shipped 2% more kilograms while its shipped value fell 34%; 化粧水 kilograms "
         "fell 12% and its value 36%. 22 of METI's 33 component lines rose that year, and the "
         "three largest falls were 化粧水 (−36%), 美容液 (−34%) and 乳液 (−27%). JCIA's "
@@ -875,18 +947,42 @@ else:
         f"ナイアシンアミドの検索は{_h['ing_y0']}年{_h['nia_pre']}→{_h['ing_y1']}年"
         f"{_h['nia_post']}に上昇（トレンド指数）")
     S["f1_title"] = "発見1 —— メイクは検索・出荷金額ともに減少、スキンケアの出荷金額は2022年に段差"
+    S["t1_intro"] = (
+        "2020年以降、美容の検索、楽天の掲載、@cosmeレビュー、YouTubeコメントはスキンケアの比重を高めた。"
+        f"経産省の出荷統計はメイク側を金額で記録しており、{_h['mkt_y0']}年から{_h['mkt_y1']}年にかけて"
+        f"ファンデーションの出荷金額は{abs(_h['found_d'])}%、口紅は{abs(_h['lip_d'])}%減少した。"
+        f"スキンケアの品目は{_h['mkt_break']}年1月に段差があり、美容液の出荷金額は段差をまたいで測ると減少、"
+        f"段差の後で測ると増加となる。{_h['ytd_y']}年1〜{_h['ytd_m']}月は前年同期比で"
+        f"皮膚用{_h['ytd_skin']:+}%、仕上用{_h['ytd_make']:+}%。")
+    S["t1_mkcap"] = (
+        f"月次、2019年1月〜{_h['ytd_y']}年{_h['ytd_m']}月 · {_h['mkt_break']}年1月以降の網掛け = 断層後 · "
+        "皮膚用は2021〜2024年に12月、2025年に10月がピーク、仕上用は7年中6年で11月がピーク")
+    S["t1_brkfn"] = (
+        "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。"
+        "金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落する。"
+        f"化粧水と美容液は{_h['ytd_y']}年{_h['ytd_m']}月まで2015〜2021年の範囲を下回り、乳液は2024年に範囲内、"
+        "2025年に範囲を下回った。2021年1月と2022年1月を比べると、出荷金額は化粧水が38%（116→72億円）、"
+        "美容液が34%（102→67億円）、乳液が40%（53→32億円）減少し、モイスチャークリームは6%、"
+        "ファンデーションは18%増加した。口紅とアイメークアップのkg単価も2022年に下落するが形が異なり、"
+        "重量が149%、44%増えた一方で出荷金額の増加は49%、11%だった。集計対象の企業や製品が変わった場合に"
+        "スキンケアのこの形になるが、経産省はそのような変更も化粧品のリンク係数も公表していない。"
+        "2022年より前の年と後の年を比べるスキンケアの金額にはこの下落が含まれるため、このタブのスキンケアの"
+        f"金額変化は2019〜2021年または2022〜{_h['mkt_y1']}年の内側で測っている。{_h['ytd_y']}年の数値は"
+        "経産省の月次確報による。")
     S["f1_body"] = (
         f"Googleトレンド：化粧品の検索は暦年ベース{_h['ing_y0']}→{_h['ing_y1']}年で約"
         f"{abs(_h['cosm_decline'])}%低下し、スキンケアはほぼ横ばい。楽天のスキンケアSKUはメイクの"
         f"{_h['sku_measured']}倍。ナイアシンアミドの検索は{_h['nia_pre']}→{_h['nia_post']}に上昇。"
         "口紅・ファンデーション・アイシャドウの検索は、マスク着用ルール緩和後も2019年を下回る。"
-        f"<br><br>経産省出荷統計：ファンデーションと口紅の出荷金額は{_h['mkt_y0']}年から{_h['mkt_y1']}年に"
-        f"いずれも{abs(_h['found_d'])}%減少した。減少の大半は{_h['mkt_y0']}→{_h['mkt_pre1']}年"
+        f"<br><br>経産省出荷統計：{_h['mkt_y0']}年から{_h['mkt_y1']}年に、ファンデーションの出荷金額は"
+        f"{abs(_h['found_d'])}%、口紅は{abs(_h['lip_d'])}%減少した。減少の大半は{_h['mkt_y0']}→{_h['mkt_pre1']}年"
         f"（{_h['found_d_pre']}%、{_h['lip_d_pre']}%）で、{_h['mkt_break']}年の段差がない品目である。"
         f"{_h['mkt_break']}年から{_h['mkt_y1']}年にはそれぞれ+{_h['found_d_post']}%、+{_h['lip_d_post']}%"
         f"増加した。化粧水・美容液・乳液のkg単価は{_h['mkt_break']}年1月に下方へ段差があり、経産省は理由を"
         f"公表していない。美容液の出荷金額は段差をまたぐと{_h['serum_val_span']}%、段差の後では"
-        f"+{_h['serum_val_post']}%。")
+        f"+{_h['serum_val_post']}%。"
+        f"<br><br>{_h['ytd_y']}年1〜{_h['ytd_m']}月の前年同期比：皮膚用{_h['ytd_skin']:+}%、"
+        f"仕上用{_h['ytd_make']:+}%、化粧品全体{_h['ytd_total']:+}%。")
     S["t1_m4d"] = (
         f"ファンデーション{_h['found_d']}%、口紅{_h['lip_d']}%（{_h['mkt_y0']}→{_h['mkt_y1']}年）· "
         "経産省出荷統計")
@@ -901,15 +997,19 @@ else:
     S["t1_p2d"] = (
         f"経済産業省生産動態統計、出荷金額（億円）、{_h['mkt_y0']}〜{_h['mkt_y1']}年。{_h['mkt_y1']}年の出荷"
         f"{_h['mkt_total_y1']:,}億円のうち、皮膚用が{_h['skin_share_y1']}%、仕上用が{_h['make_share_y1']}%。"
-        f"輸入（財務省貿易統計 HS 3304）は市場の{_h['imp_share_y1']}%で、{_h['mkt_y0']}年{_h['imp_y0']:,}億円、"
-        f"{_h['mkt_y1']}年{_h['imp_y1']:,}億円。")
+        f"輸入（財務省貿易統計 HS 3304）は{_h['mkt_y1']}年に市場の{_h['imp_share_y1']}%で、"
+        f"{_h['mkt_y0']}年{_h['imp_y0']:,}億円、{_h['imp_peak_y']}年のピーク{_h['imp_peak']:,}億円、"
+        f"{_h['mkt_y1']}年{_h['imp_y1']:,}億円。{_h['ytd_y']}年1〜{_h['ytd_m']}月の前年同期比は"
+        f"皮膚用{_h['ytd_skin']:+}%、仕上用{_h['ytd_make']:+}%、全体{_h['ytd_total']:+}%（月次確報）。")
     S["t1_mke"] = (
         "経産省の33品目を合算した、皮膚用と仕上用の出荷金額。この区分は2019年と2020年の「計」小計を再現し、"
-        f"日本化粧品工業会が公表する{_h['mkt_y1']}年の構成比と一致する。縦線は{_h['mkt_break']}年1月。")
+        f"日本化粧品工業会が公表する2024年の構成比と一致する。縦線は{_h['mkt_break']}年1月。")
     S["t1_brkb"] = (
         "化粧水のkg単価は2015年から2021年まで毎年6,787〜7,824円の範囲にあり、2022年に5,256円へ下落し、"
-        "2024年までは5,168〜5,608円。美容液は32,563〜42,781円から23,874円へ下落し、2024年は27,184円。"
-        "乳液は9,347〜12,233円から7,426円へ下落し、2024年は9,523円。2022年の美容液は数量が2%増え、"
+        "2025年は5,967円、2026年1〜7月は6,686円。美容液は32,563〜42,781円から23,874円へ下落し、2025年は"
+        "28,933円。乳液は9,347〜12,233円から7,426円へ下落し、2024年は9,523円、2025年は9,049円。"
+        "口紅とアイメークアップのkg単価は2022年に40%、23%下落し、重量は149%、44%増えた。"
+        "2022年の美容液は数量が2%増え、"
         "出荷金額は34%減った。化粧水は数量が12%、出荷金額が36%減った。経産省の33品目のうち22品目がこの年に"
         "増加し、下落幅の上位3品目は化粧水（−36%）、美容液（−34%）、乳液（−27%）。"
         "日本化粧品工業会が注記する誤報告の修正は他の品目を対象としており、段差は修正後の"
@@ -1369,9 +1469,9 @@ with tab1:
                         xaxis=_xax(dtick="M12", tickformat="%Y"),
                         yaxis=_yax(title="¥ / kg", type="log"))
     st.plotly_chart(figM2, width="stretch")
-    st.caption("Monthly, January 2019 – December 2024 · solid = the three lines with the step · dotted = comparison lines · log scale: equal vertical distance = equal percentage change"
+    st.caption(f"Monthly, January 2019 – {_MON_EN[HEADLINE['ytd_m']]} {HEADLINE['ytd_y']} · solid = the three lines with the step · dotted = comparison lines · log scale: equal vertical distance = equal percentage change"
                if lang == "en" else
-               "月次、2019年1月〜2024年12月 · 実線＝段差のある3品目 · 点線＝比較品目 · 対数軸：縦方向の同じ距離＝同じ変化率")
+               f"月次、2019年1月〜{HEADLINE['ytd_y']}年{HEADLINE['ytd_m']}月 · 実線＝段差のある3品目 · 点線＝比較品目 · 対数軸：縦方向の同じ距離＝同じ変化率")
 
     st.markdown(f'<div style="background:{C["cosm_lt"]};border-left:4px solid {C["cosm"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:12px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["t1_brkh"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["t1_brkb"]}</p></div>', unsafe_allow_html=True)
     st.markdown(f'<div style="border-top:1px solid {C["border"]};margin-top:10px;padding-top:8px;"><p style="margin:0;font-size:11px;color:{C["muted"]};font-weight:600;">{S["t1_brkfnh"]}</p><p style="margin:4px 0 0 0;font-size:11px;color:{C["muted"]};line-height:1.6;">{S["t1_brkfn"]}</p></div>', unsafe_allow_html=True)

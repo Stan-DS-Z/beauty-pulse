@@ -4,8 +4,8 @@ The 皮膚用/仕上用 grouping is the load-bearing assumption of the whole pan
 METI stopped shipping the 計 subtotal rows after 2020, so the aggregates are
 rebuilt from 33 component lines and a single line assigned to the wrong group
 moves every money figure on the page. Two independent checks pin it — the
-subtotal years it must reproduce exactly, and JCIA's published shares for the
-latest year.
+subtotal years it must reproduce exactly, and JCIA's published shares for 2024,
+the latest year JCIA has published.
 
 The break tests exist because measuring across it silently reverses the sign
 of the skincare figures. They fail if anyone widens a window back over 2022.
@@ -37,11 +37,32 @@ def test_grouping_reproduces_the_subtotal_rows(app, meti):
                 f"{subtotal} row says {published:.1f} — a line is in the wrong group")
 
 
-def test_grouping_matches_jcia_published_shares(app, headline):
-    """An external check: JCIA publishes the same split we compute."""
-    assert headline["mkt_total_y1"] == JCIA_2024["total_oku"]
-    assert headline["skin_share_y1"] == pytest.approx(JCIA_2024["skincare"], abs=0.05)
-    assert headline["make_share_y1"] == pytest.approx(JCIA_2024["makeup"], abs=0.05)
+def test_grouping_matches_jcia_published_shares(app, meti):
+    """An external check: JCIA publishes the same split we compute for 2024."""
+    val, _ = meti
+    components = [i for i in val.index if not str(i).endswith("計") and i != "化粧品合計"]
+    total = val.loc[components, 2024].sum()
+    assert round(total) == JCIA_2024["total_oku"]
+    assert 100 * val.loc[app.METI_SKIN, 2024].sum() / total == pytest.approx(JCIA_2024["skincare"], abs=0.05)
+    assert 100 * val.loc[app.METI_MAKE, 2024].sum() / total == pytest.approx(JCIA_2024["makeup"], abs=0.05)
+
+
+def test_a_part_year_never_reaches_the_annual_figures(app, meti, headline):
+    """The 確報 months arrive before their year is complete.
+
+    Summed as a year, January-July would read as a collapse. The annual table
+    must stop at the last complete year, and the part-year must be compared only
+    against the same months a year earlier.
+    """
+    val, _ = meti
+    d = pd.read_csv(app.ASSETS / "estat_meti_cosmetics.csv")
+    months = d[d["month"] >= 1].groupby("year")["month"].nunique()
+    partial = set(months[months < 12].index)
+    assert not partial & set(val.columns), f"part-years {partial} reached the annual table"
+    assert headline["mkt_y1"] not in partial
+    if partial:
+        assert headline["ytd_y"] == max(partial)
+        assert headline["ytd_m"] == months[headline["ytd_y"]]
 
 
 def test_no_line_is_counted_twice_or_dropped(app, meti):
@@ -69,7 +90,7 @@ def test_makeup_figures_do_not_span_the_break_by_accident(app, meti, headline):
     """Makeup is publishable across the window only because the break misses it.
 
     Its yen-per-unit must not step the way the skincare lines do — that is what
-    licenses the -42% headline on a 2019->2024 window.
+    licenses the foundation and lipstick headline on a window from 2019.
     """
     val, units = meti
     brk = headline["mkt_break"]
