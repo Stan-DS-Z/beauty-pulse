@@ -305,7 +305,7 @@ STRINGS = {
     "en": {
         "tagline":       "Japanese beauty market intelligence",
         "subtitle":      "@cosme · Rakuten Ichiba · Google Trends JP · YouTube · 2019–2026 · 45,510 reviews · 39,436 SKUs",
-        "tab1": "📈  The shift", "tab2": "🔤  The language", "tab3": "🔍  Discovery", "tab4": "💡  For brands",
+        "tab1": "📈  The shift", "tab2": "🔤  The language", "tab3": "🔍  Discovery",
 
         # ── TAB 1: The Shift ──────────────────────────────────────────────
         "t1_intro":  "Several independent attention sources lean the same way: since COVID, Japanese consumers have shifted beauty priority toward skincare. Official shipment statistics settle half of that and cannot settle the other half. Makeup's decline is real in money as well as in search — foundation and lipstick shipped value both fell 42% from 2019 to 2024. Whether skincare spending followed its rising attention cannot be read from the official series: it breaks in January 2022, and figures measured across that break reverse sign when measured inside it.",
@@ -424,22 +424,11 @@ STRINGS = {
         "f3_title": "Finding 3 — The review map shows structure",
         "f3_body":  "The northeast zone is where skincare and cosmetics vocabulary overlap most: foundation reviews written in skincare language, cleansing reviews evaluated on moisture and texture.<br><br>The isolated top island is influencer and giveaway reviews (「プレゼント」/「当選」 template language), separated automatically from organic consumer reviews. Brands measuring sentiment without filtering these populations are mixing two different signals.",
 
-        # ── TAB 4: For brands ─────────────────────────────────────────────
-        "t4_intro": "What the four findings imply if you sit inside a beauty company. These are directional hypotheses from attention and shelf data — search, reviews, catalog, YouTube — not from sales. Each card names the evidence it rests on.",
-        "t4_c1h": "Lead with the ingredient, not the brand",
-        "t4_c1b": "",
-        "t4_c2h": "Take the K-brand threat seriously — and learn its trick",
-        "t4_c2b": "Anua is the strongest rising-search signal in the recent window, surfacing from 6 independent seed terms (Finding 4). The pattern: Japanese consumers\' own ingredient education created the demand, and Korean-brand searches are the fastest-rising in that space. Three *Japanese* brands (unlabel, CERAMIAID, KITEN) now position themselves so K-style that this analysis initially misclassified them as Korean. Meanwhile Korean beauty has just 16 videos · 4.4M views of YouTube supply against that search demand — the education-content lane is still open to whoever moves first.",
-        "t4_c3h": "Don\'t plan for a makeup rebound that isn\'t coming",
-        "t4_c3b": "Two years after Japan relaxed mask guidance (March 2023), lipstick search sits at 36% of its 2019 baseline — below its COVID trough — and even eyeshadow, which *benefited* from masks, is 20% under baseline (mask test, Tab 1). The recovery scenario has had its window and didn\'t arrive. The convergence zone on the review map points to where the energy went: base makeup evaluated in skincare language — 保湿, 乾燥, ツヤ. Skincare-hybrid makeup is the defensible position; a pure colour-led lineup is fighting the tide.",
-        "t4_c4h": "Filter giveaway reviews before you measure anything",
-        "t4_c4b": "Influencer/monitor reviews (「プレゼント」「当選」 template language) form their own island in vocabulary space, fully separated from organic consumer reviews (Finding 3). Any brand-health metric, sentiment tracker or VoC summary built on unfiltered @cosme data is averaging two different populations — one of which was paid in product. The template vocabulary makes them cheap to detect and exclude.",
-        "t4_note": "Attention and shelf data lead sales data — they do not replace it. Before acting on any of these, triangulate against sales: 家計調査 household spend per item (e-Stat), METI shipment statistics, and your own sell-through.",
     },
     "jp": {
         "tagline":        "日本の美容市場インテリジェンス",
         "subtitle":       "@cosme · 楽天市場 · Google Trends JP · YouTube · 2019–2026 · 45,510件レビュー · 39,436 SKU",
-        "tab1": "📈  市場変化", "tab2": "🔤  消費者の言語", "tab3": "🔍  発見", "tab4": "💡  ブランドへの示唆",
+        "tab1": "📈  市場変化", "tab2": "🔤  消費者の言語", "tab3": "🔍  発見",
 
         "t1_intro":  "複数の独立した関心データが同じ方向を指している。コロナ禍以降、日本の消費者は美容の優先順位をスキンケアへと移した。公的な出荷統計はそのうち半分を裏づけ、残る半分には答えられない。メイクの後退は検索だけでなく金額でも実在し、ファンデーションと口紅の出荷金額は2019年から2024年にかけていずれも42%減少した。一方、スキンケアの支出が関心の上昇に追随したかどうかは、この統計からは読み取れない。系列は2022年1月に断層を持ち、そこをまたいで測った数値は、断層の内側で測り直すと符号が反転する。",
 
@@ -552,17 +541,6 @@ STRINGS = {
         "f3_title":  "発見3 — レビューマップが示す構造",
         "f3_body":   "北東の領域はスキンケアとコスメの語彙が最も重なる場所：スキンケア言語で書かれたファンデーションレビュー、保湿とテクスチャーで評価されるクレンジングレビュー。<br><br>上部の孤立アイランドはインフルエンサー・モニターレビュー（「プレゼント」「当選」テンプレート言語）で、オーガニックレビューから自動的に分離された。この2集団を分けずにセンチメント測定を行うブランドは、2種類のシグナルを混在させている。",
 
-        # ── TAB 4: ブランドへの示唆 ────────────────────────────────────────
-        "t4_intro": "4つの発見が、美容企業の中にいる人にとって何を意味するか。これらは検索・レビュー・カタログ・YouTubeという「注目と棚」のデータに基づく方向性の仮説であり、売上データではない。各カードは根拠とする発見を明記している。",
-        "t4_c1h": "ブランドではなく、成分を主語にする",
-        "t4_c1b": "",
-        "t4_c2h": "韓国ブランドの脅威を直視し、その手法から学ぶ",
-        "t4_c2b": "直近ウィンドウの最強急上昇シグナルはアヌアで、6つの独立した起点語から浮上した（発見4）。構図：日本の消費者自身の成分教育が需要を生み、その領域で急上昇検索の最多を占めるのが韓国ブランドである。日本ブランド3つ（アンレーベル・セラミエイド・キテン）がK-Beauty風のポジショニングを取るあまり、本分析が当初韓国と誤分類したことである。一方、韓国コスメのYouTube供給は16本・440万回視聴に留まる —— 検索需要に対して教育コンテンツのレーンはまだ空いている。先に動いた者が取る。",
-        "t4_c3h": "「メイクの揺り戻し」を計画に織り込まない",
-        "t4_c3b": "マスク緩和（2023年3月）から2年、口紅検索は2019年比36% —— コロナ期の底を下回る水準にある。マスクの恩恵を受けたアイシャドウでさえ基準比80%（タブ1のマスク検証）。回復シナリオには十分な時間が与えられ、実現しなかった。エネルギーの行き先はレビューマップの収束ゾーンが示している：保湿・乾燥・ツヤというスキンケア言語で評価されるベースメイクである。スキンケア・ハイブリッドのメイクが守れるポジションであり、純粋な色物主導のラインナップは潮流に逆らうことになる。",
-        "t4_c4h": "測定の前に、モニターレビューを除外する",
-        "t4_c4b": "インフルエンサー・モニターレビュー（「プレゼント」「当選」テンプレート言語）は語彙空間で独自のアイランドを形成し、オーガニックレビューから完全に分離している（発見3）。未フィルタの@cosmeデータで構築されたブランドヘルス指標・センチメントトラッカー・VoCサマリーは、2つの異なる母集団 —— うち一方は商品で対価を得ている —— を平均している。テンプレート語彙のため検出と除外は容易である。",
-        "t4_note": "注目と棚のデータは売上データに先行するが、代替はしない。実行の前に売上側での三角測量を：家計調査の品目別支出（e-Stat）、経産省の出荷統計、そして自社のセルスルー。",
     },
 }
 def _base(height=420):
@@ -820,14 +798,6 @@ if lang == "en":
     S["t1_c2h"] = (
         f"Consumers now search ingredients by name — niacinamide "
         f"{_h['nia_pre']} → {_h['nia_post']} on the Trends index, {_h['ing_y0']}→{_h['ing_y1']}")
-    S["t4_c1b"] = (
-        f"Ingredient-name search rose from {_h['nia_pre']} to {_h['nia_post']} "
-        f"(niacinamide) and {_h['ret_pre']} to {_h['ret_post']} (retinol) between "
-        f"{_h['ing_y0']} and {_h['ing_y1']}, and never receded (Finding 1); COVID-era "
-        "discovery searches were led by actives, not brands (Finding 4). The most-watched "
-        "skincare creator in the dataset is a chemistry educator — かずのすけ's ingredient "
-        "content drew 43.4M views. Product naming, PDP copy and ad creative that lead with "
-        "the active and its concentration meet consumers where their literacy now is.")
     S["f1_title"] = "Finding 1 — Confirmed for makeup; unmeasurable for skincare"
     S["f1_body"] = (
         "Four attention sources lean the same way. In anchored Google Trends, cosmetics search "
@@ -844,25 +814,6 @@ if lang == "en":
         "figure measured across that step reverses when measured inside it. "
         "<br><br>The attention shift is real. Its behavioural counterpart is confirmed for makeup "
         "and unavailable for skincare.")
-    S["t4_c3b"] = (
-        "Two years after Japan relaxed mask guidance (March 2023), lipstick search sits at 36% of "
-        "its 2019 baseline — below its COVID trough — and even eyeshadow, which <i>benefited</i> "
-        "from masks, is 20% under baseline (mask test, Tab 1). "
-        f"<br><br>Money qualifies this rather than contradicting it. From the {_h['mkt_break']} "
-        f"trough, lipstick shipped value has risen {_h['lip_d_post']}% and foundation "
-        f"{_h['found_d_post']}% — a real recovery off the bottom — but both still sit "
-        f"{abs(_h['found_d'])}% below {_h['mkt_y0']}. Search keeps falling while the yen partially "
-        "recovers, so the category is stabilising well under its pre-COVID level, not returning to "
-        "it. Plan for the lower plateau, not the round trip. "
-        "<br><br>The convergence zone on the review map points to where the rest of the energy "
-        "went: base makeup evaluated in skincare language — 保湿, 乾燥, ツヤ. Skincare-hybrid "
-        "makeup is the defensible position; a pure colour-led lineup is fighting the tide.")
-    S["t4_note"] = (
-        "Attention and shelf data lead sales data — they do not replace it. The METI shipment check "
-        "is now built in (Tab 1, market panel) and covers the makeup categories; it cannot settle "
-        f"the skincare ones across the {_h['mkt_break']} break. Before acting, triangulate the rest "
-        "against 家計調査 household spend per item (e-Stat) — noting it carries no 美容液 or "
-        "sunscreen line — and your own sell-through.")
     S["t1_m4d"] = (
         f"foundation {_h['found_d']}% and lipstick {_h['lip_d']}%, {_h['mkt_y0']}→{_h['mkt_y1']} · "
         "METI shipments — the search decline confirmed in yen")
@@ -941,13 +892,6 @@ else:
     S["t1_c2h"] = (
         f"消費者は成分を指名検索する — ナイアシンアミドは{_h['ing_y0']}年{_h['nia_pre']}"
         f"→{_h['ing_y1']}年{_h['nia_post']}（トレンド指数）")
-    S["t4_c1b"] = (
-        f"成分の指名検索は{_h['ing_y0']}年から{_h['ing_y1']}年にかけて、ナイアシンアミドが"
-        f"{_h['nia_pre']}→{_h['nia_post']}、レチノールが{_h['ret_pre']}→{_h['ret_post']}へ上昇し、"
-        "その後も衰えていない（発見1）。コロナ期の発見的検索を牽引したのはブランドではなく有効成分だった"
-        "（発見4）。データセット中で最も視聴されたスキンケアクリエイターは化学の教育者 —— かずのすけの"
-        "成分コンテンツは4,340万回視聴された。製品名・商品ページ・広告クリエイティブは、有効成分とその"
-        "濃度を主語にすることで、現在の消費者リテラシーに合流できる。")
     S["f1_title"] = "発見1 —— メイクでは裏づけられ、スキンケアでは測れない"
     S["f1_body"] = (
         "4つの関心データがいずれも同じ方向を指す。アンカー付きGoogleトレンドでは、化粧品の検索が暦年ベース"
@@ -961,22 +905,6 @@ else:
         f"金額系列は{_h['mkt_break']}年1月に段差を持ち、その理由は統計自身が記録していない。段差をまたいで測った"
         "数値は、内側で測り直すと反転する。"
         "<br><br>関心の移動は実在する。その行動側の対応物は、メイクでは確認され、スキンケアでは得られない。")
-    S["t4_c3b"] = (
-        "マスク緩和（2023年3月）から2年、口紅検索は2019年比36% —— コロナ期の底を下回る水準にある。"
-        "マスクの恩恵を受けたアイシャドウでさえ基準比80%（タブ1のマスク検証）。"
-        f"<br><br>金額データはこれを否定するのではなく、限定する。{_h['mkt_break']}年の底からは、"
-        f"口紅の出荷金額が{_h['lip_d_post']}%、ファンデーションが{_h['found_d_post']}%回復している —— "
-        f"底打ちは実在する。ただし両者とも依然として{_h['mkt_y0']}年比{abs(_h['found_d'])}%減の水準にある。"
-        "検索は下げ続け、金額は部分的に戻る。カテゴリはコロナ前を大きく下回る水準で安定しつつあるのであり、"
-        "戻りつつあるのではない。計画は往復ではなく、低い踊り場に対して立てるべきである。"
-        "<br><br>残りのエネルギーの行き先はレビューマップの収束ゾーンが示している：保湿・乾燥・ツヤという"
-        "スキンケア言語で評価されるベースメイクである。スキンケア・ハイブリッドのメイクが守れるポジションであり、"
-        "純粋な色物主導のラインナップは潮流に逆らうことになる。")
-    S["t4_note"] = (
-        "注目と棚のデータは売上データに先行するが、代替はしない。経産省出荷統計による検証はタブ1の市場パネルに"
-        f"組み込み済みであり、メイク系カテゴリを裏づける。ただし{_h['mkt_break']}年の断層をまたぐスキンケア側は"
-        "確定できない。残りは家計調査の品目別支出（e-Stat、ただし美容液と日焼け止めの品目を持たない）と"
-        "自社のセルスルーで三角測量されたい。")
     S["t1_m4d"] = (
         f"ファンデーション{_h['found_d']}%、口紅{_h['lip_d']}%（{_h['mkt_y0']}→{_h['mkt_y1']}年）· "
         "経産省出荷統計 —— 検索の低下が金額でも確認された")
@@ -1045,7 +973,7 @@ with _hdr_left:
 </div>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3, tab4 = st.tabs([S["tab1"], S["tab2"], S["tab3"], S["tab4"]])
+tab1, tab2, tab3 = st.tabs([S["tab1"], S["tab2"], S["tab3"]])
 
 # ═══════════════════════════════════════════════════════════════════════════
 # TAB 1
@@ -2152,33 +2080,3 @@ with tab3:
 
     # Finding callout
     st.markdown(f'<div style="background:{C["skin_lt"]};border-left:4px solid {C["skin"]};border-radius:0 8px 8px 0;padding:14px 18px;margin-top:8px;"><p style="margin:0;font-size:13px;color:{C["text"]};font-weight:600;">{S["f3_title"]}</p><p style="margin:6px 0 0 0;font-size:12px;color:{C["muted"]};line-height:1.6;">{S["f3_body"]}</p></div>', unsafe_allow_html=True)
-
-# ═══════════════════════════════════════════════════════════════════════════
-# TAB 4 — FOR BRANDS
-# ═══════════════════════════════════════════════════════════════════════════
-with tab4:
-
-    st.markdown(f'<p style="color:{C["muted"]};font-size:14px;margin-bottom:20px;">{S["t4_intro"]}</p>', unsafe_allow_html=True)
-
-    def implication_card(title, body, accent):
-        st.markdown(f"""
-        <div style="background:{C['card']};border:1px solid {C['border']};
-                    border-top:3px solid {accent};border-radius:8px;
-                    padding:18px 20px;margin-bottom:16px;min-height:230px;">
-            <p style="margin:0;font-size:14px;font-weight:700;color:{C['text']};">{title}</p>
-            <p style="margin:10px 0 0 0;font-size:12.5px;color:{C['muted']};line-height:1.7;">{body}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    r1c1, r1c2 = st.columns(2)
-    with r1c1:
-        implication_card(S["t4_c1h"], S["t4_c1b"], C["ingr"])
-    with r1c2:
-        implication_card(S["t4_c2h"], S["t4_c2b"], C["korean"])
-    r2c1, r2c2 = st.columns(2)
-    with r2c1:
-        implication_card(S["t4_c3h"], S["t4_c3b"], C["cosm"])
-    with r2c2:
-        implication_card(S["t4_c4h"], S["t4_c4b"], C["gold"])
-
-    st.markdown(f'<div style="background:{C["grid"]};border-left:3px solid {C["muted"]};border-radius:0 6px 6px 0;padding:10px 14px;margin-top:4px;"><span style="font-size:12px;color:{C["muted"]};font-style:italic;">{S["t4_note"]}</span></div>', unsafe_allow_html=True)

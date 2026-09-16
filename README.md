@@ -55,7 +55,6 @@ Cosmetics search demand fell ~32% across full calendar years 2019→2025 while s
 | 📈 The Shift / 市場変化 | Three panels: the attention layer (search, mask-rebound test, ingredient surge, Rakuten treemap, YouTube), the market layer (METI shipped value, the 2022 break), then the two set side by side |
 | 🔤 The Language / 消費者の言語 | Word clouds by year, size-matched vocabulary convergence |
 | 🔍 Discovery / 発見 | Google Trends rising searches, YouTube channel analysis, interactive review map |
-| 💡 For brands / ブランドへの示唆 | The four findings translated into prescriptive plays — with an explicit attention-data-≠-sales-data disclaimer |
 
 ---
 
