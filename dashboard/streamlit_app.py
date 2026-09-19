@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 from pathlib import Path
 
 st.set_page_config(
@@ -337,6 +338,103 @@ def compute_headline():
     }
 
 HEADLINE = compute_headline()
+
+
+# ── Launch layer — PR TIMES product-launch releases ──────────────────────
+# Written by build_prtimes_launches.py; one row per release that gate v2
+# calls a launch. The core panel is the feeds whose PR TIMES history reaches
+# LAUNCH_WINDOW_START (src/prtimes.WINDOW_START; the app does not import src/).
+# Every historical figure uses the core only, so an issuer whose feed starts
+# later never puts a step in the series. Launch timing is seasonal, so changes
+# are read as 12-month totals against the 12 months before, never month on month.
+LAUNCH_WINDOW_START = "2021-09"
+LAUNCH_GROUPS = ["skincare", "makeup", "other", "none"]
+# Measured on hand labels, not computable from the export: the gate on a
+# 100-release holdout weighted to the store, and PR TIMES coverage of the brand
+# list by tier. recon/2026-09-19_prtimes-gate-score_v2-holdout.md.
+LAUNCH_GATE = dict(asof="2026-09-19", n_holdout=100, n_store=6554,
+                   precision=0.89, p_lo=0.76, p_hi=0.98,
+                   recall=0.81, r_lo=0.68, r_hi=0.92,
+                   prestige_unseen=11, prestige_n=26, other_unseen=28, other_n=92,
+                   edition_found=7, edition_n=13)
+
+
+@st.cache_data
+def compute_launch_headline():
+    """Launch-layer figures, or None when the export is absent."""
+    path = ASSETS / "prtimes_launches.csv"
+    if not path.exists():
+        return None
+    d = pd.read_csv(path, dtype=str).fillna("")
+    feeds = pd.read_csv(ASSETS / "prtimes_feeds.csv", dtype=str).fillna("")
+    terms = pd.read_csv(ASSETS / "prtimes_ingredient_terms.csv", dtype=str).fillna("")
+
+    # The fetch month is partial; the last complete month is the one before it.
+    last = pd.Period(feeds["fetched"].max()[:7], freq="M") - 1
+    months = pd.period_range(LAUNCH_WINDOW_START, last, freq="M").astype(str)
+    l12, p12 = list(months[-12:]), list(months[-24:-12])
+    core = d[(d["panel"] == "core") & d["month"].isin(months)]
+
+    monthly = (core.groupby(["month", "category_group"]).size().unstack(fill_value=0)
+               .reindex(index=months, columns=LAUNCH_GROUPS, fill_value=0))
+    grp_l12, grp_p12 = monthly.loc[l12].sum(), monthly.loc[p12].sum()
+
+    prim = core.assign(cat=core["category"].str.split("|").str[0])
+    prim = prim[prim["cat"] != ""]
+    cats = pd.DataFrame({"n_l12": prim[prim["month"].isin(l12)]["cat"].value_counts(),
+                         "n_p12": prim[prim["month"].isin(p12)]["cat"].value_counts()}
+                        ).fillna(0).astype(int)
+    cats["group"] = prim.drop_duplicates("cat").set_index("cat")["category_group"]
+
+    # Ingredient share: editions (the title names a re-release, refill or
+    # limited packaging of an existing formula) are left out of both sides,
+    # because an unchanged formula carries no new ingredient decision.
+    ne = core[core["is_edition"] == "0"]
+    den = ne.groupby("month").size().reindex(months, fill_value=0)
+    ex = ne.assign(ing=ne["ingredients"].str.split("|")).explode("ing")
+    ex = ex[ex["ing"] != ""]
+    num = (ex.groupby(["month", "ing"]).size().unstack(fill_value=0)
+           .reindex(index=months, fill_value=0))
+    den_l12, den_p12 = int(den[l12].sum()), int(den[p12].sum())
+    ing = pd.DataFrame({"n_l12": num.loc[l12].sum(), "n_p12": num.loc[p12].sum()})
+    ing["s_l12"] = 100 * ing["n_l12"] / den_l12
+    ing["s_p12"] = 100 * ing["n_p12"] / den_p12
+    ing = ing.join(terms.set_index("canonical")).sort_values(["s_l12", "n_p12"],
+                                                              ascending=False)
+    ing_share_roll = (num.rolling(12).sum().div(den.rolling(12).sum(), axis=0) * 100).dropna()
+    any_ing_l12 = int((ne["month"].isin(l12) & (ne["ingredients"] != "")).sum())
+
+    # Full roster, latest 12 months: every feed whose history covers all 12.
+    first_day = f"{l12[0]}-01"
+    elig = feeds[(feeds["history_complete"] == "True") | (feeds["feed_reach"] <= first_day)]
+    full = d[d["company_id"].isin(elig["company_id"]) & d["month"].isin(l12)]
+    full_grp = (full.groupby(["category_group", "panel"]).size().unstack(fill_value=0)
+                .reindex(index=LAUNCH_GROUPS, columns=["core", "present_forward"], fill_value=0))
+
+    core_feeds = feeds[feeds["panel"] == "core"]
+    top = ing.iloc[0]
+    return {
+        "months": list(months), "l12": l12, "p12": p12, "last": str(last),
+        "monthly": monthly, "roll": monthly.rolling(12).sum().dropna(),
+        "grp_l12": grp_l12, "grp_p12": grp_p12,
+        "tot_l12": int(grp_l12.sum()), "tot_p12": int(grp_p12.sum()),
+        "cats": cats.sort_values("n_l12", ascending=False),
+        "ing": ing[(ing["n_l12"] + ing["n_p12"]) > 0], "ing_roll": ing_share_roll,
+        "den_l12": den_l12, "den_p12": den_p12,
+        "any_ing_share": round(100 * any_ing_l12 / den_l12, 1),
+        "top_ing": top.name, "top_n_l12": int(top["n_l12"]), "top_n_p12": int(top["n_p12"]),
+        "top_s_l12": round(float(top["s_l12"]), 1), "top_s_p12": round(float(top["s_p12"]), 1),
+        "full_grp": full_grp, "full_tot": int(full_grp.values.sum()),
+        "full_pf": int(full_grp["present_forward"].sum()),
+        "n_core": core_feeds["issuer_group"].nunique(),
+        "n_all": elig["issuer_group"].nunique(),
+        "n_pf_feeds": int((elig["panel"] == "present_forward").sum()),
+        "n_core_feeds": len(core_feeds), "n_all_feeds": len(elig),
+        "terms": terms,
+    }
+
+
+LAUNCH = compute_launch_headline()
 STRINGS = {
     "en": {
         "tagline":       "Japanese beauty market analytics",
@@ -425,7 +523,24 @@ STRINGS = {
         "f2_body": "",
 
         # ── TAB 3: Discovery ──────────────────────────────────────────────
-        "t3_intro": "Rising Google searches in two periods, the largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
+        "t3_intro": "Product-launch releases on PR TIMES, rising Google searches in two periods, the largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
+        # Launch panel. Figure-bearing strings are empty here and rebuilt from LAUNCH.
+        "t3_lp": "Product launches", "t3_lpd": "",
+        "t3_l1h": "", "t3_l1e": "", "t3_l1ax": "Launch releases, 12-month total",
+        "t3_l2h": "", "t3_l2e": "",
+        "t3_l3h": "", "t3_l3e": "",
+        "t3_l4h": "", "t3_l4e": "",
+        "t3_l5h": "Launch share and search interest, by ingredient", "t3_l5e": "",
+        "t3_l5ax1": "Share of launch releases", "t3_l5ax2": "Search interest (0–100)",
+        "t3_l5y1": "Launch share", "t3_l5y2": "Search (0–100)",
+        "t3_lcap": "",
+        "t3_lempty": "Launch export not found: dashboard/assets/prtimes_launches.csv.",
+        "t3_lg_skincare": "Skincare", "t3_lg_makeup": "Makeup",
+        "t3_lg_other": "Hair, body and fragrance", "t3_lg_none": "No category word",
+        "t3_lpan_core": "Core issuers", "t3_lpan_pf": "Issuers with history from after Sep 2021",
+        "t3_lwin_l12": "12 months to ", "t3_lwin_p12": "12 months before",
+        "t3_p2": "Search, video and reviews",
+        "t3_p2d": "Google Trends rising related searches, YouTube beauty channels and their comments, and @cosme reviews.",
 
         "t3_m1": "Top rising search, 2023–2025",  "t3_m1d": "Korean brand · surfaced from 6 seed terms",
         "t3_m2": "Top rising search, 2020–2021",  "t3_m2d": "ingredient · surfaced from 5 seed terms",
@@ -544,7 +659,23 @@ STRINGS = {
         "f2_title":  "発見2 — レビュー語彙はわずかに収束した",
         "f2_body": "",
 
-        "t3_intro":  "2期間の急上昇Google検索、美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
+        "t3_intro":  "PR TIMESの新商品リリース、2期間の急上昇Google検索、美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
+        "t3_lp": "新商品リリース", "t3_lpd": "",
+        "t3_l1h": "", "t3_l1e": "", "t3_l1ax": "新商品リリース件数、12カ月合計",
+        "t3_l2h": "", "t3_l2e": "",
+        "t3_l3h": "", "t3_l3e": "",
+        "t3_l4h": "", "t3_l4e": "",
+        "t3_l5h": "成分別の新商品リリース比率と検索関心", "t3_l5e": "",
+        "t3_l5ax1": "新商品リリースに占める比率", "t3_l5ax2": "検索関心（0–100）",
+        "t3_l5y1": "リリース比率", "t3_l5y2": "検索（0–100）",
+        "t3_lcap": "",
+        "t3_lempty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
+        "t3_lg_skincare": "スキンケア", "t3_lg_makeup": "メイク",
+        "t3_lg_other": "ヘア・ボディ・フレグランス", "t3_lg_none": "カテゴリ語なし",
+        "t3_lpan_core": "コア発行元", "t3_lpan_pf": "履歴が2021年9月より後に始まる発行元",
+        "t3_lwin_l12": "直近12カ月 〜", "t3_lwin_p12": "前年同期12カ月",
+        "t3_p2": "検索・動画・レビュー",
+        "t3_p2d": "Googleトレンドの急上昇関連検索、美容YouTubeのチャンネルとコメント、@cosmeレビュー。",
 
         "t3_m1":     "急上昇検索1位（2023–2025）", "t3_m1d": "韓国ブランド · 6つの起点語から出現",
         "t3_m2":     "急上昇検索1位（2020–2021）", "t3_m2d": "成分 · 5つの起点語から出現",
@@ -1031,6 +1162,150 @@ else:
         f"各期間を{_h['matched_n']}件に揃えると、スキンケアとコスメのレビュー言語のコサイン類似度は"
         f"{_h['conv_lo']}（{_h['conv_p0']}年）から{_h['conv_hi']}（{_h['conv_p1']}年）へ上昇した。"
         f"Δ +{_h['conv_delta']}（{_h['conv_ci_jp']}）。")
+
+# ── Launch copy is rebuilt from LAUNCH ────────────────────────────────────
+# Canonical category keys (config/launch_terms.xlsx) → display names.
+LAUNCH_CAT = {
+    "cleansing": ("Cleansing", "クレンジング"), "face_wash": ("Face wash", "洗顔料"),
+    "toner_lotion": ("Toner", "化粧水"), "booster": ("Booster", "導入美容液"),
+    "serum": ("Serum", "美容液"), "emulsion": ("Emulsion", "乳液"),
+    "eye_cream": ("Eye cream", "アイクリーム"), "cream": ("Cream", "クリーム"),
+    "mask": ("Mask", "パック"), "all_in_one": ("All-in-one", "オールインワン"),
+    "sunscreen": ("Sunscreen", "日焼け止め"), "base_makeup": ("Base makeup", "化粧下地"),
+    "foundation": ("Foundation", "ファンデーション"), "concealer": ("Concealer", "コンシーラー"),
+    "powder": ("Powder", "パウダー"), "lipstick": ("Lipstick", "口紅"),
+    "lip_balm": ("Lip balm", "リップクリーム"), "blush": ("Blush", "チーク"),
+    "eye_makeup": ("Eye makeup", "アイメイク"), "lash_brow": ("Lash and brow", "まつ毛・眉"),
+    "nail": ("Nail", "ネイル"), "hair": ("Hair", "ヘア"),
+    "fragrance": ("Fragrance", "フレグランス"), "body": ("Body", "ボディ"),
+}
+_L = LAUNCH
+_li = 0 if lang == "en" else 1
+
+
+def _ym(ym):
+    y, m = int(ym[:4]), int(ym[5:7])
+    return f"{_MON_EN[m]} {y}" if lang == "en" else f"{y}年{m}月"
+
+
+def _ing_label(canon):
+    t = _L["terms"].set_index("canonical")
+    return t.loc[canon, "label_short_en" if lang == "en" else "label_ja"]
+
+
+if _L:
+    _last = _ym(_L["last"])
+    _pct = lambda a, b: round(100 * (a - b) / b)
+    _gl, _gp = _L["grp_l12"], _L["grp_p12"]
+    _cats = _L["cats"]
+    _top_cat = _cats.index[0]
+    _fall = (_cats["n_l12"] - _cats["n_p12"]).idxmin()
+    _fell = (_cats.loc[_fall, "n_l12"] - _cats.loc[_fall, "n_p12"]) < 0
+    _pf_share = round(100 * _L["full_pf"] / _L["full_tot"])
+    _top_ing = _ing_label(_L["top_ing"])
+    _trends_last = _ym(str(load_ingredient_surge()["week_start"].max())[:7])
+    _G = LAUNCH_GATE
+    if lang == "en":
+        def _move(a, b):
+            p = _pct(a, b)
+            return f"held at {a}" if abs(p) < 3 else f"{'rose' if p > 0 else 'fell'} {abs(p)}% to {a}"
+        S["t3_lpd"] = (
+            f"Product-launch releases on PR TIMES from {_L['n_core']} issuers since September 2021 "
+            f"and {_L['n_all']} issuers over the latest 12 months, by month of release. "
+            "One release is one count.")
+        S["t3_l1h"] = (
+            f"Skincare launch releases {_move(_gl['skincare'], _gp['skincare'])} in the 12 months "
+            f"to {_last}; makeup {_move(_gl['makeup'], _gp['makeup'])}")
+        S["t3_l1e"] = (
+            f"{_L['n_core']} issuers whose PR TIMES history reaches back to September 2021. "
+            "12-month totals by the product category named in the title or excerpt; releases "
+            "that name no category word form their own line.")
+        S["t3_l2h"] = (
+            f"{LAUNCH_CAT[_top_cat][0]} had the most launch releases, {_cats.loc[_top_cat, 'n_l12']}, "
+            f"against {_cats.loc[_top_cat, 'n_p12']} a year earlier"
+            + (f"; {LAUNCH_CAT[_fall][0].lower()} fell to {_cats.loc[_fall, 'n_l12']} "
+               f"from {_cats.loc[_fall, 'n_p12']}" if _fell else ""))
+        S["t3_l2e"] = (
+            "Core issuers. The first category named in the title, otherwise in the excerpt. "
+            f"Dark bars: the 12 months to {_last}; light bars: the 12 months before.")
+        S["t3_l3h"] = (
+            f"All {_L['n_all']} issuers, 12 months to {_last}: {_L['full_tot']:,} launch releases, "
+            f"{_L['full_pf']} of them ({_pf_share}%) from the {_L['n_pf_feeds']} feeds whose history "
+            "starts after September 2021")
+        S["t3_l3e"] = (
+            f"{_L['n_all_feeds']} feeds whose PR TIMES history covers all 12 months. Feeds whose "
+            "history starts after September 2021 appear here and are left out of the series above.")
+        S["t3_l4h"] = (
+            f"{_top_ing} appeared in {_L['top_s_l12']}% of launch releases in the 12 months to "
+            f"{_last} ({_L['top_n_l12']} of {_L['den_l12']}), from {_L['top_s_p12']}% a year earlier")
+        S["t3_l4e"] = (
+            "Core issuers. Share of launch releases whose title or excerpt names the ingredient: "
+            f"{_L['den_l12']} releases in the 12 months to {_last}, {_L['den_p12']} in the 12 months "
+            f"before. {_L['any_ing_share']}% name at least one of the {len(_L['terms'])} tracked "
+            "ingredients. Releases whose title names a re-release, refill or limited packaging "
+            "are excluded.")
+        S["t3_l5e"] = (
+            "Upper: share of core launch releases naming the ingredient, 12-month rolling, to "
+            f"{_last}. Lower: Google Trends interest, 12-month rolling mean, to {_trends_last}.")
+        S["t3_lcap"] = (
+            f"Measured {_G['asof']}. Launch gate: precision {_G['precision']} (95% CI "
+            f"{_G['p_lo']}–{_G['p_hi']}) and recall {_G['recall']} ({_G['r_lo']}–{_G['r_hi']}) "
+            f"on {_G['n_holdout']} hand-labelled releases held out from the gate's design, "
+            f"weighted to {_G['n_store']:,} stored releases. PR TIMES coverage: "
+            f"{_G['prestige_unseen']} of {_G['prestige_n']} prestige (デパコス) brands in the brand "
+            f"list appear in no stored release, against {_G['other_unseen']} of {_G['other_n']} "
+            f"brands in other tiers. The edition filter finds {_G['edition_found']} of "
+            f"{_G['edition_n']} hand-labelled editions.")
+        S["t3_lwin_l12"] += _last
+    else:
+        def _move(a, b):
+            p = _pct(a, b)
+            return "で横ばい" if abs(p) < 3 else f"、前年同期比{abs(p)}%{'増' if p > 0 else '減'}"
+        S["t3_lpd"] = (
+            f"PR TIMES上の新商品リリース。2021年9月以降は{_L['n_core']}社、直近12カ月は"
+            f"{_L['n_all']}社。配信月別、1リリースを1件と数える。")
+        S["t3_l1h"] = (
+            f"直近12カ月（{_last}まで）のスキンケア新商品リリースは{_gl['skincare']}件"
+            f"{_move(_gl['skincare'], _gp['skincare'])}。メイクは{_gl['makeup']}件"
+            f"{_move(_gl['makeup'], _gp['makeup'])}")
+        S["t3_l1e"] = (
+            f"PR TIMES上の履歴が2021年9月まで遡る{_L['n_core']}社。タイトルまたは抜粋に記載された"
+            "商品カテゴリ別の12カ月合計。カテゴリ語を含まないリリースは別系列とした。")
+        S["t3_l2h"] = (
+            f"直近12カ月の新商品リリースは{LAUNCH_CAT[_top_cat][1]}が{_cats.loc[_top_cat, 'n_l12']}件で"
+            f"最多（前年同期{_cats.loc[_top_cat, 'n_p12']}件）"
+            + (f"。{LAUNCH_CAT[_fall][1]}は{_cats.loc[_fall, 'n_l12']}件"
+               f"（同{_cats.loc[_fall, 'n_p12']}件）" if _fell else ""))
+        S["t3_l2e"] = (
+            "コア発行元。タイトル、なければ抜粋で最初に記載されたカテゴリ。"
+            f"濃い棒：{_last}までの12カ月、淡い棒：その前の12カ月。")
+        S["t3_l3h"] = (
+            f"直近12カ月（{_last}まで）の全{_L['n_all']}社の新商品リリースは{_L['full_tot']:,}件。"
+            f"うち{_L['full_pf']}件（{_pf_share}%）は履歴が2021年9月より後に始まる"
+            f"{_L['n_pf_feeds']}フィードから")
+        S["t3_l3e"] = (
+            f"PR TIMES上の履歴が12カ月すべてを含む{_L['n_all_feeds']}フィード。履歴が2021年9月より後に"
+            "始まるフィードはここにのみ含め、上の系列には加えない。")
+        S["t3_l4h"] = (
+            f"{_top_ing}を含む新商品リリースは直近12カ月で{_L['top_s_l12']}%"
+            f"（{_L['den_l12']}件中{_L['top_n_l12']}件）、前年同期は{_L['top_s_p12']}%")
+        S["t3_l4e"] = (
+            "コア発行元。タイトルまたは抜粋に成分名を含む新商品リリースの比率。"
+            f"{_last}までの12カ月は{_L['den_l12']}件、その前の12カ月は{_L['den_p12']}件。"
+            f"追跡する{len(_L['terms'])}成分のいずれかを含むのは{_L['any_ing_share']}%。"
+            "タイトルに再発売・詰め替え・限定パッケージを含むリリースは除いた。")
+        S["t3_l5e"] = (
+            f"上：成分名を含むコア新商品リリースの比率、12カ月移動、{_last}まで。"
+            f"下：Googleトレンドの検索関心、12カ月移動平均、{_trends_last}まで。")
+        S["t3_lcap"] = (
+            f"{_G['asof']}測定。新商品判定の精度：適合率{_G['precision']}（95%信頼区間"
+            f"{_G['p_lo']}〜{_G['p_hi']}）、再現率{_G['recall']}（同{_G['r_lo']}〜{_G['r_hi']}）。"
+            f"判定語彙の設計に用いていない手作業ラベル{_G['n_holdout']}件で測り、保存済み"
+            f"{_G['n_store']:,}件に加重した。PR TIMESの収録：ブランドリストのデパコス"
+            f"{_G['prestige_n']}ブランドのうち{_G['prestige_unseen']}ブランドは保存済みリリースに一度も"
+            f"現れない。その他の価格帯は{_G['other_n']}ブランド中{_G['other_unseen']}。"
+            f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
+        S["t3_lwin_l12"] += _last
 
 with _hdr_left:
     st.markdown(f"""
@@ -1642,6 +1917,151 @@ with tab3:
         kpi_card(S["t3_m3"], f"{len(load_umap()):,} reviews", S["t3_m3d"])
 
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+
+    # ── Launch panel — PR TIMES ───────────────────────────────────────────
+    # Launch data sits first: brands announce before consumers search. Colours
+    # passed the dataviz validator as a set (blue, rose, ochre); the no-category
+    # line is gray and dashed, and every line is labelled at its end.
+    LG_COLOR = {"skincare": "#3F86B5", "makeup": "#C4627A", "other": "#A8861A",
+                "none": C["muted"]}
+    _h3 = (f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">'
+           '{h}</h3><p class="expl">{e}</p>')
+    panel_header(S["t3_lp"], S["t3_lpd"])
+    if LAUNCH is None:
+        st.markdown(f'<p class="expl">{S["t3_lempty"]}</p>', unsafe_allow_html=True)
+    else:
+        _gname = {g: S[f"t3_lg_{g}"] for g in LAUNCH_GROUPS}
+        st.markdown(_h3.format(h=S["t3_l1h"], e=S["t3_l1e"]), unsafe_allow_html=True)
+        lc1, lc2 = st.columns([3, 2])
+
+        # Figure 1 — 12-month rolling totals by category group, core panel
+        with lc1:
+            _roll = LAUNCH["roll"]
+            _x = pd.to_datetime(_roll.index + "-01")
+            fig_l1 = go.Figure()
+            for g in LAUNCH_GROUPS:
+                fig_l1.add_trace(go.Scatter(
+                    x=_x, y=_roll[g], name=_gname[g], mode="lines",
+                    line=dict(color=LG_COLOR[g], width=2, dash="dash" if g == "none" else "solid"),
+                    hovertemplate="%{y:.0f}<extra>" + _gname[g] + "</extra>"))
+                fig_l1.add_annotation(x=_x[-1], y=_roll[g].iloc[-1], text=_gname[g],
+                                      showarrow=False, xanchor="left", xshift=6,
+                                      font=dict(size=10, color=C["text"]))
+            fig_l1.update_layout(**_base(height=360))
+            fig_l1.update_layout(margin=dict(l=20, r=150, t=10, b=40), showlegend=True,
+                                 legend=dict(orientation="h", yanchor="top", y=-0.12,
+                                             xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
+                                 xaxis=_xax(range=[_x[0], _x[-1] + pd.Timedelta(days=20)]),
+                                 yaxis=_yax(title=S["t3_l1ax"], rangemode="tozero", automargin=True))
+            st.plotly_chart(fig_l1, width="stretch")
+
+        # Per category: latest 12 months against the 12 months before
+        with lc2:
+            st.markdown(_h3.format(h=S["t3_l2h"], e=S["t3_l2e"]), unsafe_allow_html=True)
+            _c = LAUNCH["cats"].head(12).iloc[::-1]
+            _cl = [LAUNCH_CAT[k][_li] for k in _c.index]
+            _cc = [LG_COLOR.get(g, C["muted"]) for g in _c["group"]]
+            fig_l2 = go.Figure()
+            fig_l2.add_trace(go.Bar(y=_cl, x=_c["n_p12"], orientation="h", name=S["t3_lwin_p12"],
+                                    marker=dict(color=_cc, opacity=0.35),
+                                    hovertemplate="%{x}<extra>" + S["t3_lwin_p12"] + "</extra>"))
+            fig_l2.add_trace(go.Bar(y=_cl, x=_c["n_l12"], orientation="h", name=S["t3_lwin_l12"],
+                                    marker=dict(color=_cc),
+                                    hovertemplate="%{x}<extra>" + S["t3_lwin_l12"] + "</extra>"))
+            fig_l2.update_layout(**_base(height=420))
+            # Bars take their category group's colour, so a legend swatch would show one
+            # group's hue for every bar; the expl line names dark and light instead.
+            fig_l2.update_layout(barmode="group", bargap=0.25, bargroupgap=0.08,
+                                 hovermode="y unified", showlegend=False,
+                                 margin=dict(l=10, r=10, t=10, b=30),
+                                 xaxis=_xax(), yaxis=_yax(automargin=True))
+            st.plotly_chart(fig_l2, width="stretch")
+
+        # Full roster, latest 12 months — present-forward feeds stacked on the core
+        st.markdown(_h3.format(h=S["t3_l3h"], e=S["t3_l3e"]), unsafe_allow_html=True)
+        _f = LAUNCH["full_grp"].iloc[::-1]
+        fig_l3 = go.Figure()
+        for pan, col, lab in [("core", "#5A6B7B", S["t3_lpan_core"]),
+                              ("present_forward", "#B9C2CC", S["t3_lpan_pf"])]:
+            fig_l3.add_trace(go.Bar(y=[_gname[g] for g in _f.index], x=_f[pan], name=lab,
+                                    orientation="h", marker=dict(color=col, line=dict(color=C["bg"], width=2)),
+                                    texttemplate="%{x}", textposition="inside",
+                                    insidetextfont=dict(size=10),
+                                    hovertemplate="%{x}<extra>" + lab + "</extra>"))
+        fig_l3.update_layout(**_base(height=230))
+        fig_l3.update_layout(barmode="stack", hovermode="y unified",
+                             margin=dict(l=10, r=10, t=10, b=30),
+                             legend=dict(orientation="h", yanchor="top", y=-0.15,
+                                         xanchor="left", x=0, bgcolor="rgba(0,0,0,0)",
+                                         traceorder="normal"),
+                             xaxis=_xax(), yaxis=_yax(automargin=True))
+        st.plotly_chart(fig_l3, width="stretch")
+
+        st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+        lc3, lc4 = st.columns(2)
+
+        # Figure 2 — ingredient share, latest 12 months against the 12 before
+        with lc3:
+            st.markdown(_h3.format(h=S["t3_l4h"], e=S["t3_l4e"]), unsafe_allow_html=True)
+            _i = LAUNCH["ing"].iloc[::-1]
+            _il = [_ing_label(k) for k in _i.index]
+            fig_l4 = go.Figure()
+            for yv, a, b in zip(_il, _i["s_p12"], _i["s_l12"]):
+                fig_l4.add_shape(type="line", x0=a, x1=b, y0=yv, y1=yv,
+                                 line=dict(color=C["border"], width=2), layer="below")
+            fig_l4.add_trace(go.Scatter(
+                x=_i["s_p12"], y=_il, mode="markers", name=S["t3_lwin_p12"],
+                marker=dict(size=9, color=C["card"], line=dict(color=C["ingr"], width=2)),
+                customdata=_i["n_p12"],
+                hovertemplate="%{x:.1f}% (%{customdata})<extra>" + S["t3_lwin_p12"] + "</extra>"))
+            fig_l4.add_trace(go.Scatter(
+                x=_i["s_l12"], y=_il, mode="markers", name=S["t3_lwin_l12"],
+                marker=dict(size=10, color=C["ingr"]),
+                customdata=_i["n_l12"],
+                hovertemplate="%{x:.1f}% (%{customdata})<extra>" + S["t3_lwin_l12"] + "</extra>"))
+            fig_l4.update_layout(**_base(height=460))
+            fig_l4.update_layout(hovermode="y unified", margin=dict(l=10, r=10, t=10, b=40),
+                                 legend=dict(orientation="h", yanchor="top", y=-0.08,
+                                             xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
+                                 xaxis=_xax(ticksuffix="%", rangemode="tozero"),
+                                 yaxis=_yax(automargin=True))
+            st.plotly_chart(fig_l4, width="stretch")
+
+        # One ingredient: launch share over search interest, one axis each
+        with lc4:
+            st.markdown(_h3.format(h=S["t3_l5h"], e=S["t3_l5e"]), unsafe_allow_html=True)
+            _paired = LAUNCH["ing"][LAUNCH["ing"]["trends_term"] != ""]
+            _opts = [_ing_label(k) for k in _paired.index]
+            _pick = st.selectbox(S["t3_l5ax1"], _opts, index=0, key="launch_ing",
+                                 label_visibility="collapsed")
+            _canon = _paired.index[_opts.index(_pick)]
+            _sr = LAUNCH["ing_roll"].get(_canon)
+            _tr = load_ingredient_surge()
+            _tr = (_tr[_tr["term"] == _paired.loc[_canon, "trends_term"]]
+                   .set_index("week_start")["interest"].sort_index().rolling(12).mean().dropna())
+            _x0 = pd.Timestamp(LAUNCH["roll"].index[0] + "-01")
+            _tr = _tr[_tr.index >= _x0]
+            fig_l5 = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08)
+            fig_l5.add_trace(go.Scatter(
+                x=pd.to_datetime(_sr.index + "-01"), y=_sr, mode="lines", name=S["t3_l5ax1"],
+                line=dict(color=C["ingr"], width=2),
+                hovertemplate="%{y:.1f}%<extra>" + S["t3_l5ax1"] + "</extra>"), row=1, col=1)
+            fig_l5.add_trace(go.Scatter(
+                x=_tr.index, y=_tr, mode="lines", name=S["t3_l5ax2"],
+                line=dict(color=C["text"], width=2),
+                hovertemplate="%{y:.0f}<extra>" + S["t3_l5ax2"] + "</extra>"), row=2, col=1)
+            fig_l5.update_layout(**_base(height=420))
+            fig_l5.update_layout(showlegend=False, margin=dict(l=20, r=10, t=10, b=30))
+            fig_l5.update_xaxes(**_xax())
+            fig_l5.update_yaxes(**_yax(title=S["t3_l5y1"], suffix="%", rangemode="tozero",
+                                       automargin=True), row=1, col=1)
+            fig_l5.update_yaxes(**_yax(title=S["t3_l5y2"], rangemode="tozero", automargin=True),
+                                row=2, col=1)
+            st.plotly_chart(fig_l5, width="stretch")
+
+        st.caption(S["t3_lcap"])
+
+    panel_header(S["t3_p2"], S["t3_p2d"])
 
     # ── Block C treemap ───────────────────────────────────────────────────
     st.markdown(f'<h3 style="font-size:16px;font-weight:600;color:{C["text"]};margin-bottom:2px;">{S["t3_bch"]}</h3><p class="expl">{S["t3_bce"]}</p>', unsafe_allow_html=True)

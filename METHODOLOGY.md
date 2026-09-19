@@ -63,6 +63,13 @@ Added the 2025 時系列表 (opened 30 June 2026) and January–July 2026 from t
 - **乳液のkg単価 / 乳液 yen per kg.** 2024年に2015〜2021年の範囲内（9,523円）、2025年は範囲を下回る（9,049円）。化粧水は2026年1〜7月に6,686円で、範囲（6,787〜7,824円）に近づいている。 / Inside its 2015–2021 range in 2024 (9,523), below it in 2025 (9,049). 化粧水 reached 6,686 in January–July 2026, against a 6,787–7,824 range.
 - **輸入の記述を修正 / Imports corrected.** 改訂5は「ほぼ横ばい」としていたが、2023年に2,242億円のピークがある。 / Revision 5 called imports flat; they peaked at 2,242 億円 in 2023.
 - **ダッシュボードの出荷チャートを月次に / Shipment charts made monthly.**
+
+**改訂7 — 新商品リリース層の追加（2026年9月19日）/ Revision 7 — launch layer added (19 September 2026)**  
+PR TIMES上の企業別RSSから新商品リリースを数える層を「発見」タブに追加した。市場層と関心層は変更していない。  
+A layer counting product-launch releases from PR TIMES company feeds was added to the Discovery tab. The market and attention layers are unchanged.
+- **判定 / Gate.** タイトルと抜粋に対する語彙ルール（`src/prtimes.gate`、語彙は`config/launch_terms.xlsx`）。語彙は手作業ラベル150件で設計し、設計に用いていない別の100件で測定した。 / A vocabulary rule over title and excerpt (`src/prtimes.gate`, vocabulary in `config/launch_terms.xlsx`), designed on 150 hand-labelled releases and measured on a separate 100 not used in its design.
+- **パネル / Panel.** 2021年9月まで履歴が遡る41フィード（30社）をコアとし、推移はコアのみで測る。それより後に履歴が始まる14フィードは直近12カ月の全体集計にのみ含める。 / The core is the 41 feeds (30 issuers) whose history reaches September 2021, and every trend is measured on the core only. The 14 feeds whose history starts later enter only the latest-12-month full-roster figure.
+- **ラベル / Labels.** `config/prtimes_launch_validation_labels.csv`（150件）と`config/prtimes_launch_holdout_labels.csv`（100件）。リリース本文を含まない。 / Both label files hold ids and labels only, no release text.
 ---
 
 ## 方法論的注意点 / Methodological Caveats
@@ -114,3 +121,7 @@ Added the 2025 時系列表 (opened 30 June 2026) and January–July 2026 from t
 12. **検索シグナル ≠ 支出 / Search signal ≠ spending**  
     関心層の全シグナルは注目（検索・コメント）と供給（SKU）であり、円ベースの需要ではない。経産省・生産動態統計と財務省・貿易統計による検証は改訂5で実施済みであり、メイクについては金額で裏づけられ、スキンケアについては2022年1月の断層により測定できないという結論に至った。残るのは総務省・家計調査であるが、**美容液と日焼け止めの品目を持たない** —— 最も動いたカテゴリはこの系列では検証できず、化粧水・乳液・化粧クリーム・ファンデーション・口紅に限られる。  
     Attention-layer signals measure attention (search, comments) or supply (SKUs), not yen. Validation against METI shipments and 財務省 trade statistics was carried out in Revision 5: makeup is corroborated in money, skincare is unmeasurable across the January 2022 break. What remains unpulled is 家計調査 household spending, which carries **no 美容液 line and no sunscreen line** — it cannot test the categories that moved most, only 化粧水, 乳液, 化粧クリーム, ファンデーション and 口紅.
+
+13. **新商品リリース層の測定精度と収録範囲 / Launch layer: gate accuracy and PR TIMES coverage**  
+    2026年9月19日測定。判定の適合率は0.89（95%信頼区間0.76〜0.98）、再現率は0.81（同0.68〜0.92）。判定語彙の設計に用いていない手作業ラベル100件で測り、保存済みリリース6,554件に加重した。デパコスの発行元に限った再現率は、別の100件で7件中6件、設計用の150件で12件中11件であり、他の価格帯と区別できる差はない。PR TIMESの収録は価格帯で異なる：ブランドリストのデパコス26ブランドのうち11ブランドは保存済みリリースに一度も現れず、その他の価格帯では92ブランド中28ブランドである。成分比率の図は、タイトルに再発売・詰め替え・限定パッケージを含むリリースを除く。この除外は手作業ラベルの限定・再発売13件中7件を検出する。成分比率の分子は件数が少ないため、ダッシュボードでは比率に件数を併記する。  
+    Measured 19 September 2026. Gate precision 0.89 (95% CI 0.76–0.98) and recall 0.81 (0.68–0.92), on 100 hand-labelled releases held out from the gate's design, weighted to 6,554 stored releases. Recall on prestige (デパコス) issuers alone was 6 of 7 on the holdout and 11 of 12 on the design sample, not separable from the other tiers. PR TIMES coverage differs by tier: 11 of the 26 prestige brands in the brand list appear in no stored release, against 28 of 92 brands in other tiers. The ingredient-share chart excludes releases whose title names a re-release, refill or limited packaging; that filter finds 7 of 13 hand-labelled editions. Ingredient counts are small, so the dashboard shows each share with its count.
