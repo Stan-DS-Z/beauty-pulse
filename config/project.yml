@@ -68,12 +68,12 @@ google_trends:
 #   all          — all is_target=1 brands across all groups
 
 lens:
-  active_group: "kao"
-  benchmark_groups:
-    - "shiseido"    # direct competitor across skincare + sun protection
-    - "rohto"       # Hada Labo is the mass skincare reference point
-    - "jp_indie"    # Cézanne + Canmake = プチプラ cosmetics benchmark
-    - "kose"        # Decorté competes with Kanebo/Sofina at prestige
+  # "all" — no company is singled out. The committed default is deliberately
+  # company-agnostic: this repo is a public capability demonstration, and a
+  # named active_group states who the analysis is aimed at. Set it locally to
+  # any key above when running a private lens; do not commit that change.
+  active_group: "all"
+  benchmark_groups: []
 
 # ── NLP settings ───────────────────────────────────────────────────────────
 nlp:

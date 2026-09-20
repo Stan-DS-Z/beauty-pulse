@@ -192,17 +192,24 @@ pip install -r requirements-analysis.txt
 
 主データベースはgitignoreされているため、クローンには含まれない。`src.schema.get_connection()`
 は同梱の公開DBに自動でフォールバックし（初回のみ`dashboard/assets/`から`data/`へ展開）、
-読み取り専用で開く。NB03〜NB07はクローンから実行順どおりに動作する。NB02は未公開の生データを要するため動かない。
+読み取り専用で開く。クローンから動くのはNB03・NB04b・NB05 —— 市場層とSQL層である。NB04・NB06・NB07は
+動かない。語彙分析が読むレビュー本文とYouTubeコメント本文は第三者の文章であり、公開DBには含めていない。
+これらのノートブックの結果は`dashboard/assets/`のCSVとして同梱されており、計算過程はノートブックで読める。
+NB02も動かない —— 未公開の生データを要する。
 
 The primary database is gitignored, so a clone does not have it.
 `src.schema.get_connection()` falls back to the bundled public DB — extracting it from
-`dashboard/assets/` into `data/` once — and opens it read-only. NB03–NB07 therefore run from
-a clone in the stated order. NB02 does not: it ingests raw data that is not published.
+`dashboard/assets/` into `data/` once — and opens it read-only. From a clone this runs NB03,
+NB04b and NB05: the SQL layer and the market layer. NB04, NB06 and NB07 do not run. The
+vocabulary analysis reads review bodies and YouTube comment bodies, which are text other
+people wrote, and the public DB does not carry it. Their outputs ship as the CSV assets in
+`dashboard/assets/`, and the method stays readable in the notebooks. NB02 does not run
+either: it ingests raw data that is not published.
 
 **リポジトリの範囲 / Repository scope:**  
-公開：分析ノートブック（NB02〜NB07）、ダッシュボード、CSVアセット、`signal_pulse_public.db.gz`（商品名・生JSONを削除した照会可能なデータセット。`gunzip`して利用）。  
+公開：分析ノートブック（NB02〜NB07）、ダッシュボード、CSVアセット、`signal_pulse_public.db.gz`（照会可能なデータセット。商品名・生JSON・レビュー本文・YouTubeコメント本文を削除。`gunzip`して利用）。  
 ローカルのみ：収集ノートブック（NB01x）、生データ、主データベース。  
-Public: analysis notebooks (NB02–NB07), the dashboard, CSV assets, and `signal_pulse_public.db.gz` — a queryable dataset with product names and raw JSON stripped (`gunzip` it first). Local-only: the collection notebooks (NB01x), raw data, and the primary database. From the public repo you can run the dashboard, query the public DB, and audit every analysis step against it.
+Public: analysis notebooks (NB02–NB07), the dashboard, CSV assets, and `signal_pulse_public.db.gz` — a queryable dataset with product names, raw JSON, review bodies and YouTube comment bodies stripped (`gunzip` it first). Local-only: the collection notebooks (NB01x), raw data, and the primary database. From the public repo you can run the dashboard, query the public DB, and audit every analysis step against it.
 
 ---
 

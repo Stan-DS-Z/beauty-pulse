@@ -18,16 +18,56 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # ── The public/private boundary ───────────────────────────────────────────────
 
+# Mirrors DROP_COLUMNS in NB06's public-DB builder. Stated here independently
+# on purpose: if someone edits that dict, this fails rather than following it.
+MUST_NOT_SHIP = {
+    "products":    ("product_name", "raw_json"),
+    "reviews":     ("review_title", "review_text"),
+    "yt_comments": ("comment_text",),
+    "yt_videos":   ("title", "description_snippet"),
+    "brands":      ("is_kao",),
+}
+
+
 def test_public_db_drops_identifying_columns(public_db):
+    """No catalogue identifiers, and nothing a third party wrote.
+
+    The published archive is a capability demonstration. Republishing 46k
+    @cosme review bodies and 75k YouTube comments is not needed for that —
+    the findings ship as derived CSV assets — so the text stays out.
+    """
     conn = sqlite3.connect(f"file:{public_db}?mode=ro", uri=True)
     try:
-        product_cols = {r[1] for r in conn.execute("PRAGMA table_info(products)")}
-        assert "product_name" not in product_cols
-        assert "raw_json" not in product_cols
+        leaked = []
+        for table, forbidden in MUST_NOT_SHIP.items():
+            cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+            if not cols:
+                continue          # table absent entirely is fine
+            leaked += [f"{table}.{c}" for c in forbidden if c in cols]
+        assert not leaked, f"public DB ships columns it must not: {leaked}"
 
         tables = {r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table'")}
         assert "reviewers" not in tables, "reviewer table must not ship publicly"
+    finally:
+        conn.close()
+
+
+def test_public_db_still_carries_the_analysable_columns(public_db):
+    """The stripping must not hollow the archive out.
+
+    Dropping text is a privacy decision, not a reason to ship an empty file: a
+    reader should still be able to reproduce the market layer from the clone.
+    """
+    conn = sqlite3.connect(f"file:{public_db}?mode=ro", uri=True)
+    try:
+        for table, n_min in (("products", 40_000), ("products_weekly", 500_000),
+                             ("reviews", 40_000), ("trends_weekly", 4_000)):
+            n = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+            assert n >= n_min, f"{table} has only {n:,} rows"
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(reviews)")}
+        for needed in ("review_year", "rating", "category_id", "char_count"):
+            assert needed in cols, f"reviews.{needed} is needed for the analysis"
     finally:
         conn.close()
 
