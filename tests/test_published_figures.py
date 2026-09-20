@@ -110,3 +110,33 @@ def test_period_labels_match_the_asset(app):
     sm = sm[sm["method"] == "size_matched"]
     assert app.HEADLINE["conv_p0"] == str(sm["period"].iloc[0])
     assert app.HEADLINE["conv_p1"] == str(sm["period"].iloc[1])
+
+
+def test_marked_doc_figures_are_generated_not_typed():
+    """Every <!--f:key--> span in the docs equals what build_docs_figures computes.
+
+    The reconciliation this replaces was manual and had to happen after every
+    weekly pull, because the SKU ratio moves with the catalogue. A figure that
+    drifts is now a failing test rather than a number nobody re-read.
+    """
+    import re
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root))
+    import build_docs_figures as bdf
+
+    reg = bdf.build_registry()
+    stale, unknown = [], []
+    for name in bdf.DOCS:
+        for key, shown in bdf.MARKER.findall((root / name).read_text(encoding="utf-8")):
+            if key not in reg:
+                unknown.append(f"{name}: {key}")
+            elif shown != reg[key]:
+                stale.append(f"{name}: {key} shows {shown!r}, computed {reg[key]!r}")
+
+    assert not unknown, f"markers with no registry entry: {unknown}"
+    assert not stale, (
+        "docs carry figures that disagree with the computed assets:\n  "
+        + "\n  ".join(stale) + "\nRun: python build_docs_figures.py")

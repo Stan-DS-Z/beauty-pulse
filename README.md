@@ -32,17 +32,17 @@ Search behaviour, product catalog, ingredient searches, YouTube discourse, and c
 ## 検証結果：メイクでは確認、スキンケアでは測定不能 / Verdict: Confirmed for makeup, unmeasurable for skincare
 
 **関心は動いた。金額の裏づけは半分しか取れない。**
-コロナ後、化粧品の検索需要は暦年ベース2019→2025年で約32%低下し、スキンケアの検索はほぼ横ばいで推移した。公的な出荷統計（経産省 生産動態統計）を突き合わせると、この発見は二つに分かれる。**メイクは金額でも裏づけられた** —— 2019→2025年にファンデーションの出荷金額は40%、口紅は44%減少し、落ち込みは2019→2021年に集中する。**スキンケアは裏づけられない** —— 金額系列は2022年1月に断層を持ち、そこをまたいで測った数値は断層の内側で測り直すと符号が反転する（美容液の出荷金額はまたげば-38%、内側なら+23%）。断層の原因は公表統計に記載がない。2026年1〜7月の出荷金額は前年同期比で皮膚用+7.7%、仕上用-0.3%（月次確報）。成分名検索は同じ期間に上昇したが（ナイアシンアミド 5→81、Googleトレンド指数）、こちらには行動側の対応物がそもそも存在しない —— 成分単位の需要を追う公的系列はない。
+コロナ後、化粧品の検索需要は暦年ベース<!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_y1-->2025<!--/f-->年で約<!--f:cosm_decline-->32<!--/f-->%低下し、スキンケアの検索はほぼ横ばいで推移した。公的な出荷統計（経産省 生産動態統計）を突き合わせると、この発見は二つに分かれる。**メイクは金額でも裏づけられた** —— 2019→2025年にファンデーションの出荷金額は<!--f:found_d-->40<!--/f-->%、口紅は<!--f:lip_d-->44<!--/f-->%減少し、落ち込みは<!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_pre1-->2021<!--/f-->年に集中する。**スキンケアは裏づけられない** —— 金額系列は<!--f:mkt_break-->2022<!--/f-->年1月に断層を持ち、そこをまたいで測った数値は断層の内側で測り直すと符号が反転する（美容液の出荷金額はまたげば-<!--f:serum_val_span-->38<!--/f-->%、内側なら+<!--f:serum_val_post-->23<!--/f-->%）。断層の原因は公表統計に記載がない。<!--f:ytd_y-->2026<!--/f-->年1〜<!--f:ytd_m-->7<!--/f-->月の出荷金額は前年同期比で皮膚用+<!--f:ytd_skin-->7.7<!--/f-->%、仕上用-<!--f:ytd_make-->0.3<!--/f-->%（月次確報）。成分名検索は同じ期間に上昇したが（ナイアシンアミド <!--f:nia_pre-->5<!--/f-->→<!--f:nia_post-->81<!--/f-->、Googleトレンド指数）、こちらには行動側の対応物がそもそも存在しない —— 成分単位の需要を追う公的系列はない。
 
 **Attention moved. Only half of it can be checked against money.**
-Cosmetics search demand fell ~32% across full calendar years 2019→2025 while skincare search held roughly flat. Set against official shipment statistics (METI 生産動態統計), that finding splits in two. **Makeup is corroborated in yen** — foundation shipped value fell 40% and lipstick 44% over 2019→2025, with the fall concentrated in 2019→2021, before the break and in lines it does not touch. **Skincare is not** — its money series steps in January 2022, and figures measured across that step reverse sign when measured inside it (serum shipped value reads -38% across the break and +23% after it). The cause is undocumented in the published statistics, so no skincare demand reading is offered. January–July 2026 against the same months of 2025: skincare shipped value +7.7%, makeup -0.3% (METI monthly 確報). Ingredient-name search rose over the same years (niacinamide 5→81 on the Trends index) and has no behavioural counterpart at all — no official series tracks ingredient-level demand. A mask test rules out the cyclical explanation for the makeup decline: search did not recover after Japan relaxed mask guidance in March 2023.
+Cosmetics search demand fell ~<!--f:cosm_decline-->32<!--/f-->% across full calendar years <!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_y1-->2025<!--/f--> while skincare search held roughly flat. Set against official shipment statistics (METI 生産動態統計), that finding splits in two. **Makeup is corroborated in yen** — foundation shipped value fell <!--f:found_d-->40<!--/f-->% and lipstick <!--f:lip_d-->44<!--/f-->% over <!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_y1-->2025<!--/f-->, with the fall concentrated in <!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_pre1-->2021<!--/f-->, before the break and in lines it does not touch. **Skincare is not** — its money series steps in January <!--f:mkt_break-->2022<!--/f-->, and figures measured across that step reverse sign when measured inside it (serum shipped value reads -<!--f:serum_val_span-->38<!--/f-->% across the break and +<!--f:serum_val_post-->23<!--/f-->% after it). The cause is undocumented in the published statistics, so no skincare demand reading is offered. January–July <!--f:ytd_y-->2026<!--/f--> against the same months of <!--f:mkt_y1-->2025<!--/f-->: skincare shipped value +<!--f:ytd_skin-->7.7<!--/f-->%, makeup -<!--f:ytd_make-->0.3<!--/f-->% (METI monthly 確報). Ingredient-name search rose over the same years (niacinamide <!--f:nia_pre-->5<!--/f-->→<!--f:nia_post-->81<!--/f--> on the Trends index) and has no behavioural counterpart at all — no official series tracks ingredient-level demand. A mask test rules out the cyclical explanation for the makeup decline: search did not recover after Japan relaxed mask guidance in March 2023.
 
 *何が測れるか / What is measured where:* この分析は二つの層を別々の測定として扱う。**関心層** —— Googleトレンド、楽天の掲載数、@cosmeレビュー、YouTube —— は検索と言葉を測る。**市場層** —— 経産省 生産動態統計と財務省 貿易統計 —— は金額と数量を測る。両者が一致する箇所だけが行動の裏づけを持つ。
 
 *The two layers:* the **attention layer** (Google Trends, Rakuten listings, @cosme reviews, YouTube — all self-built) measures what people search for and say. The **market layer** (METI shipments, 財務省 trade statistics HS 3304) measures what they buy, in yen and kilograms. They are different measurements and are never averaged together; only where they agree is a behavioural claim made. Full argument and the per-finding status: [METHODOLOGY.md](METHODOLOGY.md).
 
-*Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、その規模は小さく、サンプルサイズに敏感である。サンプル数を揃えた厳密な比較では Δ +0.065（0.252→0.317、ブートストラップ95%CI [+0.047, +0.083]）。  
-*Nuance:* skincare and cosmetics review language is converging slowly, but the effect is small and sample-size sensitive — Δ +0.065 (0.252→0.317, bootstrap 95% CI [+0.047, +0.083]) under a size-matched comparison.
+*Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、その規模は小さく、サンプルサイズに敏感である。サンプル数を揃えた厳密な比較では Δ +<!--f:conv_delta-->0.065<!--/f-->（<!--f:conv_lo-->0.252<!--/f-->→<!--f:conv_hi-->0.317<!--/f-->、ブートストラップ<!--f:conv_ci_jp-->95%CI [+0.047, +0.083]<!--/f-->）。  
+*Nuance:* skincare and cosmetics review language is converging slowly, but the effect is small and sample-size sensitive — Δ +<!--f:conv_delta-->0.065<!--/f--> (<!--f:conv_lo-->0.252<!--/f-->→<!--f:conv_hi-->0.317<!--/f-->, bootstrap <!--f:conv_ci-->95% CI [+0.047, +0.083]<!--/f-->) under a size-matched comparison.
 
 ---
 
@@ -69,11 +69,11 @@ All data self-sourced and self-collected. No Kaggle datasets.
 
 | ソース / Source | 内容 / Contents | 規模 / Scale |
 |---|---|---|
-| @cosme | Consumer reviews — used for *language* analysis | 45,510 reviews |
-| Rakuten Ichiba API | Product catalog, prices, review counts | 46,193 SKUs · 580,139 weekly rows |
-| Amazon | Name, price, aggregate rating, review count | 161 ASINs · 1,124 reviews |
-| Google Trends JP | Monthly search interest (2019–2026) | 4,842 rows |
-| YouTube Data API v3 | Beauty video comments | 296 videos · 74,679 comments |
+| @cosme | Consumer reviews — used for *language* analysis | <!--f:cosme_reviews-->45,510<!--/f--> reviews |
+| Rakuten Ichiba API | Product catalog, prices, review counts | <!--f:rakuten_skus-->47,380<!--/f--> SKUs · <!--f:weekly_rows-->637,811<!--/f--> weekly rows |
+| Amazon | Name, price, aggregate rating, review count | <!--f:amazon_asins-->161<!--/f--> ASINs · <!--f:amazon_reviews-->1,124<!--/f--> reviews |
+| Google Trends JP | Monthly search interest (2019–2026) | <!--f:trends_rows-->4,842<!--/f--> rows |
+| YouTube Data API v3 | Beauty video comments | <!--f:yt_videos-->296<!--/f--> videos · <!--f:yt_comments-->74,679<!--/f--> comments |
 
 **市場層 / Market layer** — 金額と数量。公的統計、e-Stat API 経由。 What people buy, in yen and kilograms; official statistics via the e-Stat API.
 

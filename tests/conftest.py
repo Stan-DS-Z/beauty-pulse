@@ -32,6 +32,20 @@ def headline(app):
     return app.HEADLINE
 
 
+def _rendered(path):
+    """The doc as GitHub shows it: figure markers stripped.
+
+    build_docs_figures.py wraps every generated figure in
+    <!--f:key-->value<!--/f-->. HTML comments are invisible when rendered, so
+    the published claim is the text without them — and that is what these tests
+    are about. Leaving them in breaks any check that reads across a figure,
+    such as the "A→B" window pairs.
+    """
+    import re
+    return re.sub(r"<!--/?f:?[a-z0-9_]*-->", "",
+                  path.read_text(encoding="utf-8"))
+
+
 REVISION_LOG_HEADING = "## \u5206\u6790\u306e\u6539\u8a02\u5c65\u6b74 / Analysis Revision History"
 
 
@@ -45,8 +59,8 @@ def docs():
     Reconciliation applies to what the docs currently assert, not to the record
     of what they used to.
     """
-    readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    method = (ROOT / "METHODOLOGY.md").read_text(encoding="utf-8")
+    readme = _rendered(ROOT / "README.md")
+    method = _rendered(ROOT / "METHODOLOGY.md")
 
     start = method.index(REVISION_LOG_HEADING)
     end = method.index("\n## ", start + len(REVISION_LOG_HEADING))

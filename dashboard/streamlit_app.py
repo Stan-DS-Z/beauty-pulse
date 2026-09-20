@@ -88,9 +88,10 @@ def compute_headline():
     The Google Trends comparison uses the anchored block_B (cross-comparable
     scale); convergence is the size-matched cosine."""
     # Rakuten SKU counts — full in-scope (ALL_TIERS) from NB07's headline export.
-    # The treemap CSV excludes beauty_all-categorised products, so it undercounts
-    # the catalogue (28,983 vs 36,032 skincare SKUs) and lands on a different
-    # ratio (4.0x vs the headline 3.7x); fall back to it only if missing.
+    # The treemap CSV excludes beauty_all-categorised products, so summing it
+    # undercounts the catalogue and lands on a different ratio; fall back to it
+    # only if the headline export is missing. No figures quoted here on purpose
+    # — both move with every weekly snapshot.
     _hl_path = ASSETS / "nb07_headline.csv"
     if _hl_path.exists():
         _hl = pd.read_csv(_hl_path).set_index("metric")["value"]
