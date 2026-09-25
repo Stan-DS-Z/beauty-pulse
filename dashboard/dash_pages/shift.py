@@ -171,19 +171,19 @@ def layout(lang="en", **_):
           State("sh-lang", "data"), prevent_initial_call=True)
 def _crossover(value, lang):
     df = D.frame("trends_crossover")
-    return figures.fig_trends_crossover(df, _date_range(df, value[0], value[1]), lang)
+    return ui.themed(figures.fig_trends_crossover(df, _date_range(df, value[0], value[1]), lang))
 
 
 @callback(Output("sh-fig2", "figure"), Input("sh-ingr", "value"),
           State("sh-lang", "data"), prevent_initial_call=True)
 def _ingredients(selected, lang):
-    return figures.fig_ingredient_surge(D.frame("ingredient_surge"), selected or [])
+    return ui.themed(figures.fig_ingredient_surge(D.frame("ingredient_surge"), selected or []))
 
 
 @callback(Output("sh-fig3", "figure"), Input("sh-lens", "value"),
           State("sh-lang", "data"), prevent_initial_call=True)
 def _lens(color_col, lang):
-    return figures.fig_sku_treemap(D.frame("sku_treemap"), color_col)
+    return ui.themed(figures.fig_sku_treemap(D.frame("sku_treemap"), color_col))
 
 
 @callback(Output("sh-rak-sel", "data"),

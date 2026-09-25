@@ -79,3 +79,15 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
         spec = fig.to_json()
         # Rebuilding reorders layout keys, so compare the parsed JSON.
         assert json.loads(pio.from_json(spec).to_json()) == json.loads(spec)
+
+
+@pytest.mark.parametrize("name", BUILDERS)
+def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, frames):
+    """A builder sets no template: Streamlit's own applies to what it draws,
+    and the Dash app sets bp.theme.TEMPLATE itself (dashboard/ui.py)."""
+    if name in LAUNCH_BUILDERS and launch is None:
+        pytest.skip("launch export not built")
+    S = strings.build_strings("en", headline, launch, A)
+    default = pio.templates[pio.templates.default].to_plotly_json()
+    for fig in cases(frames, headline, launch, "en", S)[name]():
+        assert fig.layout.template.to_plotly_json() == default

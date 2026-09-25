@@ -146,13 +146,14 @@ def layout(lang="en", **_):
 @callback(Output("dc-fig-l5", "figure"), Input("dc-launch-ing", "value"),
           State("dc-lang", "data"), prevent_initial_call=True)
 def _launch_ingredient(canon, lang):
-    return figures.fig_launch_vs_search(D.LAUNCH, D.frame("ingredient_surge"), canon, D.S[lang])
+    return ui.themed(figures.fig_launch_vs_search(D.LAUNCH, D.frame("ingredient_surge"), canon,
+                                                  D.S[lang]))
 
 
 @callback(Output("dc-fig-bc", "figure"), Input("dc-bc-window", "value"),
           State("dc-lang", "data"), prevent_initial_call=True)
 def _blockc(window_key, lang):
-    return figures.fig_blockc(D.frame("blockc"), window_key or "recent", D.S[lang])
+    return ui.themed(figures.fig_blockc(D.frame("blockc"), window_key or "recent", D.S[lang]))
 
 
 @callback(Output("dc-f4", "children"), Input("dc-bc-window", "value"),
@@ -189,7 +190,7 @@ def _search_detail(root, window_key, lang):
 @callback(Output("dc-fig-umap", "figure"), Input("dc-umap-year", "value"),
           State("dc-lang", "data"), prevent_initial_call=True)
 def _umap(year_filter, lang):
-    return figures.fig_umap(D.frame("umap"), year_filter or "all", D.S[lang])
+    return ui.themed(figures.fig_umap(D.frame("umap"), year_filter or "all", D.S[lang]))
 
 
 @callback(Output("dc-umap-count", "children"), Input("dc-umap-year", "value"),

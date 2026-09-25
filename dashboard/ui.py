@@ -13,6 +13,8 @@ from html.parser import HTMLParser
 
 from dash import dcc, html
 
+from bp.theme import TEMPLATE
+
 # ── Language and routes ─────────────────────────────────────────────────────
 
 def lang_of(value):
@@ -177,10 +179,19 @@ def legend(items, shape="square"):
         ]) for label, colour in items])
 
 
+def themed(figure):
+    """The figure with bp's chart template, replacing whatever template it was
+    built with. Every figure the Dash app shows passes through here: graph()
+    for the page trees, and each callback that returns a figure."""
+    figure.layout.template = TEMPLATE
+    return figure
+
+
 def graph(id_, figure):
     """A chart whose box is the figure's own height. With responsive on, Plotly
     fills its container, and a container with no height of its own collapses
     under a tall figure, which then overlaps whatever follows."""
+    figure = themed(figure)
     height = figure.layout.height
     return dcc.Graph(id=id_, figure=figure, config=GRAPH_CONFIG, className="bp-graph",
                      style={"height": f"{height}px"} if height else None)

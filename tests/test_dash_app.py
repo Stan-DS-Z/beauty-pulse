@@ -1,7 +1,7 @@
 """The Dash app, through Flask's test client: routes, language, callbacks, the
 word-cloud route, the no-launch empty state, the stylesheet tokens and the text
-renderer. No browser; the charts' JSON is what bp/figures.py builds, and
-tests/test_figures.py covers that.
+renderer. No browser; the charts' JSON is what bp/figures.py builds, which
+tests/test_figures.py covers, with bp.theme.TEMPLATE set, which is checked here.
 """
 
 import json
@@ -192,6 +192,63 @@ def test_umap_year_pills_filter_the_map_and_the_count(client):
     assert re.search(r"[\d,]+ reviews", _text(count))
 
 
+# ── Chart template ──────────────────────────────────────────────────────────
+
+# Each callback that returns a figure: graph -> (control, a non-default value,
+# the page's language store). None stands for the second launch ingredient.
+FIGURE_CALLBACKS = {
+    "sh-fig1": ("sh-crossover", [24, 60], "sh-lang"),
+    "sh-fig2": ("sh-ingr", ["グルタチオン", "レチナール"], "sh-lang"),
+    "sh-fig3": ("sh-lens", "med_price", "sh-lang"),
+    "dc-fig-l5": ("dc-launch-ing", None, "dc-lang"),
+    "dc-fig-bc": ("dc-bc-window", "covid", "dc-lang"),
+    "dc-fig-umap": ("dc-umap-year", 2023, "dc-lang"),
+}
+
+
+def _figures(node):
+    """Every dcc.Graph figure in a serialised tree."""
+    if isinstance(node, list):
+        return [f for n in node for f in _figures(n)]
+    if not isinstance(node, dict):
+        return []
+    props = node.get("props", {})
+    if node.get("type") == "Graph":
+        return [props["figure"]]
+    return _figures(props.get("children"))
+
+
+@pytest.mark.parametrize("path", list(PAGES))
+@pytest.mark.parametrize("lang", ["en", "jp"])
+def test_every_chart_on_a_page_carries_the_template(pages, path, lang):
+    from bp.theme import TEMPLATE
+    figs = _figures(_tree(pages[path].TREES[lang]))
+    assert figs
+    for fig in figs:
+        assert fig["layout"]["template"] == _tree(TEMPLATE)
+
+
+@pytest.mark.parametrize("graph", list(FIGURE_CALLBACKS))
+def test_every_figure_callback_returns_the_template(client, pages, graph):
+    from bp import figures
+    from bp.theme import TEMPLATE
+    control, value, lang_store = FIGURE_CALLBACKS[graph]
+    if value is None:
+        launch = pages["/discovery"].D.LAUNCH
+        if launch is None:
+            pytest.skip("launch export not built")
+        value = figures.launch_ingredient_options(launch)[1]
+    fig = _post(client, f"{graph}.figure", [_in(control, "value", value)],
+                [_in(lang_store, "data", "jp")])
+    assert fig["layout"]["template"] == _tree(TEMPLATE)
+
+
+def test_the_template_cases_cover_every_figure_callback(client, dash_app):
+    client.get("/shift")            # page callbacks register on the first request
+    graphs = {k.split(".")[0] for k in dash_app.app.callback_map if k.endswith(".figure")}
+    assert graphs == set(FIGURE_CALLBACKS)
+
+
 def test_a_malformed_click_changes_nothing(client):
     r = client.post("/_dash-update-component", data=json.dumps({
         "output": "sh-rak-sel.data", "outputs": {"id": "sh-rak-sel", "property": "data"},
@@ -232,6 +289,8 @@ def test_stylesheet_tokens_mirror_the_theme():
     tokens = dict(re.findall(r"--([a-z-]+):\s*(#[0-9A-Fa-f]{6})", root))
     for key, hexval in C.items():
         assert tokens.get(key.replace("_", "-"), "").upper() == hexval.upper(), key
+    from bp.theme import FONT
+    assert " ".join(re.search(r"--font:\s*([^;]+);", root).group(1).split()) == FONT
 
 
 def test_every_tag_in_the_string_tables_is_one_the_renderer_supports(dash_app):
