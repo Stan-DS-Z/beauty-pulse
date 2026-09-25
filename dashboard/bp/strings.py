@@ -4,7 +4,8 @@ build_strings() returns the table for one language with every figure-bearing
 entry filled from the headline and launch dicts. Imports no UI framework.
 """
 
-from .data import LAUNCH_GATE, load_ingredient_surge
+from .data import (LAUNCH_GATE, load_ingredient_surge, load_makeup_rebound,
+                   load_trends_crossover)
 
 STRINGS = {
     "en": {
@@ -21,10 +22,10 @@ STRINGS = {
         "t1_m4": "Makeup shipped value",  "t1_m4d": "",
 
         "t1_c1h": "Cosmetics search fell by about a third and stayed above skincare search in every year",
-        "t1_c1e": "Monthly Google search interest, 2019–2026 (2026: January–March). Both terms come from one anchored query and share one scale. 化粧品 search fell steadily; スキンケア search held roughly flat. 化粧品 is the Japanese umbrella term and includes skincare.",
+        "t1_c1e": "Monthly Google search interest, {tr_years} ({tr_part}). Both terms come from one anchored query and share one scale. 化粧品 search fell steadily; スキンケア search held roughly flat. 化粧品 is the Japanese umbrella term and includes skincare.",
         "t1_c2h": "",
         "t1_c2e": "Search interest for individual skincare ingredients. Each line is indexed to its own peak.",
-        "t1_c2cap": "Dotted = ingredients with steady search before 2020  ·  solid = ingredients whose search rose after 2020  ·  2026: January–March",
+        "t1_c2cap": "Dotted = ingredients with steady search before 2020  ·  solid = ingredients whose search rose after 2020  ·  {tr_part}",
         "t1_ingr_sel": "Select ingredients",
         # Rebuilt live from HEADLINE below. A figure left here is dead code if
         # the rebuild covers it and a silent contradiction if it does not;
@@ -36,7 +37,7 @@ STRINGS = {
 
         "t1_c4h": "In 2025, two years after mask guidance was relaxed, lipstick search was 36% of its 2019 level",
         "t1_c4e": "Monthly search interest for three makeup terms, each indexed to its own peak. Japan relaxed mask guidance on 13 March 2023. Lipstick and foundation search rose in 2023 and fell in 2024–2025; lipstick search in 2025 was below its 2021 low. Eyeshadow search rose while masks were worn and fell below its 2019 level after the guidance changed.",
-        "t1_c4cap": "Monthly search interest, each term indexed to its own peak · grey band = COVID state of emergency · dashed line = mask guidance relaxed (13 March 2023) · 2026: January–March",
+        "t1_c4cap": "Monthly search interest, each term indexed to its own peak · grey band = COVID state of emergency · dashed line = mask guidance relaxed (13 March 2023) · {tr_part}",
         "f1b_title": "Lipstick, foundation and eyeshadow search all stayed below 2019 after March 2023",
         "f1b_body":  "Annual average, each term's 2019 = 100: lipstick 100 → 42 (2021) → 53 (2023) → 36 (2025). Foundation 100 → 77 → 86 → 69. Eyeshadow 100 → 128 (2022) → 80 (2025). None of the three returned to 100 after mask guidance was relaxed.",
 
@@ -162,10 +163,10 @@ STRINGS = {
         "t1_m4":     "メイク出荷金額",  "t1_m4d": "",
 
         "t1_c1h":    "化粧品の検索は約3分の1低下し、全ての年でスキンケアの検索を上回った",
-        "t1_c1e":    "2019〜2026年の月次Google検索関心度（2026年は1〜3月）。両語は同一のアンカー付きクエリから取得しており、共通のスケールを持つ。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。「化粧品」はスキンケアを含む上位語である。",
+        "t1_c1e":    "{tr_years}年の月次Google検索関心度（{tr_part}）。両語は同一のアンカー付きクエリから取得しており、共通のスケールを持つ。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。「化粧品」はスキンケアを含む上位語である。",
         "t1_c2h": "",
         "t1_c2e":    "スキンケア成分ごとの検索関心度。各線は自身のピークを基準に指数化している。",
-        "t1_c2cap":  "点線 = 2020年以前から検索が安定していた成分  ·  実線 = 2020年以降に検索が上昇した成分  ·  2026年は1〜3月",
+        "t1_c2cap":  "点線 = 2020年以前から検索が安定していた成分  ·  実線 = 2020年以降に検索が上昇した成分  ·  {tr_part}",
         "t1_ingr_sel": "成分を選択",
         "t1_c3h":    "",   # rebuilt live from HEADLINE below
         "t1_c3e":    "各長方形は楽天市場のサブカテゴリ。サイズ = 掲載商品数 · 色 = 下で選択した指標。評価は評価のあるSKUのみの平均、価格は中央値。",
@@ -174,7 +175,7 @@ STRINGS = {
 
         "t1_c4h":    "マスク着用ルール緩和から2年後の2025年、口紅の検索は2019年の36%",
         "t1_c4e":    "メイク3語の月次検索関心度。各語は自身のピークを基準に指数化。日本は2023年3月13日にマスク着用ルールを緩和した。口紅とファンデーションの検索は2023年に上昇し、2024〜2025年に低下した。2025年の口紅検索は2021年の底を下回る。アイシャドウの検索はマスク着用期に上昇し、緩和後は2019年水準を下回った。",
-        "t1_c4cap":  "月次検索関心度、各語は自身のピークを基準に指数化 · グレー帯 = 緊急事態宣言期 · 破線 = マスク着用ルール緩和（2023年3月13日） · 2026年は1〜3月",
+        "t1_c4cap":  "月次検索関心度、各語は自身のピークを基準に指数化 · グレー帯 = 緊急事態宣言期 · 破線 = マスク着用ルール緩和（2023年3月13日） · {tr_part}",
         "f1b_title": "口紅・ファンデーション・アイシャドウの検索は、2023年3月以降いずれも2019年を下回る",
         "f1b_body":  "各語の2019年を100とした年平均：口紅 100 → 42（2021年）→ 53（2023年）→ 36（2025年）。ファンデーション 100 → 77 → 86 → 69。アイシャドウ 100 → 128（2022年）→ 80（2025年）。マスク着用ルール緩和後、3語とも100に戻っていない。",
 
@@ -323,9 +324,24 @@ def _ing_label(canon, lang, _L):
     return t.loc[canon, "label_short_en" if lang == "en" else "label_ja"]
 
 
+def _trends_span(df, lang):
+    """A Trends asset's span of years, and the months its last year covers."""
+    y0, last = df["week_start"].min().year, df["week_start"].max()
+    y1, m = last.year, last.month
+    if lang == "en":
+        return f"{y0}–{y1}", f"{y1}: January" + ("" if m == 1 else f"–{_MON_EN[m]}")
+    return f"{y0}〜{y1}", f"{y1}年は1" + ("" if m == 1 else f"〜{m}") + "月"
+
+
 def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
     """STRINGS[lang] with the live figures written in."""
     S = dict(STRINGS[lang])
+    # The Trends pull runs into the current year; each caption names the months
+    # its own chart's asset covers.
+    _cr_years, _cr_part = _trends_span(load_trends_crossover(ASSETS), lang)
+    S["t1_c1e"] = S["t1_c1e"].format(tr_years=_cr_years, tr_part=_cr_part)
+    S["t1_c2cap"] = S["t1_c2cap"].format(tr_part=_trends_span(load_ingredient_surge(ASSETS), lang)[1])
+    S["t1_c4cap"] = S["t1_c4cap"].format(tr_part=_trends_span(load_makeup_rebound(ASSETS), lang)[1])
     # ── Convergence copy is rebuilt from live figures ─────────────────────────
     # These numbers recompute whenever NB06 re-runs (corpus growth, re-scrape),
     # so the prose is generated from HEADLINE rather than hardcoded — it can never

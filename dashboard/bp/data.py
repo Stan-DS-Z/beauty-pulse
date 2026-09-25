@@ -96,7 +96,7 @@ def compute_headline(ASSETS: Path):
     # Google Trends — anchored block_B (the only cross-term-comparable block)
     df_tr = pd.read_csv(ASSETS / "nb07_trends_crossover.csv", parse_dates=["week_start"])
     df_tr["year"] = df_tr["week_start"].dt.year
-    # Compare full calendar years only — the latest year is partial (Jan–Mar),
+    # Compare full calendar years only — the latest year is partial,
     # and cosmetics search is seasonal (December gifting), so a partial-year
     # endpoint biases the decline estimate.
     months_per_year = df_tr.groupby("year")["week_start"].nunique()
@@ -179,9 +179,10 @@ def compute_headline(ASSETS: Path):
         return int(round(100 * (s_[b] - s_[a]) / s_[a]))
 
     # The ratio, reported inside each regime rather than across the break.
-    # Endpoint-to-endpoint it reads 2.38 -> 2.13, a narrowing; the path is
-    # 2.38 -> 3.22 (widening) then a one-year step down then flat. The step is
-    # the break, so the narrowing is not published as a finding.
+    # On the assets to 2025 (September 2026) it reads 2.38 -> 2.24 end to end,
+    # a narrowing; the path is 2.38 -> 3.16 through 2021 (widening), a step down
+    # to 2.34 in 2022, then 2.10-2.24. The step is the break, so the narrowing is
+    # not published as a finding.
     mkt_ratio_pre0 = round(_skin[mkt_y0] / _make[mkt_y0], 2)
     mkt_ratio_pre1 = round(_skin[_pre1] / _make[_pre1], 2)
     mkt_ratio_post0 = round(_skin[METI_BREAK] / _make[METI_BREAK], 2)

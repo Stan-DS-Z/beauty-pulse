@@ -22,6 +22,8 @@ The registry has three sources, in order of authority:
 
   HEADLINE   dashboard/bp/data.py's compute_headline() — the exact values
              the deployed page renders, so docs and dashboard cannot diverge
+  LAUNCH     compute_launch_headline() and prtimes_feeds.csv — the launch
+             panel's feed counts
   nb07_sku_ratio.csv   the ratio treatments, which HEADLINE only spans
   the database         corpus sizes for the data-source tables
 
@@ -54,6 +56,23 @@ def headline() -> dict:
     sys.path.insert(0, str(ROOT / "dashboard"))
     from bp import data
     return data.compute_headline(data.ASSETS)
+
+
+def launch_feeds() -> dict:
+    """The launch panel's feed counts: compute_launch_headline() for what the
+    figures use, prtimes_feeds.csv for the panel each active feed is on."""
+    sys.path.insert(0, str(ROOT / "dashboard"))
+    from bp import data
+    lau = data.compute_launch_headline(data.ASSETS)
+    if lau is None:
+        return {}
+    feeds = pd.read_csv(data.ASSETS / "prtimes_feeds.csv")
+    return {
+        "launch_core_feeds": f"{lau['n_core_feeds']}",
+        "launch_core_issuers": f"{lau['n_core']}",
+        "launch_later_feeds": f"{int((feeds['panel'] == 'present_forward').sum())}",
+        "launch_later_feeds_l12": f"{lau['n_pf_feeds']}",
+    }
 
 
 def ratios() -> pd.Series:
@@ -132,6 +151,9 @@ def build_registry() -> dict[str, str]:
         "conv_hi":     f"{float(h['conv_hi']):.3f}",
         "conv_ci":     str(h["conv_ci"]),
         "conv_ci_jp":  str(h["conv_ci_jp"]),
+
+        # ── launch layer ────────────────────────────────────────────────────
+        **launch_feeds(),
     }
     return reg
 
