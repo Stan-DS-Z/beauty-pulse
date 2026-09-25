@@ -428,6 +428,23 @@ def fig_cosine_sizecurve(df_curve, HEADLINE):
     return fig_cv
 
 
+def wordcloud_years():
+    """The years a word cloud is drawn for, oldest first."""
+    return [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
+
+
+def wordcloud_note(year):
+    """The note under a year's word cloud: its string key, and the colour keys
+    of its background and left rule."""
+    if year <= 2021:
+        return "t2_wc_early", "cosm_lt", "cosm"
+    if year == 2022:
+        return "t2_wc_2022", "grid", "muted"
+    if year == 2023:
+        return "t2_wc_2023", "grid", "gold"
+    return "t2_wc_late", "skin_lt", "skin"
+
+
 # ── Tab 3 · launches ──────────────────────────────────────────────────────
 
 # Colours passed the dataviz validator as a set (blue, rose, ochre); the
