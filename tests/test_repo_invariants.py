@@ -14,6 +14,9 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+# The app and its bp package: every .py the dashboard runs.
+DASHBOARD_SOURCE = "\n".join(
+    p.read_text(encoding="utf-8") for p in sorted((ROOT / "dashboard").rglob("*.py")))
 
 
 # ── The public/private boundary ───────────────────────────────────────────────
@@ -103,8 +106,7 @@ def test_private_db_is_not_tracked():
 # ── The dashboard's inputs ────────────────────────────────────────────────────
 
 def test_every_asset_the_dashboard_reads_exists():
-    source = (ROOT / "dashboard" / "streamlit_app.py").read_text(encoding="utf-8")
-    names = set(re.findall(r'ASSETS\s*/\s*"([^"]+)"', source))
+    names = set(re.findall(r'ASSETS\s*/\s*"([^"]+)"', DASHBOARD_SOURCE))
     assert names, "no asset references found — has the loader style changed?"
     missing = [n for n in sorted(names)
                if not (ROOT / "dashboard" / "assets" / n).exists()]
@@ -112,8 +114,7 @@ def test_every_asset_the_dashboard_reads_exists():
 
 
 @pytest.mark.parametrize("name", sorted(
-    re.findall(r'ASSETS\s*/\s*"([^"]+\.csv)"',
-               (ROOT / "dashboard" / "streamlit_app.py").read_text(encoding="utf-8"))))
+    re.findall(r'ASSETS\s*/\s*"([^"]+\.csv)"', DASHBOARD_SOURCE)))
 def test_each_asset_csv_parses_and_is_not_empty(name):
     df = pd.read_csv(ROOT / "dashboard" / "assets" / name)
     assert not df.empty, f"{name} is empty"

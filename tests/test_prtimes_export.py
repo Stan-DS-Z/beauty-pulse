@@ -65,15 +65,16 @@ def test_release_store_is_gitignored():
 def test_discovery_tab_renders_without_the_export(tmp_path):
     """A clone without the launch export still renders every tab.
 
-    st.cache_data keys on the function's source, not on the assets directory,
-    so an earlier app run in this process would hand back its cached launch
-    figures. The cache is cleared first."""
+    The app passes its own assets directory into bp, so the copy below reads
+    the tmp assets. The cache is cleared first all the same, so no earlier app
+    run in this process can hand back its launch figures."""
     import streamlit as st
     from streamlit.testing.v1 import AppTest
     st.cache_data.clear()
     app_dir = tmp_path / "dashboard"
     (app_dir / "assets").mkdir(parents=True)
     shutil.copy(ROOT / "dashboard" / "streamlit_app.py", app_dir / "streamlit_app.py")
+    (app_dir / "bp").symlink_to(ROOT / "dashboard" / "bp")
     for f in ASSETS.iterdir():
         if not f.name.startswith("prtimes_"):
             (app_dir / "assets" / f.name).symlink_to(f)

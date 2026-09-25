@@ -20,7 +20,7 @@ disagree with the assets they are quoting.
 
 The registry has three sources, in order of authority:
 
-  HEADLINE   dashboard/streamlit_app.py's compute_headline() — the exact values
+  HEADLINE   dashboard/bp/data.py's compute_headline() — the exact values
              the deployed page renders, so docs and dashboard cannot diverge
   nb07_sku_ratio.csv   the ratio treatments, which HEADLINE only spans
   the database         corpus sizes for the data-source tables
@@ -34,7 +34,6 @@ are written. update_data.command does this.
 """
 
 import argparse
-import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -50,14 +49,11 @@ MARKER = re.compile(r"<!--f:([a-z0-9_]+)-->(.*?)<!--/f-->", re.DOTALL)
 
 
 def headline() -> dict:
-    """compute_headline() from the dashboard, imported the way the other
-    build_*.py scripts do — importing the module runs it in bare mode, where
-    the st.* calls are no-ops."""
-    spec = importlib.util.spec_from_file_location(
-        "dash_app", ROOT / "dashboard" / "streamlit_app.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.HEADLINE
+    """compute_headline() from the dashboard's bp package — the function the
+    deployed page computes HEADLINE with, over the same shipped assets."""
+    sys.path.insert(0, str(ROOT / "dashboard"))
+    from bp import data
+    return data.compute_headline(data.ASSETS)
 
 
 def ratios() -> pd.Series:

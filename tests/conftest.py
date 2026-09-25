@@ -1,35 +1,47 @@
 """Shared fixtures.
 
-The dashboard module is imported directly rather than through Streamlit's
-script runner: outside a run context the st.* calls are no-ops, so importing it
-gives us HEADLINE and STRINGS — the values the deployed page actually renders —
-without standing up a server.
+The dashboard's numbers and copy come from its bp package, which imports no UI
+framework, so the tests read HEADLINE and STRINGS — the values the deployed
+page renders — from bp directly, without Streamlit or a server.
 """
 
 import gzip
-import importlib.util
 import shutil
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "dashboard"))
 
 
 @pytest.fixture(scope="session")
-def app():
-    spec = importlib.util.spec_from_file_location(
-        "dash_app", ROOT / "dashboard" / "streamlit_app.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def headline():
+    from bp import data
+    return data.compute_headline(data.ASSETS)
 
 
 @pytest.fixture(scope="session")
-def headline(app):
-    return app.HEADLINE
+def app(headline):
+    """The names the tests read from the dashboard, served from bp.
+
+    bp computes nothing at import and its loaders take the assets directory,
+    so HEADLINE is computed once above and the loader is bound here to the
+    shipped assets, the way the app binds it."""
+    from bp import data, strings
+    return SimpleNamespace(
+        ASSETS=data.ASSETS,
+        HEADLINE=headline,
+        STRINGS=strings.STRINGS,
+        METI_SKIN=data.METI_SKIN,
+        METI_MAKE=data.METI_MAKE,
+        METI_BREAK=data.METI_BREAK,
+        LAUNCH_WINDOW_START=data.LAUNCH_WINDOW_START,
+        load_meti_annual=lambda: data.load_meti_annual(data.ASSETS),
+    )
 
 
 def _rendered(path):
