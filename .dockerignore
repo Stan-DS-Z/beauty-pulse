@@ -1,0 +1,14 @@
+# A whitelist: the image gets requirements.txt and dashboard/, nothing else.
+# A local `docker build` sees gitignored files too (data/*.db, recon/, .env);
+# listing what goes in keeps them out without naming each one.
+*
+!requirements.txt
+!dashboard
+
+# Inside dashboard/: the public DB ships for readers of the repo, and the app
+# never opens it (the uncompressed copy exists only locally).
+dashboard/assets/signal_pulse_public.db.gz
+dashboard/assets/signal_pulse_public.db
+**/__pycache__
+**/*.pyc
+**/.DS_Store

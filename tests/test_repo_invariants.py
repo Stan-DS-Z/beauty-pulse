@@ -6,6 +6,7 @@ with the dashboard, which is how they came apart in the first place.
 """
 
 import re
+import shutil
 import sqlite3
 import subprocess
 from pathlib import Path
@@ -14,6 +15,12 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# These read git itself. Cloud Build's test step can run on a source with no
+# .git, or on an image with no git binary; GitHub Actions runs them on every push.
+NEEDS_GIT = pytest.mark.skipif(shutil.which("git") is None or not (ROOT / ".git").exists(),
+                               reason="not a git checkout")
+
 # The app and its bp package: every .py the dashboard runs.
 DASHBOARD_SOURCE = "\n".join(
     p.read_text(encoding="utf-8") for p in sorted((ROOT / "dashboard").rglob("*.py")))
@@ -94,6 +101,7 @@ def test_public_db_has_one_row_per_genre(public_db):
         conn.close()
 
 
+@NEEDS_GIT
 def test_private_db_is_not_tracked():
     tracked = subprocess.run(
         ["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True
@@ -141,6 +149,7 @@ def test_chart_export_uses_the_dashboard_window(app):
 
 # ── House writing rule ────────────────────────────────────────────────────────
 
+@NEEDS_GIT
 def test_no_pp_abbreviation():
     """"pp" is banned for both percentage points and pages (see memory/)."""
     files = subprocess.run(

@@ -1,0 +1,57 @@
+# Push to main -> test -> build -> push -> deploy the Dash app to Cloud Run.
+# Run by a Cloud Build trigger on the GitHub repo, set up once in the console
+# (DEPLOY.md). The service's settings live here, in the deploy step, so the repo
+# records what runs.
+steps:
+  # 1. Red tests, no deploy. python:3.12 rather than -slim: it carries git,
+  #    which three repo-invariant tests read (they skip without a checkout).
+  - id: test
+    name: python:3.12
+    entrypoint: bash
+    args:
+      - -c
+      - pip install -q -r requirements-dev.txt && python -m pytest -q
+
+  # 2. Build the image; the commit goes in so /version can report it.
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/beauty-pulse/dashboard:$SHORT_SHA
+      - --build-arg
+      - APP_VERSION=$SHORT_SHA
+      - .
+
+  # 3. Push to the beauty-pulse Artifact Registry repository (created once, DEPLOY.md).
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - asia-northeast1-docker.pkg.dev/$PROJECT_ID/beauty-pulse/dashboard:$SHORT_SHA
+
+  # 4. Deploy. The app is public, so unauthenticated access is on.
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - beauty-pulse
+      - --image=asia-northeast1-docker.pkg.dev/$PROJECT_ID/beauty-pulse/dashboard:$SHORT_SHA
+      - --region=asia-northeast1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --memory=1Gi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=2
+      - --quiet
+
+images:
+  - asia-northeast1-docker.pkg.dev/$PROJECT_ID/beauty-pulse/dashboard:$SHORT_SHA
+
+options:
+  # Required when the trigger runs as a chosen service account.
+  logging: CLOUD_LOGGING_ONLY
+timeout: 1200s

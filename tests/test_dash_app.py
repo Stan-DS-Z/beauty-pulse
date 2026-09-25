@@ -100,6 +100,14 @@ def test_layout_takes_the_language_from_the_query(pages, path):
         assert page.layout(lang=junk) is page.TREES["en"], junk
 
 
+def test_version_reports_the_build_and_the_data_months(client):
+    r = client.get("/version")
+    assert r.status_code == 200 and r.headers["Cache-Control"] == "no-store"
+    body = r.get_json()
+    assert set(body) == {"version", "trends_to", "launches_to"}
+    assert re.fullmatch(r"\d{4}-\d{2}", body["trends_to"])
+
+
 # ── One callback per control, with a non-default value ─────────────────────
 
 def test_crossover_slider_sets_the_visible_range(client, pages):

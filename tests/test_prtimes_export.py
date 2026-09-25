@@ -19,6 +19,11 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "dashboard" / "assets"
 
+# These read git itself. Cloud Build's test step can run on a source with no
+# .git, or on an image with no git binary; GitHub Actions runs them on every push.
+NEEDS_GIT = pytest.mark.skipif(shutil.which("git") is None or not (ROOT / ".git").exists(),
+                               reason="not a git checkout")
+
 LAUNCH_COLUMNS = [
     "release_id", "company_id", "issuer", "issuer_group", "role", "origin", "panel",
     "published", "month", "category", "category_group", "ingredients", "brand", "tier",
@@ -57,6 +62,7 @@ def test_one_row_per_release_and_known_panels(launches):
         assert set(launches[col]) <= {"0", "1"}
 
 
+@NEEDS_GIT
 def test_release_store_is_gitignored():
     ignored = subprocess.run(["git", "check-ignore", "-q", "data/prtimes.db"], cwd=ROOT)
     assert ignored.returncode == 0, "data/prtimes.db holds release text and must stay untracked"

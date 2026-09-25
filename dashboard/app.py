@@ -3,6 +3,9 @@ Beauty Pulse — the Dash app. Runs alongside streamlit_app.py until it replaces
 
     python dashboard/app.py                                   # local, port 8050
     gunicorn --chdir dashboard --preload app:server           # production
+    /version                                                  # what is deployed
+
+Deploy: Dockerfile and cloudbuild.yaml at the repo root; see DEPLOY.md.
 
 Three pages, one per Streamlit tab, in dash_pages/ (not pages/: a pages/ folder
 next to streamlit_app.py would switch the Streamlit app into multipage mode).
@@ -11,12 +14,14 @@ its English and Japanese trees once at import and its layout() hands back the
 one the URL asks for. Numbers, copy, theme and figures come from bp/.
 """
 
+import os
 from pathlib import Path
 
 from dash import Dash, Input, Output, clientside_callback, dcc, html, page_container
-from flask import abort, redirect, request, send_file
+from flask import abort, jsonify, redirect, request, send_file
 from flask_compress import Compress
 
+import data_cache
 from bp import figures
 
 HERE = Path(__file__).parent
@@ -47,6 +52,20 @@ def _home():
         qs = request.query_string.decode()
         return redirect(HOME + (f"?{qs}" if qs else ""), code=302)
     return None
+
+
+@server.route("/version")
+def _version():
+    """The deployed commit and the months its data runs to. APP_VERSION is the
+    short SHA Cloud Build bakes into the image; a local run says "dev"."""
+    d = data_cache.load()
+    resp = jsonify({
+        "version": os.environ.get("APP_VERSION", "dev"),
+        "trends_to": d.frame("trends_crossover")["week_start"].max().strftime("%Y-%m"),
+        "launches_to": d.LAUNCH["last"] if d.LAUNCH else None,
+    })
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @server.route("/wordcloud/<int:year>.png")
