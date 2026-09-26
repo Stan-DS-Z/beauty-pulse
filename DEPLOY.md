@@ -137,7 +137,20 @@ seconds.
    fork; the sample was redone on that build.
 
 Since the commit after `828cb61`, `cloudbuild.yaml` keeps one instance warm (`--min-instances=1`)
-and states startup CPU boost (`--cpu-boost`). Samples on that build are not taken yet.
+and states startup CPU boost (`--cpu-boost`). Samples on that build (`a66c632`, 2026-09-26), each
+round after 20 minutes with no requests, curl, times in seconds. The service's own address comes
+first; the public address follows about 100 seconds later.
+
+| Sent (UTC) | Address | First byte | New instance in logs |
+|---|---|---|---|
+| 13:43:04 | run.app | 0.071 | no |
+| 13:44:49 | beautypulse.web.app | 0.177 | no |
+| 14:04:58 | run.app | 0.064 | no |
+| 14:06:41 | beautypulse.web.app | 0.135 | no |
+| 14:26:51 | run.app | 0.063 | no |
+| 14:28:35 | beautypulse.web.app | 0.156 | no |
+
+The one instance the deploy started at 13:22:17 served all six.
 
 See [minimum instances](https://cloud.google.com/run/docs/configuring/min-instances) for what
 keeping an instance warm changes.
