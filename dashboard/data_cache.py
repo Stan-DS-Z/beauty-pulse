@@ -31,7 +31,8 @@ class Data:
 
     def frame(self, name):
         """A loaded asset, e.g. frame("umap") -> load_umap(assets). Raises
-        FileNotFoundError when the CSV is absent, as the Streamlit loaders do."""
+        FileNotFoundError when the CSV is absent; the pages catch it and show a
+        notice in the chart's place."""
         return _frame(self.assets, name)
 
 

@@ -4,7 +4,7 @@
     python export_ingredient_chart.py --lang jp   ->  ingredient_surge_jp.png
 
 Window: full calendar years only, selected the same way compute_headline() in
-dashboard/streamlit_app.py selects them (>= 12 points in the year). The source
+dashboard/bp/data.py selects them (>= 12 points in the year). The source
 CSV carries a partial current year; averaging it against full years would put a
 figure on the chart that the dashboard does not report, and beauty search is
 seasonal enough that a half-year mean is not comparable to a full one.

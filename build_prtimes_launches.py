@@ -13,8 +13,8 @@ The panel is fixed by WINDOW_START: a feed is core when its history is
 complete or its feed reaches that month, and present-forward otherwise. The
 feed-health record is the newest data/interim/prtimes_feed_health_*.json.
 
-The ingredient table is exported because the dashboard cannot read .xlsx on
-Streamlit Cloud (openpyxl is not in requirements.txt).
+The ingredient table is exported because the dashboard does not read .xlsx:
+openpyxl is not in requirements.txt, which is all the Cloud Run image installs.
 
     python build_prtimes_launches.py
 """

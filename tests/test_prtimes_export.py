@@ -68,28 +68,6 @@ def test_release_store_is_gitignored():
     assert ignored.returncode == 0, "data/prtimes.db holds release text and must stay untracked"
 
 
-def test_discovery_tab_renders_without_the_export(tmp_path):
-    """A clone without the launch export still renders every tab.
-
-    The app passes its own assets directory into bp, so the copy below reads
-    the tmp assets. The cache is cleared first all the same, so no earlier app
-    run in this process can hand back its launch figures."""
-    import streamlit as st
-    from streamlit.testing.v1 import AppTest
-    st.cache_data.clear()
-    app_dir = tmp_path / "dashboard"
-    (app_dir / "assets").mkdir(parents=True)
-    shutil.copy(ROOT / "dashboard" / "streamlit_app.py", app_dir / "streamlit_app.py")
-    (app_dir / "bp").symlink_to(ROOT / "dashboard" / "bp")
-    for f in ASSETS.iterdir():
-        if not f.name.startswith("prtimes_"):
-            (app_dir / "assets" / f.name).symlink_to(f)
-    at = AppTest.from_file(str(app_dir / "streamlit_app.py"), default_timeout=180).run()
-    assert not at.exception, at.exception
-    body = "\n".join(str(e.value) for e in at.markdown)
-    assert "prtimes_launches.csv" in body, "the empty state line must render"
-
-
 # ── Gate v2, frozen: the counts it scored when the vocabulary was fixed ──────
 
 SAMPLES = {

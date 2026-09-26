@@ -1,8 +1,11 @@
 # Deploying the Dash app
 
 The Dash app (`dashboard/app.py`) runs on Cloud Run, behind Firebase Hosting, which serves it at
-https://beautypulse.web.app. The Streamlit app keeps deploying from `main` on Streamlit
-Community Cloud as before.
+https://beautypulse.web.app.
+
+The old address, ss-beauty-pulse.streamlit.app, shows a one-screen page pointing here
+(`dashboard/streamlit_app.py`, with its own `dashboard/requirements.txt`), which Streamlit
+Community Cloud keeps redeploying from `main`.
 
 | | |
 |---|---|

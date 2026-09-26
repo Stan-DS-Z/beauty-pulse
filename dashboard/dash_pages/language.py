@@ -17,7 +17,7 @@ WC_DEFAULT = 2025
 
 
 def wordcloud_image(year, assets):
-    """The year's word cloud, or the caption Streamlit shows when it is missing."""
+    """The year's word cloud, or a caption naming the missing file."""
     if not (assets / f"wordcloud_{year}.png").exists():
         return ui.caption(f"wordcloud_{year}.png not found")
     return html.Img(src=f"/wordcloud/{year}.png", className="bp-wordcloud",

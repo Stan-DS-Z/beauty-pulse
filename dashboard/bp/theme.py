@@ -46,16 +46,14 @@ def _yax(title="", suffix="", **kw):
 
 # ── Chart template ──────────────────────────────────────────────────────────
 # Streamlit's chart look: its placeholder template with the light theme's
-# colours and fonts filled in, as its frontend resolves them at draw time
-# (Streamlit 1.62, read from the browser). The builders set no template, so
-# Streamlit's own applies to what Streamlit draws: importing Streamlit makes
-# it Plotly's process-wide default. A template set in _base would replace it
-# there too, so only the Dash app applies TEMPLATE, figure by figure
-# (dashboard/ui.py).
+# colours and fonts filled in, as its frontend resolved them at draw time
+# (Streamlit 1.62, read from the browser), so that the Dash app drew the charts
+# as the Streamlit app it replaced did. The builders set no template; the Dash
+# app applies TEMPLATE figure by figure (dashboard/ui.py).
 #
 # Three departures. The font: Streamlit's is Source Sans, which the Dash page
 # does not load, so FONT is the page's stack (style.css --font). Titles:
-# Streamlit bolds them by wrapping title.text in <b>, which is outside the
+# Streamlit bolded them by wrapping title.text in <b>, which is outside the
 # template, so the weight is set here instead. "transparent", which plotly.py
 # rejects, is written rgba(0,0,0,0). Left out: Streamlit's settings for
 # ternary plots and range selectors, which no chart has, and its trace

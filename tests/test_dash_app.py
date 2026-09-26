@@ -123,6 +123,20 @@ def test_version_reports_the_build_and_the_data_months(client):
     assert re.fullmatch(r"\d{4}-\d{2}", body["trends_to"])
 
 
+@pytest.mark.parametrize("lang", ["en", "jp"])
+def test_shift_page_shows_the_measured_ratio_and_its_range(pages, headline, lang):
+    """The reclassified SKU ratio, its 95% CI and its sensitivity span reach the
+    page, from a HEADLINE computed independently of the app's own."""
+    H = headline
+    sep = "–" if lang == "en" else "〜"
+    text = _text(_tree(pages["/shift"].TREES[lang]))
+    assert f"{H['sku_measured']:.1f}x" in text
+    assert f"{H['sku_lo']:.1f}{sep}{H['sku_hi']:.1f}" in text, \
+        "the CI must be shown, not just the point"
+    assert f"{H['sku_span_lo']:.1f}{sep}{H['sku_span_hi']:.1f}" in text, \
+        "the sensitivity span must be shown"
+
+
 # ── One callback per control, with a non-default value ─────────────────────
 
 def test_crossover_slider_sets_the_visible_range(client, pages):

@@ -7,15 +7,15 @@ How did COVID restructure Japanese beauty consumption?
 Search behaviour, product catalog, ingredient searches, YouTube discourse, and consumer reviews — multiple independent signals, cross-checked across sources.
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
-![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-red)
+![Dash](https://img.shields.io/badge/Dashboard-Dash-blue)
 ![SQLite](https://img.shields.io/badge/Data-SQLite-lightgrey)
 ![NLP](https://img.shields.io/badge/NLP-SudachiPy%20%7C%20TF--IDF%20%7C%20UMAP-violet)
 ![Status](https://img.shields.io/badge/Status-Deployed-brightgreen)
 ![Markets](https://img.shields.io/badge/Market-Japan-white)
 
 <p align="center">
-  <a href="https://ss-beauty-pulse.streamlit.app/">
-    <img src="https://img.shields.io/badge/%E2%9C%A8_ダッシュボード-ss--beauty--pulse.streamlit.app-4A90B8?style=for-the-badge" alt="Dashboard">
+  <a href="https://beautypulse.web.app">
+    <img src="https://img.shields.io/badge/%E2%9C%A8_ダッシュボード-beautypulse.web.app-4A90B8?style=for-the-badge" alt="Dashboard">
   </a>
 </p>
 
@@ -48,7 +48,8 @@ Cosmetics search demand fell ~<!--f:cosm_decline-->32<!--/f-->% across full cale
 
 ## ライブダッシュボード / Live Dashboard
 
-**[Beauty Pulse](https://ss-beauty-pulse.streamlit.app/)** is deployed on Streamlit Community Cloud with an EN/JP language toggle.
+**[Beauty Pulse](https://beautypulse.web.app)** はDashアプリで、Google Cloud Run上で動き、Firebase Hosting経由で英語・日本語で配信している。  
+**[Beauty Pulse](https://beautypulse.web.app)** is a Dash app on Google Cloud Run, served through Firebase Hosting, in English and Japanese.
 
 | Tab | What it shows |
 |---|---|
@@ -102,8 +103,9 @@ umap-learn   0.5.x     # Dimensionality reduction for review mapping
 hdbscan      0.8.x     # Automatic cluster detection
 
 # Dashboard
-Streamlit    1.x       # Interactive web UI
+Dash         4.2.0     # Web app: pages, callbacks, EN/JA routing
 Plotly       5.24.1    # Charts (version pinned for API stability)
+gunicorn     26.0.0    # WSGI server in the Cloud Run image
 ```
 
 **設計原則 / Design Principles:**
@@ -129,7 +131,7 @@ Plotly       5.24.1    # Charts (version pinned for API stability)
 | NB06 | Discovery layer — vocabulary convergence (size-matched), topic modelling, review mapping, search discovery |
 | NB07 | Executive synthesis + dashboard asset generation |
 
-**Execution order:** NB02 → NB02b → NB02c → NB03 → NB04 → NB05 → NB06 → NB07 → `streamlit_app.py`
+**Execution order:** NB02 → NB02b → NB02c → NB03 → NB04 → NB05 → NB06 → NB07 → `dashboard/app.py`
 
 ---
 
@@ -181,7 +183,7 @@ cd beauty-pulse
 python3.12 -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-streamlit run dashboard/streamlit_app.py
+python dashboard/app.py           # http://localhost:8050
 ```
 
 **分析を検証・再実行する / Interrogate or re-run the analysis (NB03 → NB07):**
@@ -215,7 +217,7 @@ Public: analysis notebooks (NB02–NB07), the dashboard, CSV assets, and `signal
 
 ## プロジェクトの背景 / Context
 
-このプロジェクトは、日本の美容・FMCGアナリティクスへのキャリアピボットを目的としたデータポートフォリオ作品。自己収集データの構築（Kaggle不使用）、日本語NLPパイプライン、SQLite設計、Streamlitダッシュボード展開を含む。
+このプロジェクトは、日本の美容・FMCGアナリティクスへのキャリアピボットを目的としたデータポートフォリオ作品。自己収集データの構築（Kaggle不使用）、日本語NLPパイプライン、SQLite設計、Dashダッシュボードの展開を含む。
 
 This project forms one half of a data analytics portfolio targeting Japanese beauty and FMCG analytics roles. It demonstrates self-sourced data construction, Japanese NLP, SQL architecture, and deployed dashboard work — built as a complement to [The Masstige Moment](https://github.com/Stan-DS-Z/the-masstige-moment), which analyses the same market from a top-down revenue perspective.
 

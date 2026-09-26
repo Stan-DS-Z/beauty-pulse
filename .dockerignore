@@ -5,6 +5,11 @@
 !requirements.txt
 !dashboard
 
+# Inside dashboard/: the Streamlit Cloud stub that points to the Dash app, and
+# its own requirements file; the image runs only the Dash app.
+dashboard/streamlit_app.py
+dashboard/requirements.txt
+
 # Inside dashboard/: the public DB ships for readers of the repo, and the app
 # never opens it (the uncompressed copy exists only locally).
 dashboard/assets/signal_pulse_public.db.gz

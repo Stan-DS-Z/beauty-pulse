@@ -1,5 +1,5 @@
 """
-Beauty Pulse — the Dash app. Runs alongside streamlit_app.py until it replaces it.
+Beauty Pulse — the Dash app, served at https://beautypulse.web.app.
 
     python dashboard/app.py                                   # local, port 8050
     gunicorn --chdir dashboard --preload app:server           # production
@@ -25,7 +25,7 @@ import data_cache
 from bp import figures
 
 HERE = Path(__file__).parent
-ASSETS = HERE / "assets"          # data, as for Streamlit; Dash's own assets are static/
+ASSETS = HERE / "assets"          # the CSV data; Dash's own assets folder is static/
 HOME = "/shift"                   # until a funnel page takes "/"
 
 app = Dash(

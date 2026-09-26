@@ -83,8 +83,8 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
 
 @pytest.mark.parametrize("name", BUILDERS)
 def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, frames):
-    """A builder sets no template: Streamlit's own applies to what it draws,
-    and the Dash app sets bp.theme.TEMPLATE itself (dashboard/ui.py)."""
+    """A builder sets no template: the Dash app sets bp.theme.TEMPLATE on
+    every figure itself (dashboard/ui.py), so it is set in one place."""
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
     S = strings.build_strings("en", headline, launch, A)

@@ -1,19 +1,18 @@
-# Dashboard dependencies - Streamlit Community Cloud installs this file.
-# Analysis-pipeline dependencies live in requirements-analysis.txt.
+# Dashboard dependencies: the Cloud Run image (Dockerfile) and CI
+# (requirements-dev.txt, .github/workflows/tests.yml, cloudbuild.yaml) install
+# this file. Analysis-pipeline dependencies live in requirements-analysis.txt;
+# the redirect stub in dashboard/ has its own requirements file there.
 #
-# Pinned to the versions the dashboard is verified against. Streamlit Cloud
-# reinstalls from this file on every deploy, so anything left floating means a
-# rebuild can change behaviour with no commit behind it — pandas 3.0 and numpy
-# 2.x are both recent major releases, and plotly was already pinned for exactly
-# this reason. Bump deliberately, then re-run the dashboard before committing.
-streamlit==1.62.0
+# Pinned to the versions the dashboard is verified against. Every build
+# reinstalls from this file, so anything left floating means a rebuild can
+# change behaviour with no commit behind it — pandas 3.0 and numpy 2.x are both
+# recent major releases, and plotly was already pinned for exactly this reason.
+# Bump deliberately, then re-run the dashboard before committing.
 pandas==3.0.5
 numpy==2.5.2
 plotly==5.24.1
-pillow==12.3.0
-# The Dash app (dashboard/app.py), alongside Streamlit until it replaces it.
-# Flask and Werkzeug are pinned at what dash 4.2.0 resolved to, for the same
-# reason as everything above: nothing floats.
+# The Dash app (dashboard/app.py). Flask and Werkzeug are pinned at what
+# dash 4.2.0 resolved to, for the same reason as everything above: nothing floats.
 dash==4.2.0
 Flask==3.1.3
 Werkzeug==3.1.8

@@ -4,9 +4,9 @@
 > Methodological caveats for [Beauty Pulse](README.md), and the record of revisions from data
 > correction and methodology audit.
 >
-> 本文中の「発見1〜4」は[ダッシュボード](https://ss-beauty-pulse.streamlit.app/)で提示している4つの発見を指す。  
+> 本文中の「発見1〜4」は[ダッシュボード](https://beautypulse.web.app)で提示している4つの発見を指す。  
 > References to Findings 1–4 below are the four findings presented on the
-> [dashboard](https://ss-beauty-pulse.streamlit.app/).
+> [dashboard](https://beautypulse.web.app).
 
 ---
 

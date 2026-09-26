@@ -2,7 +2,7 @@
 
 The dashboard's numbers and copy come from its bp package, which imports no UI
 framework, so the tests read HEADLINE and STRINGS — the values the deployed
-page renders — from bp directly, without Streamlit or a server.
+page renders — from bp directly, without a server.
 """
 
 import gzip
