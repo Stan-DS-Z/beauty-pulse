@@ -100,6 +100,21 @@ def test_layout_takes_the_language_from_the_query(pages, path):
         assert page.layout(lang=junk) is page.TREES["en"], junk
 
 
+def test_importing_the_app_leaves_it_set_up():
+    """gunicorn --preload imports app.py once and forks the workers from it. A
+    worker must start with Dash's list of servable JS bundles already built, or
+    parallel requests on a cold start race Dash's own setup and get 500s. A
+    fresh interpreter, because this process has served requests already."""
+    import subprocess
+    import sys
+    code = ("import app; import sys; "
+            "sys.exit(0 if 'dcc/dash_core_components.js' in app.app.registered_paths['dash'] "
+            "and app.app._got_first_request['setup_server'] else 1)")
+    r = subprocess.run([sys.executable, "-c", code], cwd=ROOT / "dashboard",
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stderr[-2000:]
+
+
 def test_version_reports_the_build_and_the_data_months(client):
     r = client.get("/version")
     assert r.status_code == 200 and r.headers["Cache-Control"] == "no-store"

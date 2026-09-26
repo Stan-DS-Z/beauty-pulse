@@ -94,6 +94,14 @@ clientside_callback(
     Input("shell-url", "search"),
 )
 
+# Dash sets itself up on a process's first request, and marks that done before
+# it is: a request on another thread meanwhile is checked against a half-built
+# list of the JS bundles Dash serves, and gets a 500. On a cold start that broke
+# the page. Made here, the first request runs in the gunicorn master before the
+# workers fork (--preload), so every worker starts set up.
+with server.test_client() as _client:
+    _client.get(HOME)
+
 
 if __name__ == "__main__":
     app.run(debug=False, port=8050)
