@@ -79,12 +79,39 @@ the image.
 
 ## Cold start
 
-Measured against `/shift`, after at least 15 minutes idle for each cold sample:
-`curl -o /dev/null -s -w '%{time_starttransfer}\n' https://<service-url>/shift`.
+Measured against `/shift`. A cold sample follows at least 20 minutes with no requests, because
+Cloud Run may keep an idle instance for up to 15 minutes. It counts only if the service's logs
+show a new instance starting between the request and its first byte: Cloud Run's
+`Starting new instance` and gunicorn's `Starting gunicorn`.
 
-| Date | Cold (s) | Warm (s) | Min instances |
-|---|---|---|---|
-| — | — | — | 0 |
+```zsh
+curl -o /dev/null -s -w '%{time_starttransfer}\n' https://<service-url>/shift
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="beauty-pulse"
+  AND (textPayload:"Starting new instance" OR textPayload:"Starting gunicorn")' \
+  --project <project-id> --freshness=1h --limit=4
+```
+
+A browser sample loads `/shift` in a new Chrome profile with the cache off, and records the first
+byte and the time until all 9 charts have drawn, both from navigation start.
+
+2026-09-26. 1 vCPU, 1 GiB, min instances 0, max 2; gunicorn with 2 workers × 4 threads and
+`--preload`. Times in seconds.
+
+| Sent (UTC) | Commit | Sample | First byte | 9 charts drawn | Instance start → gunicorn start |
+|---|---|---|---|---|---|
+| 10:39:54 | `51e245d` | cold 1, curl | 13.13 | — | 13.0 |
+| 10:40:38 | `51e245d` | warm, curl | 0.053 | — | no new instance |
+| 10:42:21 | `51e245d` | warm, curl | 0.074 | — | no new instance |
+| 10:44:04 | `51e245d` | warm, curl | 0.049 | — | no new instance |
+| 11:04:35 | `51e245d` | cold 2, curl | 5.22 | — | 5.1 |
+| 11:25:01 | `51e245d` | cold 3, browser | 4.69 ¹ | did not draw ² | 4.7 |
+| 12:04:31 | `823e24b` | cold 3, browser, redone | 6.68 | 7.54 | 6.5 |
+
+1. Cloud Run's logged latency for the `/shift` request. The browser's own figure was not recorded:
+   the script stopped when the charts did not draw.
+2. A request for a JS bundle returned 500 while a gunicorn worker was still setting Dash up, so
+   no chart drew. Fixed in `823e24b`, which sets Dash up in the gunicorn master before the workers
+   fork; the sample was redone on that build.
 
 See [minimum instances](https://cloud.google.com/run/docs/configuring/min-instances) for what
 keeping an instance warm changes.
