@@ -30,7 +30,10 @@ steps:
       - push
       - asia-northeast1-docker.pkg.dev/$PROJECT_ID/beauty-pulse/dashboard:$SHORT_SHA
 
-  # 4. Deploy. The app is public, so unauthenticated access is on.
+  # 4. Deploy. The app is public, so unauthenticated access is on. One instance
+  #    stays warm, so a visitor after an idle spell skips the cold start
+  #    (DEPLOY.md, Cold start). Startup CPU boost was already on by gcloud's
+  #    default; the flag keeps it on if that default changes.
   - id: deploy
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gcloud
@@ -44,7 +47,8 @@ steps:
       - --allow-unauthenticated
       - --memory=1Gi
       - --cpu=1
-      - --min-instances=0
+      - --cpu-boost
+      - --min-instances=1
       - --max-instances=2
       - --quiet
 

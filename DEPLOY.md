@@ -10,8 +10,8 @@ The Dash app (`dashboard/app.py`) runs on Cloud Run. The Streamlit app keeps dep
 | Image | `asia-northeast1-docker.pkg.dev/<PROJECT_ID>/beauty-pulse/dashboard:<short SHA>` |
 | Build | `cloudbuild.yaml`, run by a Cloud Build trigger on pushes to `main` |
 
-`cloudbuild.yaml` is the source of truth for the service's settings: memory, CPU, instance
-limits and public access are flags on its deploy step. A setting changed in the console is
+`cloudbuild.yaml` is the source of truth for the service's settings: memory, CPU, startup CPU
+boost, instance limits and public access are flags on its deploy step. A setting changed in the console is
 overwritten by the next deploy. Change it in the file instead.
 
 Each push to `main` runs the test suite, then builds, pushes and deploys. Red tests stop the
@@ -94,8 +94,9 @@ gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.serv
 A browser sample loads `/shift` in a new Chrome profile with the cache off, and records the first
 byte and the time until all 9 charts have drawn, both from navigation start.
 
-2026-09-26. 1 vCPU, 1 GiB, min instances 0, max 2; gunicorn with 2 workers × 4 threads and
-`--preload`. Times in seconds.
+2026-09-26. 1 vCPU, 1 GiB, startup CPU boost on (gcloud's default; `cloudbuild.yaml` did not set
+it then), min instances 0, max 2; gunicorn with 2 workers × 4 threads and `--preload`. Times in
+seconds.
 
 | Sent (UTC) | Commit | Sample | First byte | 9 charts drawn | Instance start → gunicorn start |
 |---|---|---|---|---|---|
@@ -112,6 +113,9 @@ byte and the time until all 9 charts have drawn, both from navigation start.
 2. A request for a JS bundle returned 500 while a gunicorn worker was still setting Dash up, so
    no chart drew. Fixed in `823e24b`, which sets Dash up in the gunicorn master before the workers
    fork; the sample was redone on that build.
+
+Since the commit after `828cb61`, `cloudbuild.yaml` keeps one instance warm (`--min-instances=1`)
+and states startup CPU boost (`--cpu-boost`). Samples on that build are not taken yet.
 
 See [minimum instances](https://cloud.google.com/run/docs/configuring/min-instances) for what
 keeping an instance warm changes.
