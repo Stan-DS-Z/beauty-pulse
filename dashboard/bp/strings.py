@@ -22,7 +22,7 @@ STRINGS = {
         "t1_m4": "Makeup shipped value",  "t1_m4d": "",
 
         "t1_c1h": "Cosmetics search fell by about a third and stayed above skincare search in every year",
-        "t1_c1e": "Monthly Google search interest, {tr_years} ({tr_part}). Both terms come from one request and share one scale. 化粧品 search fell steadily; スキンケア search held roughly flat. 化粧品 is the Japanese umbrella term and includes skincare.",
+        "t1_c1e": "Monthly Google search interest, {tr_years} ({tr_part}). Both terms come from one request and share one scale. {pair} 化粧品 is the Japanese umbrella term and includes skincare.",
         "t1_c2h": "",
         "t1_c2e": "Search interest for individual skincare ingredients. Each line is indexed to its own peak.",
         "t1_c2cap": "Dotted = ingredients with steady search before 2020  ·  solid = ingredients whose search rose after 2020  ·  {tr_part}",
@@ -165,7 +165,7 @@ STRINGS = {
         "t1_m4":     "メイク出荷金額",  "t1_m4d": "",
 
         "t1_c1h":    "化粧品の検索は約3分の1低下し、全ての年でスキンケアの検索を上回った",
-        "t1_c1e":    "{tr_years}年の月次Google検索関心度（{tr_part}）。両語は同一のリクエストで取得しており、共通のスケールを持つ。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。「化粧品」はスキンケアを含む上位語である。",
+        "t1_c1e":    "{tr_years}年の月次Google検索関心度（{tr_part}）。両語は同一のリクエストで取得しており、共通のスケールを持つ。{pair}「化粧品」はスキンケアを含む上位語である。",
         "t1_c2h": "",
         "t1_c2e":    "スキンケア成分ごとの検索関心度。各線は自身のピークを基準に指数化している。",
         "t1_c2cap":  "点線 = 2020年以前から検索が安定していた成分  ·  実線 = 2020年以降に検索が上昇した成分  ·  {tr_part}",
@@ -337,13 +337,25 @@ def _trends_span(df, lang):
     return f"{y0}〜{y1}", f"{y1}年は1" + ("" if m == 1 else f"〜{m}") + "月"
 
 
+def _pair(h, lang):
+    """化粧品 against スキンケア over full years, from one request."""
+    y0, y1, c, s = h["ing_y0"], h["ing_y1"], abs(h["cosm_decline"]), h["skin_change"]
+    if lang == "en":
+        return (f"Over full years {y0}→{y1}, 化粧品 search fell {c}% and スキンケア search "
+                f"{'rose' if s >= 0 else 'fell'} {abs(s)}%; the gap between them narrowed "
+                f"{abs(h['gap_change'])}%, {h['cosm_share']}% of it from the fall in 化粧品.")
+    return (f"暦年ベース{y0}→{y1}年で、化粧品の検索は{c}%低下し、スキンケアの検索は{abs(s)}%"
+            f"{'上昇' if s >= 0 else '低下'}した。両語の差は{abs(h['gap_change'])}%縮小し、"
+            f"その{h['cosm_share']}%は化粧品の低下による。")
+
+
 def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
     """STRINGS[lang] with the live figures written in."""
     S = dict(STRINGS[lang])
     # The Trends pull runs into the current year; each caption names the months
     # its own chart's asset covers.
     _cr_years, _cr_part = _trends_span(load_trends_crossover(ASSETS), lang)
-    S["t1_c1e"] = S["t1_c1e"].format(tr_years=_cr_years, tr_part=_cr_part)
+    S["t1_c1e"] = S["t1_c1e"].format(tr_years=_cr_years, tr_part=_cr_part, pair=_pair(HEADLINE, lang))
     S["t1_c2cap"] = S["t1_c2cap"].format(tr_part=_trends_span(load_ingredient_surge(ASSETS), lang)[1])
     S["t1_c4cap"] = S["t1_c4cap"].format(tr_part=_trends_span(load_makeup_rebound(ASSETS), lang)[1])
     # Makeup rebound: each term's full-year mean indexed to its own 2019. Google
@@ -434,8 +446,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"2019–2021 or within 2022–{_h['mkt_y1']}. {_h['ytd_y']} figures come from METI's monthly "
             "確報 release.")
         S["f1_body"] = (
-            f"Google Trends: 化粧品 search fell ~{abs(_h['cosm_decline'])}% over full years "
-            f"{_h['ing_y0']}→{_h['ing_y1']}, and スキンケア search held roughly flat. Rakuten lists "
+            f"Google Trends: {_pair(_h, 'en')[0].lower() + _pair(_h, 'en')[1:]} Rakuten lists "
             f"{_h['sku_measured']}× more skincare SKUs than makeup SKUs. Niacinamide search rose from "
             f"{_h['nia_pre']} to {_h['nia_post']}. Lipstick, foundation and eyeshadow search stayed "
             "below 2019 after mask guidance was relaxed."
@@ -554,8 +565,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"金額変化は2019〜2021年または2022〜{_h['mkt_y1']}年の内側で測っている。{_h['ytd_y']}年の数値は"
             "経産省の月次確報による。")
         S["f1_body"] = (
-            f"Googleトレンド：化粧品の検索は暦年ベース{_h['ing_y0']}→{_h['ing_y1']}年で約"
-            f"{abs(_h['cosm_decline'])}%低下し、スキンケアはほぼ横ばい。楽天のスキンケアSKUはメイクの"
+            f"Googleトレンド：{_pair(_h, 'jp')}楽天のスキンケアSKUはメイクの"
             f"{_h['sku_measured']}倍。ナイアシンアミドの検索は{_h['nia_pre']}→{_h['nia_post']}に上昇。"
             "口紅・ファンデーション・アイシャドウの検索は、マスク着用ルール緩和後も2019年を下回る。"
             f"<br><br>経産省出荷統計：{_h['mkt_y0']}年から{_h['mkt_y1']}年に、ファンデーションの出荷金額は"

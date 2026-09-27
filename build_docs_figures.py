@@ -129,6 +129,9 @@ def build_registry() -> dict[str, str]:
 
         # ── attention layer ─────────────────────────────────────────────────
         "cosm_decline":  pct(h["cosm_decline"]),
+        "skin_change":   pct(h["skin_change"]),
+        "gap_change":    pct(h["gap_change"]),
+        "cosm_share":    f"{int(h['cosm_share'])}",
         "nia_pre":       f"{int(h['nia_pre'])}",
         "nia_post":      f"{int(h['nia_post'])}",
         "ing_y0":        f"{int(h['ing_y0'])}",

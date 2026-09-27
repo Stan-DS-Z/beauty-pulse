@@ -112,6 +112,14 @@ def compute_headline(ASSETS: Path):
                              / annual.loc[y0, "化粧品"]))
     ratio_0 = round(annual.loc[y0, "スキンケア"] / annual.loc[y0, "化粧品"], 2)
     ratio_1 = round(annual.loc[y1, "スキンケア"] / annual.loc[y1, "化粧品"], 2)
+    # Inside one request, percentage changes and the split of the gap's movement
+    # do not depend on Google's scaling. The gap narrows by 化粧品's fall plus
+    # スキンケア's rise; cosm_share is the part that came from the fall.
+    _s0, _s1 = annual.loc[y0, "スキンケア"], annual.loc[y1, "スキンケア"]
+    _c0, _c1 = annual.loc[y0, "化粧品"], annual.loc[y1, "化粧品"]
+    skin_change = int(round(100 * (_s1 - _s0) / _s0))
+    gap_change = int(round(100 * ((_c1 - _s1) / (_c0 - _s0) - 1)))
+    cosm_share = int(round(100 * (_c0 - _c1) / ((_c0 - _s0) - (_c1 - _s1))))
 
     # Vocabulary convergence — size-matched cosine
     df_sv = pd.read_csv(ASSETS / "nb06_cosine_salvage.csv")
@@ -264,6 +272,9 @@ def compute_headline(ASSETS: Path):
         "skin_skus":    skin_skus,
         "cosm_skus":    cosm_skus,
         "cosm_decline": cosm_decline,
+        "skin_change":  skin_change,
+        "gap_change":   gap_change,
+        "cosm_share":   cosm_share,
         "ratio_0":      ratio_0,
         "ratio_1":      ratio_1,
         "conv_lo":      conv_lo,
