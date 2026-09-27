@@ -150,6 +150,7 @@ def build(lang, d):
         ui.caption(m2_cap),
         ui.finding(S["t1_brkh"], S["t1_brkb"], "cosm"),
         ui.footnote(S["t1_brkfnh"], S["t1_brkfn"]),
+        ui.footnote(S["t1_impfnh"], S["t1_impfn"]),
 
         ui.panel_header(S["t1_p3"], S["t1_p3d"]),
         ui.chart_head(S["t1_dvh"], S["t1_dve"]),

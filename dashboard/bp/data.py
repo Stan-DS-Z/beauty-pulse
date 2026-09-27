@@ -28,6 +28,10 @@ METI_SKIN = ["化粧水", "美容液", "乳液", "モイスチャークリーム
 METI_MAKE = ["ファンデーション", "おしろい", "口紅", "ほほ紅", "アイメークアップ",
              "まゆ墨・まつ毛化粧料", "つめ化粧料(除光液を含む)", "リップクリーム",
              "その他の仕上用化粧品"]
+# HS 3304 covers makeup, skincare, sunscreen and nail preparations; hair is 3305
+# and fragrance 3303. These METI lines are the ones an HS 3304 figure is set
+# against.
+METI_SUN = ["日やけ止め及び日やけ用化粧品"]
 
 # The series breaks at January 2022. Yen per kg for 化粧水, 美容液 and 乳液
 # falls 21-35% from 2021 to 2022, after seven years inside a range (2015-2021);
@@ -217,11 +221,17 @@ def compute_headline(ASSETS: Path):
             .pivot(index="year", columns="term", values="interest"))
     serum_att_span = _pct(_att["美容液"], mkt_y0, mkt_y1)
 
-    # 財務省 貿易統計 HS 3304 — imports never absorb the domestic fall.
+    # 財務省 貿易統計 HS 3304. Trade has no break, so the level runs from mkt_y0.
+    # The share divides by the METI lines HS 3304 covers, and is measured from
+    # METI_BREAK on, inside one regime.
     _tr = pd.read_csv(ASSETS / "estat_trade_hs3304.csv")
     _flow = (_tr.groupby(["flow", "year"])["value_1000jpy"].sum() / 1e5)
     imp_y0, imp_y1 = int(round(_flow["import"][mkt_y0])), int(round(_flow["import"][mkt_y1]))
-    imp_share_y1 = round(100 * _flow["import"][mkt_y1] / mkt_total[mkt_y1], 1)
+    imp_rise = _pct(_flow["import"], mkt_y0, mkt_y1)
+    _aligned = _mv.loc[METI_SKIN + METI_MAKE + METI_SUN].sum()
+    aligned_y1 = int(round(_aligned[mkt_y1]))
+    imp_share_y1 = round(100 * _flow["import"][mkt_y1] / _aligned[mkt_y1], 1)
+    imp_share_brk = round(100 * _flow["import"][METI_BREAK] / _aligned[METI_BREAK], 1)
     _imp = _flow["import"].loc[mkt_y0:mkt_y1]
     imp_peak_y, imp_peak = int(_imp.idxmax()), int(round(_imp.max()))
     # The peak is named only when it is not the latest year.
@@ -303,7 +313,10 @@ def compute_headline(ASSETS: Path):
         "make_share_y1":  make_share_y1,
         "imp_y0":         imp_y0,
         "imp_y1":         imp_y1,
+        "imp_rise":       imp_rise,
+        "aligned_y1":     aligned_y1,
         "imp_share_y1":   imp_share_y1,
+        "imp_share_brk":  imp_share_brk,
         "imp_peak_y":     imp_peak_y,
         "imp_peak":       imp_peak,
         "imp_off_peak":   imp_off_peak,

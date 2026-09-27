@@ -60,6 +60,8 @@ STRINGS = {
         "t1_brkb": "",
         "t1_brkfnh": "About the January 2022 break",
         "t1_brkfn": "",
+        "t1_impfnh": "About the import figures",
+        "t1_impfn": "",
         "t1_dvh": "Search interest and shipped value, measured within each period",
         "t1_dve": "",
         "t1_dv_pre": "Before the break",
@@ -198,6 +200,8 @@ STRINGS = {
         "t1_brkb":  "",
         "t1_brkfnh": "2022年1月の断層について",
         "t1_brkfn": "",
+        "t1_impfnh": "輸入の数値について",
+        "t1_impfn": "",
         "t1_dvh":   "検索関心度と出荷金額、各区間の内側で測定",
         "t1_dve":   "",
         "t1_dv_pre":  "断層前",
@@ -381,6 +385,13 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"Monthly, January 2019 – {_MON_EN[_h['ytd_m']]} {_h['ytd_y']} · shaded from January "
             f"{_h['mkt_break']} = after the break · skincare peaks in December in 2021–2024 and October "
             "in 2025; makeup peaks in November in six of seven years")
+        S["t1_impfn"] = (
+            "HS 3304 covers makeup, skincare, sunscreen and nail preparations; hair products (3305) "
+            "and fragrance (3303) are other headings. METI's shipped value is what manufacturers in "
+            "Japan ship, including product later exported, and excludes imports. Against METI's "
+            f"skincare, makeup and sunscreen lines ({_h['aligned_y1']:,} 億円 in {_h['mkt_y1']}), "
+            f"HS 3304 imports were {_h['imp_share_y1']}% in {_h['mkt_y1']} and "
+            f"{_h['imp_share_brk']}% in {_h['mkt_break']}.")
         S["t1_brkfn"] = (
             "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, "
             "units and kilograms for each product line. Yen divided by kilograms gives an average price "
@@ -429,8 +440,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"経済産業省生産動態統計, shipped value in 億円, {_h['mkt_y0']}–{_h['mkt_y1']}. Of the "
             f"{_h['mkt_total_y1']:,} 億円 shipped in {_h['mkt_y1']}, skincare was {_h['skin_share_y1']}% "
             f"and makeup {_h['make_share_y1']}%. Imports (財務省 貿易統計, HS 3304) were "
-            f"{_h['imp_y1']:,} 億円 in {_h['mkt_y1']}, {_h['imp_share_y1']}% of the market, against "
-            f"{_h['imp_y0']:,} 億円 in {_h['mkt_y0']}"
+            f"{_h['imp_y1']:,} 億円 in {_h['mkt_y1']}, against {_h['imp_y0']:,} 億円 in {_h['mkt_y0']}, "
+            f"a {'rise' if _h['imp_rise'] >= 0 else 'fall'} of {abs(_h['imp_rise'])}%"
             + (f", {abs(_h['imp_off_peak'])}% below the {_h['imp_peak_y']} peak of {_h['imp_peak']:,} 億円"
                if _h['imp_off_peak'] is not None else "")
             + f". January–{_MON_EN[_h['ytd_m']]} {_h['ytd_y']} against the same months of "
@@ -498,6 +509,12 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
         S["t1_mkcap"] = (
             f"月次、2019年1月〜{_h['ytd_y']}年{_h['ytd_m']}月 · {_h['mkt_break']}年1月以降の網掛け = 断層後 · "
             "皮膚用は2021〜2024年に12月、2025年に10月がピーク、仕上用は7年中6年で11月がピーク")
+        S["t1_impfn"] = (
+            "HS 3304はメイク・スキンケア・日やけ止め・ネイル用の調製品で、頭髪用（3305）と香水類（3303）は"
+            "別の項に分類される。経産省の出荷金額は国内メーカーの出荷で、後に輸出される分を含み、輸入を含まない。"
+            f"経産省の皮膚用・仕上用・日やけ止めの出荷金額（{_h['mkt_y1']}年{_h['aligned_y1']:,}億円）に対し、"
+            f"HS 3304の輸入は{_h['mkt_y1']}年に{_h['imp_share_y1']}%、{_h['mkt_break']}年に"
+            f"{_h['imp_share_brk']}%。")
         S["t1_brkfn"] = (
             "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。"
             "金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落する。"
@@ -538,8 +555,9 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
         S["t1_p2d"] = (
             f"経済産業省生産動態統計、出荷金額（億円）、{_h['mkt_y0']}〜{_h['mkt_y1']}年。{_h['mkt_y1']}年の出荷"
             f"{_h['mkt_total_y1']:,}億円のうち、皮膚用が{_h['skin_share_y1']}%、仕上用が{_h['make_share_y1']}%。"
-            f"輸入（財務省貿易統計 HS 3304）は{_h['mkt_y1']}年に{_h['imp_y1']:,}億円で市場の"
-            f"{_h['imp_share_y1']}%、{_h['mkt_y0']}年は{_h['imp_y0']:,}億円"
+            f"輸入（財務省貿易統計 HS 3304）は{_h['mkt_y1']}年に{_h['imp_y1']:,}億円で、"
+            f"{_h['mkt_y0']}年の{_h['imp_y0']:,}億円から{abs(_h['imp_rise'])}%"
+            f"{'増加' if _h['imp_rise'] >= 0 else '減少'}"
             + (f"。{_h['imp_peak_y']}年のピーク{_h['imp_peak']:,}億円を{abs(_h['imp_off_peak'])}%下回る"
                if _h['imp_off_peak'] is not None else "")
             + f"。{_h['ytd_y']}年1〜{_h['ytd_m']}月の前年同期比は"
