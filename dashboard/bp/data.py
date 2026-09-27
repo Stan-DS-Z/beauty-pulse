@@ -224,6 +224,9 @@ def compute_headline(ASSETS: Path):
     imp_share_y1 = round(100 * _flow["import"][mkt_y1] / mkt_total[mkt_y1], 1)
     _imp = _flow["import"].loc[mkt_y0:mkt_y1]
     imp_peak_y, imp_peak = int(_imp.idxmax()), int(round(_imp.max()))
+    # The peak is named only when it is not the latest year.
+    imp_off_peak = (None if imp_peak_y == mkt_y1
+                    else int(round(100 * (_imp[mkt_y1] / _imp.max() - 1))))
 
     # The newest months, from the 確報 workbook, compared on the same months of
     # the year before. A part-year is never set against a full one.
@@ -303,6 +306,7 @@ def compute_headline(ASSETS: Path):
         "imp_share_y1":   imp_share_y1,
         "imp_peak_y":     imp_peak_y,
         "imp_peak":       imp_peak,
+        "imp_off_peak":   imp_off_peak,
         "ytd_y":          ytd_y,
         "ytd_m":          ytd_m,
         "ytd_skin":       ytd_skin,

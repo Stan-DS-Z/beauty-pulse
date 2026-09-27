@@ -70,6 +70,13 @@ A layer counting product-launch releases from PR TIMES company feeds was added t
 - **判定 / Gate.** タイトルと抜粋に対する語彙ルール（`src/prtimes.gate`、語彙は`config/launch_terms.xlsx`）。語彙は手作業ラベル150件で設計し、設計に用いていない別の100件で測定した。 / A vocabulary rule over title and excerpt (`src/prtimes.gate`, vocabulary in `config/launch_terms.xlsx`), designed on 150 hand-labelled releases and measured on a separate 100 not used in its design.
 - **パネル / Panel.** 2021年9月まで履歴が遡る41フィード（30社）をコアとし、推移はコアのみで測る。それより後に履歴が始まる14フィードのうち、直近12カ月をすべて含む13フィードを直近12カ月の全体集計にのみ含める。 / The core is the 41 feeds (30 issuers) whose history reaches September 2021, and every trend is measured on the core only. Of the 14 feeds whose history starts later, the 13 that cover all of the latest 12 months enter only the latest-12-month full-roster figure.
 - **ラベル / Labels.** `config/prtimes_launch_validation_labels.csv`（150件）と`config/prtimes_launch_holdout_labels.csv`（100件）。リリース本文を含まない。 / Both label files hold ids and labels only, no release text.
+
+**改訂8 — HS 3304輸入の欠落品目を補完（2026年9月27日）/ Revision 8 — a missing HS 3304 import line restored (27 September 2026)**  
+2024年1月、輸入統計品目表は3304.99の011・012・019を010に統合した。e-Statのデータベースは010を収録しておらず、2024年と2025年の輸入はそれぞれ1,068億円、1,070億円少なかった。同じ表のCSVファイル（第6部）は010を収録し、両方にある品目では千円単位まで一致する。`build_estat_imports.py`はデータベースを取得した後に年ごとにこのファイルと突き合わせ、ファイルにのみある行を加える。  
+In January 2024 the import schedule merged 3304.99-011, -012 and -019 into 3304.99-010. The e-Stat database does not carry 010, so 2024 and 2025 imports were short by 1,068 and 1,070 億円. The same table's CSV file (第6部) carries 010 and agrees with the database to the 千円 on every line both hold. `build_estat_imports.py` now reads that file for each year after the database pull and adds the rows only the file has.
+- **輸入 / Imports.** 2023年2,242億円、2024年2,739億円（修正前1,671億円）、2025年2,759億円（同1,688億円）。2025年の市場に占める割合は19.8%（同12.1%）で、2019年は9.5%。 / 2,242 億円 in 2023, 2,739 in 2024 (1,671 before), 2,759 in 2025 (1,688 before). Imports were 19.8% of the 2025 market (12.1% before), against 9.5% in 2019.
+- **改訂5・6の輸入の記述 / The import entries in Revisions 5 and 6.** 「輸入代替仮説の棄却」と「2023年のピーク」は修正前の系列による。2019〜2025年に輸入は1,092億円増え、国内出荷は3,705億円減った。 / "Import-substitution hypothesis rejected" and "peaked at 2,242 億円 in 2023" rest on the uncorrected series. From 2019 to 2025 imports rose 1,092 億円 and domestic shipments fell 3,705 億円.
+- **検査 / Test.** `tests/test_scheme_breaks.py`は、品目コードが変わった年にHS 6桁の合計が20%を超えて減るか50%を超えて増えると失敗する。 / `tests/test_scheme_breaks.py` fails when an HS 6-digit total falls more than 20% or rises more than 50% in a year its codes change.
 ---
 
 ## 方法論的注意点 / Methodological Caveats

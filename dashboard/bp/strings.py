@@ -429,9 +429,11 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"経済産業省生産動態統計, shipped value in 億円, {_h['mkt_y0']}–{_h['mkt_y1']}. Of the "
             f"{_h['mkt_total_y1']:,} 億円 shipped in {_h['mkt_y1']}, skincare was {_h['skin_share_y1']}% "
             f"and makeup {_h['make_share_y1']}%. Imports (財務省 貿易統計, HS 3304) were "
-            f"{_h['imp_share_y1']}% of the market in {_h['mkt_y1']}: {_h['imp_y0']:,} 億円 in "
-            f"{_h['mkt_y0']}, {_h['imp_peak']:,} 億円 at the {_h['imp_peak_y']} peak, {_h['imp_y1']:,} 億円 "
-            f"in {_h['mkt_y1']}. January–{_MON_EN[_h['ytd_m']]} {_h['ytd_y']} against the same months of "
+            f"{_h['imp_y1']:,} 億円 in {_h['mkt_y1']}, {_h['imp_share_y1']}% of the market, against "
+            f"{_h['imp_y0']:,} 億円 in {_h['mkt_y0']}"
+            + (f", {abs(_h['imp_off_peak'])}% below the {_h['imp_peak_y']} peak of {_h['imp_peak']:,} 億円"
+               if _h['imp_off_peak'] is not None else "")
+            + f". January–{_MON_EN[_h['ytd_m']]} {_h['ytd_y']} against the same months of "
             f"{_h['ytd_y'] - 1}: skincare {_h['ytd_skin']:+}%, makeup {_h['ytd_make']:+}%, total "
             f"{_h['ytd_total']:+}% (monthly 確報).")
         S["t1_mke"] = (
@@ -536,9 +538,11 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
         S["t1_p2d"] = (
             f"経済産業省生産動態統計、出荷金額（億円）、{_h['mkt_y0']}〜{_h['mkt_y1']}年。{_h['mkt_y1']}年の出荷"
             f"{_h['mkt_total_y1']:,}億円のうち、皮膚用が{_h['skin_share_y1']}%、仕上用が{_h['make_share_y1']}%。"
-            f"輸入（財務省貿易統計 HS 3304）は{_h['mkt_y1']}年に市場の{_h['imp_share_y1']}%で、"
-            f"{_h['mkt_y0']}年{_h['imp_y0']:,}億円、{_h['imp_peak_y']}年のピーク{_h['imp_peak']:,}億円、"
-            f"{_h['mkt_y1']}年{_h['imp_y1']:,}億円。{_h['ytd_y']}年1〜{_h['ytd_m']}月の前年同期比は"
+            f"輸入（財務省貿易統計 HS 3304）は{_h['mkt_y1']}年に{_h['imp_y1']:,}億円で市場の"
+            f"{_h['imp_share_y1']}%、{_h['mkt_y0']}年は{_h['imp_y0']:,}億円"
+            + (f"。{_h['imp_peak_y']}年のピーク{_h['imp_peak']:,}億円を{abs(_h['imp_off_peak'])}%下回る"
+               if _h['imp_off_peak'] is not None else "")
+            + f"。{_h['ytd_y']}年1〜{_h['ytd_m']}月の前年同期比は"
             f"皮膚用{_h['ytd_skin']:+}%、仕上用{_h['ytd_make']:+}%、全体{_h['ytd_total']:+}%（月次確報）。")
         S["t1_mke"] = (
             "経産省の33品目を合算した、皮膚用と仕上用の出荷金額。この区分は2019年と2020年の「計」小計を再現し、"

@@ -83,8 +83,8 @@ All data self-sourced and self-collected. No Kaggle datasets.
 | 経産省 生産動態統計「11.化粧品」 | Shipments by product line — value, volume, unit count | monthly January 2019 – July 2026, annual from 2015 |
 | 財務省 貿易統計 HS 3304 | Imports and exports by country | annual 2016–2025 |
 
-再現は `build_estat_shipments.py` と `build_estat_imports.py`（要 `ESTAT_APP_ID`）。両スクリプトは表IDを `getStatsList` から実行時に解決する —— IDは安定しておらず、広く引用されているMETIのIDは2010年の単月表を指す。  
-Rebuild with `build_estat_shipments.py` and `build_estat_imports.py` (`ESTAT_APP_ID` required). Both resolve table IDs from `getStatsList` at run time: the IDs are not stable, and the commonly cited METI one resolves to a single month of 2010. Months after the last yearly table come from METI's monthly 確報 workbook, found through `getDataCatalog`.
+再現は `build_estat_shipments.py` と `build_estat_imports.py`（要 `ESTAT_APP_ID`）。表IDは `getStatsList` で確認した日付とともに各スクリプトに記載している —— IDは安定しておらず、広く引用されているMETIのIDは2010年の単月表を指す。経産省の最新の年次表より後の月は月次確報から取る。貿易統計はデータベースを同じ表のCSVファイルと突き合わせ、データベースにない品目（2024年以降の3304.99-010）をファイルから補う。いずれのファイルも `getDataCatalog` で探す。  
+Rebuild with `build_estat_shipments.py` and `build_estat_imports.py` (`ESTAT_APP_ID` required). Each script lists its table IDs with the date they were confirmed against `getStatsList`: the IDs are not stable, and the commonly cited METI one resolves to a single month of 2010. Months after the last yearly METI table come from the monthly 確報 workbook. The trade pull checks the database against the same table's CSV file and takes lines the database lacks (3304.99-010 from 2024) from the file. Both files are found through `getDataCatalog`.
 
 レビュー「量」は取得設計に依存するため市場シグナルとして用いず、レビュー「テキスト」のみを語彙分析に使用する。本文は一覧ページのプレビューであり全文ではない —— 詳細は[方法論](METHODOLOGY.md)。  
 Review *volume* depends on scraping design, so only review *text* is used, for vocabulary analysis. Bodies are listing-page previews, not full text — see [Methodology](METHODOLOGY.md).
