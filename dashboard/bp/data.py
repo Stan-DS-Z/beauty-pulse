@@ -52,7 +52,7 @@ def cut_months(d, cutoff, year="year", month="month"):
     """Rows dated no later than `cutoff` ("YYYY-MM", inclusive), or every row
     when it is None. A row with month 0 is a whole year, kept when its December
     is inside the cut. The report computes on data cut at its edition
-    (sources.EDITION); the monitor passes None and reads everything."""
+    (sources.CUTOFF); the monitor passes None and reads everything."""
     if cutoff is None:
         return d
     c = int(cutoff[:4]) * 100 + int(cutoff[5:7])

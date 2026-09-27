@@ -33,12 +33,15 @@ REPORT_PAGES = ("brief", "market", "demand", "supply", "consumer", "timing", "me
 MONITOR_PAGES = ("funnel", "categories", "sources")
 PAGES = REPORT_PAGES + MONITOR_PAGES
 
-# The report's edition, "YYYY-MM". Report pages compute on data cut at the end
-# of this month and carry this one date; monitor pages compute on the latest
-# data and carry each source's own date. Issuing a new edition is this one
-# line: data that arrives meanwhile reaches the monitor at once and the report
-# only then. The cadence is Stan's decision.
+# The report's edition and its data cut-off, both "YYYY-MM". EDITION is the
+# month the report carries on every page. CUTOFF is the last month complete in
+# every source the report reads when the edition was issued: report pages
+# compute on data dated up to its end, so a month still arriving (September
+# launch releases, before the October fetch) cannot move a published edition.
+# Monitor pages compute on the latest data and carry each source's own date.
+# Issuing a new edition is these two lines; the cadence is Stan's decision.
 EDITION = "2026-09"
+CUTOFF = "2026-08"
 
 # key: (English name, Japanese name, kind, pages that use it)
 DECLARED = {

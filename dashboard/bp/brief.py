@@ -2,8 +2,8 @@
 and the Brief's three exhibits.
 
 Every figure is computed here from the shipped assets; strings.py words them.
-The Brief is a report page, so it computes on data cut at its edition
-(sources.EDITION): no row dated after the cut-off month enters a figure, and
+The Brief is a report page, so it computes on data cut at its edition's cut-off
+(sources.CUTOFF): no row dated after the cut-off month enters a figure, and
 newer data reaches it only when a new edition moves the cut-off. Windows come
 from the cut data: the category window is funnel.funnel_window's, the launch
 window is compute_launch_headline's. Like data.py, nothing runs at import.

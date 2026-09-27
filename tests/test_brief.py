@@ -27,13 +27,13 @@ def launch():
 
 @pytest.fixture(scope="module")
 def B(headline, launch):
-    return brief.compute_brief(A, headline, sources.EDITION)
+    return brief.compute_brief(A, headline, sources.CUTOFF)
 
 
 @pytest.fixture(scope="module")
 def S(headline, launch, B):
     return strings.build_strings("en", headline, launch, A, B,
-                                 sources.build_registry(A, sources.EDITION))
+                                 sources.build_registry(A, sources.CUTOFF))
 
 
 # ── The directions the copy states ──────────────────────────────────────────
@@ -72,7 +72,7 @@ def test_governing_thought_and_portfolio_title_hold(B):
 
 def test_korean_share_compares_complete_halves_inside_the_launch_window(B):
     s = B["supply"]
-    months = pd.Series(data.compute_launch_headline(A, sources.EDITION)["months"])
+    months = pd.Series(data.compute_launch_headline(A, sources.CUTOFF)["months"])
     for h in (s["h_first"], s["h_last"]):
         y, half = int(h[:4]), int(h[-1])
         want = [f"{y}-{m:02d}" for m in (range(1, 7) if half == 1 else range(7, 13))]
@@ -84,7 +84,7 @@ def test_the_top_actives_are_never_ranked(B, headline, launch, lang):
     """The three are named in alphabetical (EN) or 五十音 (JA) order, never by
     their rise."""
     S = strings.build_strings(lang, headline, launch, A, B,
-                              sources.build_registry(A, sources.EDITION))
+                              sources.build_registry(A, sources.CUTOFF))
     col = S["b_namecol"]
     names = [B["actives"].loc[k, col] for k in B["demand"]["top3"]]
     names = [n.lower() for n in names] if lang == "en" else names
@@ -96,7 +96,7 @@ def test_the_top_actives_are_never_ranked(B, headline, launch, lang):
 def test_the_japanese_brief_is_complete_and_carries_the_same_figures(B, headline, launch):
     """Every Brief string exists in Japanese, and every number in an English
     line appears in its Japanese line."""
-    reg = sources.build_registry(A, sources.EDITION)
+    reg = sources.build_registry(A, sources.CUTOFF)
     en = strings.build_strings("en", headline, launch, A, B, reg)
     ja = strings.build_strings("jp", headline, launch, A, B, reg)
     keys = [k for k in en if k.startswith("b_")]
@@ -135,7 +135,7 @@ def _assets_copy(dest, future):
     def write(name, frame, **kw):
         (dest / name).unlink()
         frame.to_csv(dest / name, index=False, **kw)
-    cut = sources.EDITION
+    cut = sources.CUTOFF
     after = [_later(cut, n) for n in range(1, 16)]          # the next fifteen months
 
     feeds = pd.read_csv(A / "prtimes_feeds.csv", dtype=str)
@@ -178,11 +178,11 @@ def _assets_copy(dest, future):
     return dest
 
 
-def test_no_report_figure_uses_data_past_the_edition(tmp_path, headline):
-    """Data dated after the edition's month changes nothing on the Brief: not a
+def test_no_report_figure_uses_data_past_the_cut_off(tmp_path, headline):
+    """Data dated after the cut-off month changes nothing on the Brief: not a
     figure, not a sentence, not a source line. The baseline has the same late
     fetch, so the months up to the cut-off are complete in both."""
-    cut = sources.EDITION
+    cut = sources.CUTOFF
     base_dir = _assets_copy(tmp_path / "base", future=False)
     fut_dir = _assets_copy(tmp_path / "future", future=True)
     base = brief.compute_brief(base_dir, headline, cut)
@@ -197,8 +197,10 @@ def test_no_report_figure_uses_data_past_the_edition(tmp_path, headline):
             > sources.build_registry(base_dir)["meti"].data_to)
 
 
-def test_the_edition_is_a_month():
-    assert re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", sources.EDITION)
+def test_the_edition_and_its_cut_off_are_months_in_order():
+    for ym in (sources.EDITION, sources.CUTOFF):
+        assert re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", ym), ym
+    assert sources.CUTOFF < sources.EDITION
 
 
 # ── The page ────────────────────────────────────────────────────────────────
@@ -219,7 +221,7 @@ def page_json():
 
 
 def test_every_exhibit_carries_a_source_line_from_the_registry(S):
-    reg = sources.build_registry(A, sources.EDITION)
+    reg = sources.build_registry(A, sources.CUTOFF)
     for key, srcs in (("b_p_src", ["meti", "prtimes"]), ("b_a_src", ["trends", "prtimes"]),
                       ("b_t_src", ["meti", "trends", "prtimes"])):
         assert S[key] == sources.source_line(srcs, reg)
@@ -235,6 +237,6 @@ def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):
 def test_the_nav_has_no_emoji(headline, launch, B):
     for lang in ("en", "jp"):
         S = strings.build_strings(lang, headline, launch, A, B,
-                                  sources.build_registry(A, sources.EDITION))
+                                  sources.build_registry(A, sources.CUTOFF))
         for key in ("nav_report", "nav_brief", "tab1", "tab2", "tab3"):
             assert not EMOJI.search(S[key]), (lang, key)

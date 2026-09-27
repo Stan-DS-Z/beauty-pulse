@@ -72,7 +72,7 @@ def cases(f, H, L, lang, S, B=None):
 def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch, frames):
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
-    B = brief.compute_brief(A, headline, sources.EDITION)
+    B = brief.compute_brief(A, headline, sources.CUTOFF)
     S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A))
     table = cases(frames, headline, launch, lang, S, B)
     assert name in table, f"{name} has no case in tests/test_figures.py"
@@ -89,7 +89,7 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
     every figure itself (dashboard/ui.py), so it is set in one place."""
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
-    B = brief.compute_brief(A, headline, sources.EDITION)
+    B = brief.compute_brief(A, headline, sources.CUTOFF)
     S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A))
     default = pio.templates[pio.templates.default].to_plotly_json()
     for fig in cases(frames, headline, launch, "en", S, B)[name]():
