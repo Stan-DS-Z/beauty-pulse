@@ -33,7 +33,7 @@ STRINGS = {
         # the rebuild covers it and a silent contradiction if it does not;
         # empty means a missing rebuild shows up as a blank heading.
         "t1_c3h": "",
-        "t1_c3e": "Each rectangle is a Rakuten Ichiba subcategory, from each genre's 3,000 most-reviewed items on {date}. Size = items in the pull, not Rakuten's listings · colour = the measure selected below. Ratings average rated items only; price is the median.",
+        "t1_c3e": "Each rectangle is a Rakuten Ichiba subcategory, from each genre's 3,000 most-reviewed items on {date}. Size = items in the pull · colour = the measure selected below. Ratings average rated items only; price is the median.",
         "t1_lens": "Colour by",
         "t1_lens_opts": {"Reviews per SKU": "avg_reviews", "Median price": "med_price", "Average rating": "avg_rating"},
 
@@ -43,13 +43,10 @@ STRINGS = {
         "f1b_title": "Lipstick, foundation and eyeshadow search all stayed below 2019 after March 2023",
         "f1b_body":  "Annual average, each term's 2019 = 100: lipstick 100 → 42 (2021) → 53 (2023) → 36 (2025). Foundation 100 → 77 → 86 → 69. Eyeshadow 100 → 128 (2022) → 80 (2025). None of the three returned to 100 after mask guidance was relaxed.",
 
-        "t1_c5h": "YouTube comments on skincare videos outnumbered cosmetics comments in every year except 2022",
-        "t1_c5e": "Comments per year on Japanese beauty videos, by video category.",
-        "t1_c5cap": "2022: cosmetics {c22:,} comments, skincare {s22:,}  ·  2024: skincare {s24:,}, cosmetics {c24:,}",
 
         # ── TAB 1 · market layer (METI 生産動態統計 + 財務省 貿易統計) ──────
-        "t1_p1": "Attention: search, listings, reviews and comments",
-        "t1_p1d": "Google Trends, Rakuten listings, @cosme reviews and YouTube comments, collected for this project.",
+        "t1_p1": "Attention: search and listings",
+        "t1_p1d": "Google Trends search, compared across skincare and makeup, and Rakuten items, read for price and rating within each subcategory. Both collected for this project.",
         "t1_p2": "Market: shipped value in yen",
         "t1_p2d": "",
         "t1_p3": "Search and shipped value, category by category",
@@ -172,7 +169,7 @@ STRINGS = {
         "t1_c2cap":  "点線 = 2020年以前から検索が安定していた成分  ·  実線 = 2020年以降に検索が上昇した成分  ·  {tr_part}",
         "t1_ingr_sel": "成分を選択",
         "t1_c3h":    "",   # rebuilt live from HEADLINE below
-        "t1_c3e":    "各長方形は楽天市場のサブカテゴリ。{date}時点の各ジャンルのレビュー数上位3,000商品。サイズ = 取得した商品数（楽天の掲載数ではない） · 色 = 下で選択した指標。評価は評価のある商品のみの平均、価格は中央値。",
+        "t1_c3e":    "各長方形は楽天市場のサブカテゴリ。{date}時点の各ジャンルのレビュー数上位3,000商品。サイズ = 取得した商品数 · 色 = 下で選択した指標。評価は評価のある商品のみの平均、価格は中央値。",
         "t1_lens":   "色分け基準",
         "t1_lens_opts": {"SKUあたりレビュー数": "avg_reviews", "価格中央値": "med_price", "平均評価": "avg_rating"},
 
@@ -182,13 +179,10 @@ STRINGS = {
         "f1b_title": "口紅・ファンデーション・アイシャドウの検索は、2023年3月以降いずれも2019年を下回る",
         "f1b_body":  "各語の2019年を100とした年平均：口紅 100 → 42（2021年）→ 53（2023年）→ 36（2025年）。ファンデーション 100 → 77 → 86 → 69。アイシャドウ 100 → 128（2022年）→ 80（2025年）。マスク着用ルール緩和後、3語とも100に戻っていない。",
 
-        "t1_c5h":    "YouTubeのスキンケア動画へのコメント数は、2022年を除く全ての年でコスメ動画を上回った",
-        "t1_c5e":    "日本の美容動画への年別コメント数、動画カテゴリ別。",
-        "t1_c5cap":  "2022年：コスメ{c22:,}件、スキンケア{s22:,}件  ·  2024年：スキンケア{s24:,}件、コスメ{c24:,}件",
 
         # ── TAB 1 · 市場レイヤー（経産省 生産動態統計 + 財務省 貿易統計）──
-        "t1_p1":  "関心：検索・掲載・レビュー・コメント",
-        "t1_p1d": "Googleトレンド、楽天の掲載、@cosmeレビュー、YouTubeコメント。本プロジェクトで収集したデータ。",
+        "t1_p1":  "関心：検索と掲載",
+        "t1_p1d": "Googleトレンドの検索（スキンケアとメイクを比較）と、楽天の商品（サブカテゴリごとの価格と評価）。いずれも本プロジェクトで収集したデータ。",
         "t1_p2":  "市場：出荷金額",
         "t1_p2d": "",
         "t1_p3":  "品目別の検索と出荷金額",
@@ -406,7 +400,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"index, {_h['ing_y0']}→{_h['ing_y1']}")
         S["f1_title"] = "Finding 1 — Makeup fell in search and in shipped value; skincare shipped value steps down in 2022"
         S["t1_intro"] = (
-            "After 2020, Japanese beauty search and YouTube comments moved toward skincare. "
+            "After 2020, Japanese beauty search moved toward skincare. "
             "METI shipment statistics record the makeup side in yen: foundation "
             f"shipped value fell {abs(_h['found_d'])}% and lipstick {abs(_h['lip_d'])}% from "
             f"{_h['mkt_y0']} to {_h['mkt_y1']}. METI's skincare lines step down in January "
@@ -522,7 +516,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"{_h['nia_post']}に上昇（トレンド指数）")
         S["f1_title"] = "発見1 —— メイクは検索・出荷金額ともに減少、スキンケアの出荷金額は2022年に段差"
         S["t1_intro"] = (
-            "2020年以降、美容の検索とYouTubeコメントはスキンケアの比重を高めた。"
+            "2020年以降、美容の検索はスキンケアの比重を高めた。"
             f"経産省の出荷統計はメイク側を金額で記録しており、{_h['mkt_y0']}年から{_h['mkt_y1']}年にかけて"
             f"ファンデーションの出荷金額は{abs(_h['found_d'])}%、口紅は{abs(_h['lip_d'])}%減少した。"
             f"スキンケアの品目は{_h['mkt_break']}年1月に段差があり、美容液の出荷金額は段差をまたいで測ると減少、"

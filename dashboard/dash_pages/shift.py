@@ -58,16 +58,6 @@ def build(lang, d):
     kr_note = (ui.note("Korean cosmetics" if lang == "en" else "韓国コスメ",
                        _kr_text(kr, lang), "korean") if kr is not None else None)
 
-    try:
-        df_yt_vol = d.frame("yt_volume")
-        yt_block = [
-            ui.graph("sh-fig5", figures.fig_yt_volume(df_yt_vol)),
-            ui.caption(S["t1_c5cap"].format(**figures.yt_volume_counts(df_yt_vol))),
-        ]
-    except FileNotFoundError:
-        yt_block = [ui.info("nb07_yt_volume.csv not found — run the NB07 YouTube "
-                            "export cells to generate it.")]
-
     m2_cap = (f"Monthly, January 2019 – {_mon_en[H['ytd_m']]} {H['ytd_y']} · solid = the three "
               "lines with the step · dotted = comparison lines · log scale: equal vertical "
               "distance = equal percentage change"
@@ -128,9 +118,6 @@ def build(lang, d):
                 kr_note,
             ]),
         ),
-
-        ui.chart_head(S["t1_c5h"], S["t1_c5e"]),
-        *yt_block,
 
         ui.panel_header(S["t1_p2"], S["t1_p2d"]),
         ui.chart_head(S["t1_mkh"], S["t1_mke"]),

@@ -94,13 +94,37 @@ Of the 1,124 Amazon reviews in the database, 48 had no text. 45 came from the 13
 - **取込 / Ingest.** `src/ingest.py`は本文のないAmazonレビューを取り込まない。 / `src/ingest.py` no longer ingests an Amazon review with no text.
 
 **改訂11 — 楽天のSKU比率を撤回（2026年9月27日）/ Revision 11 — the Rakuten SKU ratio withdrawn (27 September 2026)**  
-公表していたSKU比率（再分類後7.46倍、分類のまま3.56倍）は、楽天の掲載数ではなく本プロジェクトの取得を数えていた。取得は11ジャンル（スキンケア側9、メイク側2）それぞれのレビュー数上位3,000商品で、どのジャンルも上限に達する。比率は22回の取得に現れた商品をすべて累計して数えていた。1週の取得で数えても分類のまま3.81〜3.87倍、再分類後6.84〜6.93倍で、取得するジャンルの数で決まる値である。比率はダッシュボード、README、本文書から削除した。  
-The published SKU ratio (7.46× relabelled, 3.56× as tagged) counted this project's pull, not Rakuten's listings. The pull takes the 3,000 most-reviewed items in each of 11 genres, nine on the skincare side and two on the makeup side, and every genre reaches the cap; the ratio counted every item seen across 22 pulls. Counted within one week it is 3.81–3.87× as tagged and 6.84–6.93× relabelled, a value set by how many genres are pulled. The ratio is removed from the dashboard, README and this document.
+公表していたSKU比率（再分類後7.46倍、分類のまま3.56倍）は、本プロジェクトの取得を数えていた。取得は11ジャンル（スキンケア側9、メイク側2）それぞれのレビュー数上位3,000商品で、どのジャンルも上限に達する。比率は22回の取得に現れた商品をすべて累計して数えていた。1週の取得で数えても分類のまま3.81〜3.87倍、再分類後6.84〜6.93倍で、取得するジャンルの数で決まる値である。比率はダッシュボード、README、本文書から削除した。  
+The published SKU ratio (7.46× relabelled, 3.56× as tagged) counted this project's pull. The pull takes the 3,000 most-reviewed items in each of 11 genres, nine on the skincare side and two on the makeup side, and every genre reaches the cap; the ratio counted every item seen across 22 pulls. Counted within one week it is 3.81–3.87× as tagged and 6.84–6.93× relabelled, a value set by how many genres are pulled. The ratio is removed from the dashboard, README and this document.
 - **楽天のジャンル件数 / Rakuten's genre totals.** 2026年9月20日に楽天APIが報告した掲載件数は、スキンケア631,905件、日焼け止め・UVケア48,478件、ベースメイク・メイクアップ402,248件、韓国コスメ30,039件で、楽天のジャンル分類のままではスキンケア側がメイク側の1.57倍。1日分の値であり、韓国コスメをメイク側に数える分類のままで、同じ商品を複数の店舗が出品すると店舗ごとに数えられる。スキンケアのジャンルには、経産省が仕上用とするリップクリームのほか、セットとその他の下位ジャンルが含まれる。 / On 20 September 2026 the Rakuten API reported 631,905 listings in スキンケア, 48,478 in 日焼け止め・UVケア, 402,248 in ベースメイク・メイクアップ and 30,039 in 韓国コスメ: on Rakuten's genre tags, 1.57 times as many on the skincare side as on the makeup side. It is one date, on tags that file 韓国コスメ as makeup, and a product sold by several shops counts once per shop. The スキンケア genre includes リップクリーム, which METI counts as makeup, and set and other subgenres.
 - **取得 / Capture.** NB01aは2026年9月27日から各ジャンルの掲載件数をスナップショットに保存し、`ingest_rakuten_weekly.py`が`genre_totals`に格納する。9月20日分はその回の実行ログから格納した。 / From 27 September 2026 NB01a saves each genre's listing count with its snapshot, and `ingest_rakuten_weekly.py` stores it in `genre_totals`. The 20 September counts were stored from that run's log.
 - **再公表の条件 / Before a ratio returns.** 週次の掲載件数が8週分そろい、再分類の比率をレビュー数上位3,000商品の外（別の並び順の標本）で測り直し、スキンケア側（リップクリーム、セット、その他）も同様に確認するまで、棚の比率は公表しない。 / No shelf ratio is published until eight weekly totals exist, the relabel proportions have been re-measured on items outside the most-reviewed 3,000 (a sample under another sort order), and the skincare side (リップクリーム, セット, その他) has had the same check.
 - **ツリーマップ / Treemap.** 最新の1週（2026年9月20日）の取得から作り、1商品あたりのレビュー数・評価・価格のみを示す。これまでは全取得の累計から作っていた。 / Built from the latest week's pull (20 September 2026) and read for reviews per item, rating and price only. It previously pooled every pull.
 - **概要の一文 / The overview sentence.** 「2020年以降、美容の検索、楽天の掲載…はスキンケアの比重を高めた」から楽天を削除した。楽天のデータは2026年3月からで、2020年以降の変化を示さない。 / Rakuten is removed from "After 2020, Japanese beauty search, Rakuten listings … moved toward skincare": the Rakuten data starts in March 2026 and shows no change since 2020.
+
+
+**改訂12 — 情報源の役割を定め、それに合わない記述を修正（2026年9月27日）/ Revision 12 — source roles set, and the claims that did not fit them corrected (27 September 2026)**  
+@cosme、YouTube、楽天は各側を深く調べるために収集しており、側ごとの件数と年ごとの分布は収集の選択で決まる。改訂2（@cosmeのレビュー量シェア）と改訂11（楽天のSKU比率）は同じ原因による。「情報源の役割」の節を加え、各情報源の用途を定めた。これに合わない記述を修正した。  
+@cosme, YouTube and Rakuten were collected for depth on each side, so the count on each side and its spread across years follow the collection's choices. Revision 2 (@cosme review-volume share) and Revision 11 (the Rakuten SKU ratio) had that one cause. A Source roles section now sets what each source is used for, and the claims that did not fit it are corrected.
+- **ダッシュボード / Dashboard.** 変化のページの概要は「2020年以降、美容の検索はスキンケアの比重を高めた」とした。YouTubeのコメント数の図は外した：スキンケア10検索カテゴリに対しメイク4検索カテゴリで動画を集めており、296本のうち2022年より前の動画は29本である。 / The Shift page's overview now reads "After 2020, Japanese beauty search moved toward skincare." The YouTube comment-count chart is removed: its videos were found through ten skincare search categories against four makeup ones, and 29 of the 296 were published before 2022.
+- **README.** 冒頭は市場の測定のみを挙げ、測定の説明は二つの役割に書き換えた。 / The opening line lists the market measures only, and the note on what is measured where is restated as the two roles.
+- **ノートブック / Notebooks.** NB03とNB04はレビュー量を変化の根拠として用いない。NB05は第5節（楽天）を外し、結論を検索のみに置いた。NB07の発見1は、ダッシュボードと同じ計算から2019→2025年の数値を表示する（2019→2024年の数値が残っていた）。 / NB03 and NB04 no longer cite review volume as evidence of the shift. NB05 drops its §5 (Rakuten) and rests its verdict on search alone. NB07's Finding 1 shows the 2019→2025 figures from the dashboard's own computation; it had carried 2019→2024 figures.
+- **検査 / Test.** `tests/retired_phrases.py`の表現が文書、変化のページ、公開ノートブックに戻ると失敗する。 / The suite fails if a phrasing in `tests/retired_phrases.py` returns to the docs, the Shift page or a committed notebook.
+
+---
+
+## 情報源の役割 / Source roles
+
+各情報源は、その収集方法が支えられる用途にだけ用いる。  
+Each source is used only for what its collection method can support.
+
+| 役割 / Role | 情報源 / Sources | 用いる / Used for | 用いない / Not used for |
+|---|---|---|---|
+| **市場の測定** —— 枠は本プロジェクトの外で決まる / **Market measures** — the frame is set outside this project | 経産省 生産動態統計、財務省 貿易統計 HS 3304、Googleトレンド、PR TIMESのコアパネル / METI shipments, 財務省 trade statistics HS 3304, Google Trends, the PR TIMES core panel | 水準と推移の比較。スキンケアとメイクの比較を含む / Levels and trends, including skincare against makeup | 経産省の2022年1月の断層をまたぐ比較。PR TIMESのコアパネルと、履歴が遡らないフィードの接続 / Comparisons across METI's January 2022 break; joining the PR TIMES core panel with feeds whose history does not reach back |
+| **側ごとの測定** —— 枠は本プロジェクトの収集が決める / **Within-side instruments** — the frame is set by this project's collection | @cosmeレビュー、YouTubeコメント、楽天の商品 / @cosme reviews, YouTube comments, Rakuten items | 各側の内側での言葉・成分・価格・評価。開示のとおりサンプル数を揃えた語彙の比較 / Language, ingredients, price and rating within one side; vocabulary comparisons at equal sample sizes, as disclosed | 側や年をまたぐ件数・比率・量の比較 / Any count, share or volume compared across sides or across years |
+
+収集は各側を深く調べるために設計された（`config/categories.xlsx`、2026年4月6日）。@cosmeはスキンケア7カテゴリに対しメイク3カテゴリ（ファンデーション・口紅・アイシャドウ、マスク検証に用いる3品目）、YouTubeはスキンケア10検索カテゴリに対しメイク4検索カテゴリ、楽天はスキンケア側9ジャンルに対しメイク側2ジャンル。各側の件数と年ごとの分布はこれらの選択で決まるため、側ごとの測定から得た件数は収集を測る。  
+The collection was designed for depth on each side (`config/categories.xlsx`, 6 April 2026): seven @cosme skincare categories against three makeup ones (foundation, lipstick and eyeshadow, the products the mask test uses), ten YouTube search categories on skincare against four on makeup, and nine Rakuten genres on the skincare side against two on the makeup side. The count on each side, and its spread across years, follow those choices, so counts from the within-side instruments measure the collection.
 
 ---
 

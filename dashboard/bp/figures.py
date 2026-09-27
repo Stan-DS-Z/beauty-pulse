@@ -251,49 +251,6 @@ def korean_callout(df_sku):
             "med_price": _kr["med_price"], "all_rps": _all_rps}
 
 
-def fig_yt_volume(df_yt_vol):
-    """Comments per year, skincare against cosmetics videos."""
-    df_yt_sk  = df_yt_vol[df_yt_vol["tier_group"] == "skincare"]
-    df_yt_co  = df_yt_vol[df_yt_vol["tier_group"] == "cosmetics"]
-
-    fig5 = go.Figure()
-    fig5.add_vrect(x0=2019.6, x1=2021.4, fillcolor=C["grid"],
-                   opacity=0.6, layer="below", line_width=0,
-                   annotation_text="COVID", annotation_position="top left",
-                   annotation_font=dict(size=10, color=C["muted"]))
-    fig5.add_trace(go.Bar(
-        x=df_yt_sk["comment_year"], y=df_yt_sk["n_comments"],
-        name="Skincare", marker_color=C["skin"],
-        hovertemplate="Skincare: %{y:,} comments<extra></extra>",
-    ))
-    fig5.add_trace(go.Bar(
-        x=df_yt_co["comment_year"], y=df_yt_co["n_comments"],
-        name="Cosmetics", marker_color=C["cosm"],
-        hovertemplate="Cosmetics: %{y:,} comments<extra></extra>",
-    ))
-    fig5.update_layout(**_base(height=280))
-    fig5.update_layout(
-        barmode="group",
-        margin=dict(l=20, r=20, t=20, b=60),
-        legend=dict(orientation="h", yanchor="top", y=-0.24,
-                    xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
-        xaxis=_xax(dtick=1, tickformat="d"),
-        yaxis=_yax(title="Comment count"),
-    )
-    return fig5
-
-
-def yt_volume_counts(df_yt_vol):
-    """The four comment counts the caption quotes."""
-    df_yt_sk  = df_yt_vol[df_yt_vol["tier_group"] == "skincare"]
-    df_yt_co  = df_yt_vol[df_yt_vol["tier_group"] == "cosmetics"]
-    _yc = lambda d, y: int(d.loc[d["comment_year"] == y, "n_comments"].sum())
-    return dict(c22=_yc(df_yt_co, 2022), s22=_yc(df_yt_sk, 2022),
-                s24=_yc(df_yt_sk, 2024), c24=_yc(df_yt_co, 2024))
-
-
-# ── Tab 1 · market ────────────────────────────────────────────────────────
-
 def fig_meti_groups(df_grp, HEADLINE, lang):
     """Monthly shipped value, skincare and makeup, with the break marked."""
     _brk = HEADLINE["mkt_break"]

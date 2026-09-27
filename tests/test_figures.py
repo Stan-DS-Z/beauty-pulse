@@ -30,7 +30,7 @@ def frames():
     return dict(
         cross=data.load_trends_crossover(A), mk=data.load_makeup_rebound(A),
         ing=data.load_ingredient_surge(A), sku=data.load_sku_treemap(A),
-        yt_vol=data.load_yt_volume(A), grp=df_grp, px_kg=px_kg, val_all=val_all,
+        grp=df_grp, px_kg=px_kg, val_all=val_all,
         att=data.load_attention_annual(A), curve=data.load_cosine_sizecurve(A),
         bc=data.load_blockc(A), ch=data.load_yt_channels(A), tfidf=data.load_yt_tfidf(A),
         umap=data.load_umap(A))
@@ -46,7 +46,6 @@ def cases(f, H, L, lang, S):
             f["ing"], figures.ingredient_default())],
         "fig_sku_treemap": lambda: [figures.fig_sku_treemap(
             f["sku"], next(iter(figures.lens_options(S))))],
-        "fig_yt_volume": lambda: [figures.fig_yt_volume(f["yt_vol"])],
         "fig_meti_groups": lambda: [figures.fig_meti_groups(f["grp"], H, lang)],
         "fig_meti_price_per_kg": lambda: [figures.fig_meti_price_per_kg(f["px_kg"], H, lang)],
         "fig_search_vs_value": lambda: [figures.fig_search_vs_value(

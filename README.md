@@ -3,8 +3,8 @@
 **コロナ禍はどのように日本の美容消費を再構成したのか？**  
 How did COVID restructure Japanese beauty consumption?
 
-検索行動・商品カタログ・成分検索・YouTube・消費者レビュー — 複数の独立した signal を突き合わせる。  
-Search behaviour, product catalog, ingredient searches, YouTube discourse, and consumer reviews — multiple independent signals, cross-checked across sources.
+市場の測定：Google検索、経産省の出荷統計、財務省の貿易統計、PR TIMESの新商品リリース。  
+Market measures: Google search, METI shipment statistics, 財務省 trade statistics, and PR TIMES product-launch releases.
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Dash](https://img.shields.io/badge/Dashboard-Dash-blue)
@@ -37,9 +37,9 @@ Search behaviour, product catalog, ingredient searches, YouTube discourse, and c
 **Attention moved. Only half of it can be checked against money.**
 Cosmetics search demand fell ~<!--f:cosm_decline-->33<!--/f-->% across full calendar years <!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_y1-->2025<!--/f-->, and skincare search rose ~<!--f:skin_change-->14<!--/f-->%; the gap between them narrowed ~<!--f:gap_change-->50<!--/f-->%, <!--f:cosm_share-->89<!--/f-->% of it from the fall in cosmetics search. Set against official shipment statistics (METI 生産動態統計), that finding splits in two. **Makeup is corroborated in yen** — foundation shipped value fell <!--f:found_d-->40<!--/f-->% and lipstick <!--f:lip_d-->44<!--/f-->% over <!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_y1-->2025<!--/f-->, with the fall concentrated in <!--f:mkt_y0-->2019<!--/f-->→<!--f:mkt_pre1-->2021<!--/f-->, before the break and in lines it does not touch. **Skincare is not** — its money series steps in January <!--f:mkt_break-->2022<!--/f-->, and figures measured across that step reverse sign when measured inside it (serum shipped value reads -<!--f:serum_val_span-->38<!--/f-->% across the break and +<!--f:serum_val_post-->23<!--/f-->% after it). The cause is undocumented in the published statistics, so no skincare demand reading is offered. January–July <!--f:ytd_y-->2026<!--/f--> against the same months of <!--f:mkt_y1-->2025<!--/f-->: skincare shipped value +<!--f:ytd_skin-->7.7<!--/f-->%, makeup -<!--f:ytd_make-->0.3<!--/f-->% (METI monthly 確報). Ingredient-name search rose over the same years (niacinamide <!--f:nia_pre-->4<!--/f-->→<!--f:nia_post-->69<!--/f--> on the Trends index) and has no behavioural counterpart at all — no official series tracks ingredient-level demand. A mask test rules out the cyclical explanation for the makeup decline: search did not recover after Japan relaxed mask guidance in March 2023.
 
-*何が測れるか / What is measured where:* この分析は二つの層を別々の測定として扱う。**関心層** —— Googleトレンド、楽天の掲載数、@cosmeレビュー、YouTube —— は検索と言葉を測る。**市場層** —— 経産省 生産動態統計と財務省 貿易統計 —— は金額と数量を測る。両者が一致する箇所だけが行動の裏づけを持つ。
+*何が測れるか / What is measured where:* **市場の測定** —— Googleトレンド、経産省 生産動態統計、財務省 貿易統計、PR TIMESのコアパネル —— は測定の枠が本プロジェクトの外で決まっており、スキンケアとメイクの比較や年をまたぐ比較に用いる。検索は関心を、出荷と貿易は金額と数量を測る。**側ごとの測定** —— @cosmeレビュー、YouTubeコメント、楽天の商品 —— は本プロジェクトが各側を深く調べるために収集したもので、言葉・成分・価格・評価を各側の内側で読み、件数や比率を側や年をまたいで比べない。
 
-*The two layers:* the **attention layer** (Google Trends, Rakuten listings, @cosme reviews, YouTube — all self-built) measures what people search for and say. The **market layer** (METI shipments, 財務省 trade statistics HS 3304) measures what they buy, in yen and kilograms. They are different measurements and are never averaged together; only where they agree is a behavioural claim made. Full argument and the per-finding status: [METHODOLOGY.md](METHODOLOGY.md).
+*What is measured where:* **Market measures** (Google Trends, METI shipments, 財務省 trade statistics HS 3304, the PR TIMES core panel) have a frame set outside this project, and are compared across skincare and makeup and across years: search measures attention, shipments and trade measure yen and kilograms. **Within-side instruments** (@cosme reviews, YouTube comments, Rakuten items) were collected by this project for depth on each side; they are read for language, ingredients, price and rating within a side, and no count or share from them is compared across sides or years. Rules and reasons: [METHODOLOGY.md](METHODOLOGY.md), Source roles.
 
 *Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、その規模は小さく、サンプルサイズに敏感である。サンプル数を揃えた厳密な比較では Δ +<!--f:conv_delta-->0.065<!--/f-->（<!--f:conv_lo-->0.252<!--/f-->→<!--f:conv_hi-->0.317<!--/f-->、ブートストラップ<!--f:conv_ci_jp-->95%CI [+0.047, +0.083]<!--/f-->）。  
 *Nuance:* skincare and cosmetics review language is converging slowly, but the effect is small and sample-size sensitive — Δ +<!--f:conv_delta-->0.065<!--/f--> (<!--f:conv_lo-->0.252<!--/f-->→<!--f:conv_hi-->0.317<!--/f-->, bootstrap <!--f:conv_ci-->95% CI [+0.047, +0.083]<!--/f-->) under a size-matched comparison.
@@ -127,7 +127,7 @@ gunicorn     26.0.0    # WSGI server in the Cloud Run image
 | NB02c | Weekly Rakuten snapshot ingestion (time-series tracking) |
 | NB03 | SQL analytical foundation — BI layer demonstrating CTEs, window functions, self-joins |
 | NB04 | Consumer voice — vocabulary analysis, ingredient detection, review quality |
-| NB05 | The Shift — confirmatory analysis across independent sources |
+| NB05 | The Shift — search attention on Google Trends, one source |
 | NB06 | Discovery layer — vocabulary convergence (size-matched), topic modelling, review mapping, search discovery |
 | NB07 | Executive synthesis + dashboard asset generation |
 

@@ -36,6 +36,33 @@ def test_the_docs_use_no_retired_measure(docs):
     assert not hits, hits
 
 
+def test_committed_notebooks_use_no_retired_measure():
+    """The same check on every committed notebook's markdown and text output."""
+    import json
+    import subprocess
+    from pathlib import Path
+    from retired_phrases import RETIRED
+    root = Path(__file__).resolve().parent.parent
+    try:
+        tracked = subprocess.run(["git", "ls-files", "notebooks/*.ipynb"], cwd=root,
+                                 capture_output=True, text=True, check=True).stdout.split()
+    except (OSError, subprocess.CalledProcessError):
+        tracked = [str(p.relative_to(root)) for p in (root / "notebooks").glob("NB0[2-7]*.ipynb")]
+    hits = []
+    for nb_path in tracked:
+        nb = json.loads((root / nb_path).read_text(encoding="utf-8"))
+        for i, c in enumerate(nb["cells"]):
+            texts = ["".join(c["source"])] if c["cell_type"] == "markdown" else []
+            for o in c.get("outputs", []):
+                texts.append("".join(o.get("text", "")))
+                texts.append("".join(o.get("data", {}).get("text/markdown", "")))
+            for pat, why in RETIRED:
+                for tx in texts:
+                    for m in re.finditer(pat, tx, re.I):
+                        hits.append((nb_path, i, why, m.group(0)))
+    assert not hits, hits
+
+
 def test_ingredient_levels_match(docs, headline):
     """"A→B" level pairs must be the niacinamide and retinol endpoints."""
     # (?<![\d.]) / (?![\d.]) so "0.31→0.53" is not read as 31→0.

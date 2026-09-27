@@ -13,10 +13,18 @@ RETIRED = [
      "Rakuten listing ratio (Revision 11)"),
     (r"\bfive (independent )?sources\b|5つの(独立した)?(ソース|情報源)",
      "'five sources': three of them were retired (Revisions 2, 3, 11)"),
-    (r"review[- ]volume (growth )?(is|as) a (market )?signal",
+    (r"review[- ]volume[^.。]{0,30}\bis a (market )?signal",
      "@cosme review-volume share as a signal (Revision 2)"),
+    (r"(multiple|several|three|five) independent (signals|sources)|複数の独立した",
+     "'independent signals': the within-side instruments are not (Source roles)"),
+    (r"YouTube comments?[^.。]{0,40}(moved toward|outnumbered)|YouTubeコメント[^。]{0,20}比重",
+     "YouTube comment counts across sides: set by the query list (Source roles)"),
+    (r"YoY growth confirms the inflection|structural shift is not a calendar artefact",
+     "@cosme review volume as shift evidence (NB03; Revision 2)"),
 ]
 
-# The sources a "moved toward skincare after 2020" sentence may not cite:
-# no Rakuten data before March 2026; @cosme review-volume share retired.
-NOT_SHIFT_EVIDENCE = r"Rakuten|楽天|@cosme|review"
+# The sources a "moved toward skincare after 2020" sentence may not cite: the
+# within-side instruments (METHODOLOGY Source roles). Rakuten has no data
+# before March 2026; @cosme review share and YouTube comment counts follow the
+# collection's mix.
+NOT_SHIFT_EVIDENCE = r"Rakuten|楽天|@cosme|review|YouTube"
