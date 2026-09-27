@@ -346,6 +346,32 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
     S["t1_c1e"] = S["t1_c1e"].format(tr_years=_cr_years, tr_part=_cr_part)
     S["t1_c2cap"] = S["t1_c2cap"].format(tr_part=_trends_span(load_ingredient_surge(ASSETS), lang)[1])
     S["t1_c4cap"] = S["t1_c4cap"].format(tr_part=_trends_span(load_makeup_rebound(ASSETS), lang)[1])
+    # Makeup rebound: each term's full-year mean indexed to its own 2019. Google
+    # samples every request, so these move on each re-pull; they are read from
+    # the asset rather than typed.
+    _mk = load_makeup_rebound(ASSETS)
+    _mn = _mk.groupby("year")["week_start"].nunique()
+    _ann = _mk[_mk["year"].isin(_mn[_mn >= 12].index)].groupby(["year", "term"])["interest"].mean().unstack()
+    _rb = (100 * _ann / _ann.loc[2019]).round().astype(int)
+    _yl = int(_rb.index.max())
+    _lip, _fnd, _eye = _rb["口紅"], _rb["ファンデーション"], _rb["アイシャドウ"]
+    _eye_pk = int(_eye.idxmax())
+    if lang == "en":
+        _gap = {1: "one year", 2: "two years", 3: "three years", 4: "four years"}.get(_yl - 2023, f"{_yl - 2023} years")
+        S["t1_c4h"] = (f"In {_yl}, {_gap} after mask guidance was relaxed, lipstick search "
+                       f"was {_lip[_yl]}% of its 2019 level")
+        S["f1b_body"] = (
+            f"Annual average, each term's 2019 = 100: lipstick 100 → {_lip[2021]} (2021) → {_lip[2023]} "
+            f"(2023) → {_lip[_yl]} ({_yl}). Foundation 100 → {_fnd[2021]} → {_fnd[2023]} → {_fnd[_yl]}. "
+            f"Eyeshadow 100 → {_eye[_eye_pk]} ({_eye_pk}) → {_eye[_yl]} ({_yl}). None of the three "
+            "returned to 100 after mask guidance was relaxed.")
+    else:
+        S["t1_c4h"] = (f"マスク着用ルール緩和から{_yl - 2023}年後の{_yl}年、口紅の検索は2019年の{_lip[_yl]}%")
+        S["f1b_body"] = (
+            f"各語の2019年を100とした年平均：口紅 100 → {_lip[2021]}（2021年）→ {_lip[2023]}（2023年）→ "
+            f"{_lip[_yl]}（{_yl}年）。ファンデーション 100 → {_fnd[2021]} → {_fnd[2023]} → {_fnd[_yl]}。"
+            f"アイシャドウ 100 → {_eye[_eye_pk]}（{_eye_pk}年）→ {_eye[_yl]}（{_yl}年）。"
+            "マスク着用ルール緩和後、3語とも100に戻っていない。")
     # ── Convergence copy is rebuilt from live figures ─────────────────────────
     # These numbers recompute whenever NB06 re-runs (corpus growth, re-scrape),
     # so the prose is generated from HEADLINE rather than hardcoded — it can never
