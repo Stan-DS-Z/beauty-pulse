@@ -73,7 +73,7 @@ All data self-sourced and self-collected. No Kaggle datasets.
 | @cosme | Consumer reviews — used for *language* analysis | <!--f:cosme_reviews-->45,510<!--/f--> reviews |
 | Rakuten Ichiba API | Product catalog, prices, review counts | <!--f:rakuten_skus-->47,380<!--/f--> SKUs · <!--f:weekly_rows-->637,811<!--/f--> weekly rows |
 | Amazon | Name, price, aggregate rating, review count | <!--f:amazon_asins-->161<!--/f--> ASINs · <!--f:amazon_reviews-->1,124<!--/f--> reviews |
-| Google Trends JP | Monthly search interest (2019–2026) | <!--f:trends_rows-->4,842<!--/f--> rows |
+| Google Trends JP | Monthly search interest (2019–2026) | <!--f:trends_rows-->3,010<!--/f--> rows |
 | YouTube Data API v3 | Beauty video comments | <!--f:yt_videos-->296<!--/f--> videos · <!--f:yt_comments-->74,679<!--/f--> comments |
 
 **市場層 / Market layer** — 金額と数量。公的統計、e-Stat API 経由。 What people buy, in yen and kilograms; official statistics via the e-Stat API.

@@ -63,6 +63,16 @@ def test_public_db_drops_identifying_columns(public_db):
         conn.close()
 
 
+def test_public_db_ships_only_the_analysed_trends_blocks(public_db):
+    """block_A and block_B only; the per-company blocks are lenses and stay private."""
+    conn = sqlite3.connect(f"file:{public_db}?mode=ro", uri=True)
+    try:
+        groups = {r[0] for r in conn.execute("SELECT DISTINCT term_group FROM trends_weekly")}
+    finally:
+        conn.close()
+    assert groups == {"block_A", "block_B"}, f"trends_weekly ships {sorted(groups)}"
+
+
 def test_public_db_still_carries_the_analysable_columns(public_db):
     """The stripping must not hollow the archive out.
 
@@ -72,7 +82,7 @@ def test_public_db_still_carries_the_analysable_columns(public_db):
     conn = sqlite3.connect(f"file:{public_db}?mode=ro", uri=True)
     try:
         for table, n_min in (("products", 40_000), ("products_weekly", 500_000),
-                             ("reviews", 40_000), ("trends_weekly", 4_000)):
+                             ("reviews", 40_000), ("trends_weekly", 3_000)):
             n = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
             assert n >= n_min, f"{table} has only {n:,} rows"
         cols = {r[1] for r in conn.execute("PRAGMA table_info(reviews)")}

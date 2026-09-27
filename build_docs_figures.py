@@ -93,7 +93,10 @@ def corpus() -> dict:
         "amazon_asins": q("SELECT COUNT(*) FROM products WHERE source_id = 3"),
         "amazon_reviews": q("SELECT COUNT(*) FROM reviews r JOIN products p "
                             "ON r.product_id = p.product_id WHERE p.source_id = 3"),
-        "trends_rows": q("SELECT COUNT(*) FROM trends_weekly"),
+        # The two blocks the analysis reads and the public DB ships; the
+        # per-company blocks stay private.
+        "trends_rows": q("SELECT COUNT(*) FROM trends_weekly "
+                         "WHERE term_group IN ('block_A', 'block_B')"),
         "yt_videos": q("SELECT COUNT(*) FROM yt_videos"),
         "yt_comments": q("SELECT COUNT(*) FROM yt_comments"),
     }
