@@ -1,0 +1,166 @@
+genre_id,level,parent_id,name,side,note
+100944,2,100939,スキンケア,skincare,parent: its level-3 genres carry the side
+210450,3,100944,クレンジング,skincare,
+216301,3,100944,洗顔料,skincare,
+216307,3,100944,化粧水・ローション,skincare,
+567441,3,100944,保湿ミスト,skincare,
+216348,3,100944,美容液,skincare,
+216387,3,100944,乳液・ミルク,skincare,
+216424,3,100944,フェイスクリーム,skincare,
+216461,3,100944,フェイスオイル・バーム,skincare,
+567440,3,100944,保湿ジェル,skincare,
+563728,3,100944,オールインワン化粧品,skincare,
+216467,3,100944,ジェルパック・クリーム,skincare,
+503020,3,100944,シートマスク・フェイスパック,skincare,
+503044,3,100944,ピーリング・ゴマージュ,skincare,
+509822,3,100944,目元美容液,skincare,
+509843,3,100944,アイクリーム・ジェル,skincare,
+569360,3,100944,目元・口元ケアパッチ,skincare,eye and mouth patches
+405206,3,100944,リップクリーム,makeup,リップクリーム: METI counts lip balm as makeup (仕上用)
+568658,3,100944,リッププランパー,makeup,lip plumper: a lip product; filed with lip balm
+567442,3,100944,セット,skincare,set: contents mixed; takes its parent's side
+112849,3,100944,その他,skincare,スキンケア その他: contents mixed; takes its parent's side
+204233,2,100939,ベースメイク・メイクアップ,makeup,parent: its level-3 genres carry the side
+405258,3,204233,化粧下地,makeup,
+210457,3,204233,ファンデーション,makeup,
+567445,3,204233,BBクリーム,makeup,
+567446,3,204233,CCクリーム,makeup,
+405348,3,204233,コンシーラー,makeup,
+216499,3,204233,フェイスカラー・パウダー,makeup,
+569333,3,204233,フィックスミスト,makeup,setting mist
+216519,3,204233,アイブロウ・眉マスカラ,makeup,
+216539,3,204233,アイシャドウ,makeup,
+216559,3,204233,アイライナー,makeup,
+216579,3,204233,マスカラ,makeup,
+510002,3,204233,マスカラ下地,makeup,
+510003,3,204233,まつげ・まゆげ美容液,makeup,lash and brow serum; METI まゆ墨・まつ毛化粧料 is makeup
+562134,3,204233,つけまつげ,other,false eyelashes: not a cosmetic preparation
+568533,3,204233,つけまつげ接着剤,other,false-eyelash adhesive
+563781,3,204233,まつげエクステ,other,lash extensions: the hand labels counted these as neither
+567546,3,204233,アイテープ,other,eyelid tape: the hand labels counted these as neither
+216600,3,204233,口紅・リップスティック,makeup,
+503106,3,204233,リップライナー,makeup,
+216620,3,204233,リップグロス,makeup,
+216640,3,204233,チーク,makeup,
+567447,3,204233,セット,makeup,set: contents mixed; takes its parent's side
+112859,3,204233,その他,makeup,ベースメイク・メイクアップ その他: contents mixed; takes its parent's side
+216492,2,100939,日焼け止め・UVケア,sunscreen,parent: its level-3 genres carry the side
+503054,3,216492,日焼け止め,sunscreen,"sunscreen: its own METI line (日やけ止め及び日やけ用化粧品), a group apart from skincare as on the site"
+216495,3,216492,サンオイル・タンニング,other,tanning / after-sun: body
+216496,3,216492,アフターサンケア,other,tanning / after-sun: body
+567439,3,216492,セルフタンニングローション,other,tanning / after-sun: body
+201452,3,216492,その他,other,tanning / after-sun: body
+111787,2,100939,メイク道具・ケアグッズ,other,
+304742,3,111787,ビューラー・カーラー,other,
+304744,3,111787,ホットビューラー,other,
+111788,3,111787,ブラシ・チップ,other,
+510103,3,111787,パフ・スポンジ,other,
+111797,3,111787,コットン,other,
+100974,3,111787,洗顔グッズ,other,
+100979,3,111787,あぶらとり紙,other,
+201453,3,111787,メイクボックス,other,
+100976,3,111787,ボトル・ケース・携帯小物,other,
+210461,3,111787,詰替容器・アトマイザー,other,
+216660,3,111787,フェイス用カミソリ,other,
+216661,3,111787,ツィザー（毛抜き）,other,
+563790,3,111787,眉・鼻毛・甘皮はさみ,other,
+510090,3,111787,散髪はさみ,other,
+569357,3,111787,散髪ケープ,other,
+204238,3,111787,バスグッズ,other,
+510096,3,111787,ボディマッサージグッズ,other,
+304760,3,111787,フットケア用品,other,
+210675,3,111787,ハンドケア用品,other,
+100972,3,111787,その他,other,
+100940,2,100939,ヘアケア・スタイリング,other,
+210677,3,100940,シャンプー,other,
+210686,3,100940,リンス・コンディショナー,other,
+567232,3,100940,リンスインシャンプー,other,
+567233,3,100940,シャンプー・リンスセット,other,
+210695,3,100940,トリートメント,other,
+507825,3,100940,アウトバストリートメント,other,
+567538,3,100940,シャンプー・トリートメントセット,other,
+562135,3,100940,スカルプケアローション・エッセンス,other,
+111541,3,100940,スタイリング剤,other,
+210723,3,100940,カラーリング,other,
+507832,3,100940,白髪染め,other,
+507843,3,100940,育毛・養毛剤,other,
+405409,3,100940,トラベルセット,other,
+568288,3,100940,シャンプーブラシ,other,
+100663,3,100940,ブラシ,other,
+569310,3,100940,くし・コーム,other,
+215988,3,100940,ヘアバンド,other,
+101878,3,100940,その他,other,
+111120,2,100939,香水・フレグランス,other,no level-3 genres
+100878,2,100939,アロマ・お香,other,
+210329,3,100878,アロマオイル,other,
+551744,3,100878,エッセンシャルオイル・精油,other,
+551798,3,100878,キャリアオイル,other,
+407120,3,100878,アロマディフューザー,other,
+568659,3,100878,リードディフューザー,other,
+216082,3,100878,アロマスプレー,other,
+111210,3,100878,アロマポット,other,
+210397,3,100878,お香・インセンス,other,
+210402,3,100878,香木,other,
+210403,3,100878,匂い袋,other,
+216086,3,100878,茶香炉,other,
+505679,3,100878,お香立て・スタンド・受け皿,other,
+216087,3,100878,キャンドル,other,
+215109,3,100878,ポプリ,other,
+216085,3,100878,アロマバーナー,other,
+216084,3,100878,遮光瓶,other,
+551824,3,100878,スポイト,other,
+551826,3,100878,アロマプレート,other,
+505629,3,100878,セット,other,
+101868,3,100878,その他,other,
+100960,2,100939,ボディケア,other,
+507851,3,100960,デオドラント・制汗剤,other,
+100962,3,100960,石けん・ボディソープ,other,
+216670,3,100960,ボディローション・ミルク,other,
+100963,3,100960,ボディオイル,other,
+216671,3,100960,ボディクリーム,other,
+567448,3,100960,ボディパウダー,other,
+507857,3,100960,スリミングジェル・クリーム,other,
+510097,3,100960,ボディマッサージオイル,other,
+510098,3,100960,ボディスクラブ,other,
+507861,3,100960,バストケアクリーム・ジェル,other,
+304758,3,100960,ハンドソープ,other,
+304759,3,100960,ハンドクリーム,other,
+304761,3,100960,フットクリーム,other,
+567752,3,100960,浴用化粧品,other,
+101882,3,100960,その他,other,
+201454,2,100939,ネイル,other,sided by its level-3 genres (METI つめ化粧料 includes polish and remover)
+563784,3,201454,ジェルネイル,other,"gel nail: base gel is a cosmetic, colour and top gels may be sold as goods (MHLW 事務連絡 2020-09-04); METI つめ化粧料 does not cover the goods"
+567443,3,201454,マニキュアうすめ液,makeup,METI つめ化粧料 includes polish and remover
+304766,3,201454,マニキュア,makeup,METI つめ化粧料 includes polish and remover
+405373,3,201454,トップ・ベースコート,makeup,METI つめ化粧料 includes polish and remover
+567444,3,201454,ネイルハードナー,makeup,METI つめ化粧料 includes polish and remover
+210671,3,201454,ネイルアート用品,other,
+405387,3,201454,リムーバー,makeup,METI つめ化粧料 includes polish and remover
+304781,3,201454,ネイルチップ,other,
+210674,3,201454,ネイルケアグッズ,other,
+201460,3,201454,その他,other,
+210462,2,100939,シェービング・脱毛・脱色,other,
+567539,3,210462,T字カミソリ,other,
+567540,3,210462,T字カミソリ替刃,other,
+210463,3,210462,シェービングムース,other,
+210464,3,210462,シェービングジェル,other,
+210465,3,210462,シェービングローション,other,
+210466,3,210462,アフターシェーブ,other,
+216667,3,210462,脱毛剤・ワックス・クリーム,other,
+503154,3,210462,脱毛シート,other,
+216668,3,210462,脱色剤,other,
+201461,3,210462,その他,other,
+204245,2,100939,美顔器・スチーマー,other,
+503041,3,204245,美顔ローラー,other,
+503169,3,204245,美顔器,other,
+216737,3,204245,フェイススチーマー,other,
+566890,3,204245,スキンチェッカー,other,
+566901,3,204245,アイマッサージャー,other,
+564517,2,100939,韓国コスメ,other,country-of-origin genre: sided by its level-3 genres
+564569,3,564517,ボディケア,other,
+564570,3,564517,ヘアケア・スタイリング,other,
+564571,3,564517,メイクアップ,makeup,
+562084,3,564517,スキンケア,skincare,
+564572,3,564517,その他,other,
+567431,2,100939,化粧品原料,other,no level-3 genres
+101877,2,100939,その他,other,no level-3 genres
