@@ -133,6 +133,10 @@ def build_registry() -> dict[str, str]:
         "ytd_skin":        f"{float(h['ytd_skin']):.1f}",
         "ytd_make":        f"{abs(float(h['ytd_make'])):.1f}",
 
+        # ── consumer layer ──────────────────────────────────────────────────
+        "vocab_shared":  f"{int(h['vocab_shared'])}",
+        "vocab_top":     f"{int(h['vocab_top'])}",
+
         # ── convergence ─────────────────────────────────────────────────────
         "conv_delta":  f"{float(h['conv_delta']):.3f}",
         "conv_lo":     f"{float(h['conv_lo']):.3f}",

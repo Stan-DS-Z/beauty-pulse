@@ -230,6 +230,11 @@ def compute_headline(ASSETS: Path):
     ytd_skin, ytd_make, ytd_total = (_ytd_pct(METI_SKIN), _ytd_pct(METI_MAKE),
                                      _ytd_pct(_all_items))
 
+    # Discovery: skincare terms in both top-N lists, @cosme and YouTube, one
+    # method for both (build_vocab_overlap.py).
+    _vo = pd.read_csv(ASSETS / "vocab_overlap.csv")
+    _vc = _vo[_vo["source"] == "cosme"]
+    vocab_top, vocab_shared = len(_vc), int(_vc["in_both"].sum())
 
     return {
         "cosm_decline": cosm_decline,
@@ -297,6 +302,9 @@ def compute_headline(ASSETS: Path):
         "ytd_skin":       ytd_skin,
         "ytd_make":       ytd_make,
         "ytd_total":      ytd_total,
+        # consumer layer
+        "vocab_top":      vocab_top,
+        "vocab_shared":   vocab_shared,
     }
 
 

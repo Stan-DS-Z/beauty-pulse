@@ -135,7 +135,7 @@ STRINGS = {
         "t3_ytgapb": "韓国コスメ: 16 videos and 4.4M views in this dataset. かずのすけ, a chemistry-focused creator: 71 videos and 43.4M views of ingredient content.",
 
         "t3_yttfh": "YouTube commenters write about the video; @cosme reviewers write about the product",
-        "t3_yttfe": "15 of the top 30 skincare terms appear on both platforms.",
+        "t3_yttfe": "",   # rebuilt from HEADLINE (vocab_shared, vocab_top)
         "t3_ytreg":  "Top terms by platform — ",
         "t3_ytregb": "YouTube: 動画 (video), 参考 (reference), 思う (think). @cosme: しっとり (moist), 毛穴 (pores), 香り (scent). The creator name <b>かずのすけ</b> ranks among the top skincare comment terms.",
         "t3_ytdivtitle": "← More frequent in cosmetics comments  ·  More frequent in skincare comments →",
@@ -268,7 +268,7 @@ STRINGS = {
         "t3_ytgapb": "韓国コスメ：本データセットで16本・440万回視聴。化学系クリエイターのかずのすけ：成分コンテンツ71本・4,340万回視聴。",
 
         "t3_yttfh":  "YouTubeのコメントは動画について、@cosmeのレビューは商品について書かれている",
-        "t3_yttfe":  "スキンケア上位30語のうち、両プラットフォームに共通するのは15語。",
+        "t3_yttfe":  "",  # rebuilt from HEADLINE (vocab_shared, vocab_top)
         "t3_ytreg":  "プラットフォーム別の上位語 — ",
         "t3_ytregb": "YouTube：動画・参考・思う。@cosme：しっとり・毛穴・香り。クリエイター名<b>かずのすけ</b>がスキンケアコメントの上位語に入る。",
         "t3_ytdivtitle": "← コスメのコメントで多い  ·  スキンケアのコメントで多い →",
@@ -392,6 +392,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"Measured at equal sample sizes, skincare and cosmetics reviews shared more vocabulary "
             f"in {_h['conv_p1']} than in {_h['conv_p0']}.")
         S["t2_m2d"] = f"each period set to {_h['matched_n']} reviews · {_h['conv_ci']}"
+        S["t3_yttfe"] = (f"{_h['vocab_shared']} of the top {_h['vocab_top']} skincare terms "
+                         "appear on both platforms.")
         S["t1_m2d"] = f"Trends index, annual mean, {_h['ing_y0']} vs {_h['ing_y1']}"
         S["t1_c3h"] = ("Rakuten Ichiba: rating and median price for each genre's "
                        "3,000 most-reviewed items")
@@ -509,6 +511,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"サンプル数を揃えて測ると、スキンケアとコスメのレビューが共有する語彙は、"
             f"{_h['conv_p0']}年より{_h['conv_p1']}年のほうが多い。")
         S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
+        S["t3_yttfe"] = (f"スキンケア上位{_h['vocab_top']}語のうち、"
+                         f"両プラットフォームに共通するのは{_h['vocab_shared']}語。")
         S["t1_m2d"] = f"トレンド指数の年平均、{_h['ing_y0']}年と{_h['ing_y1']}年"
         S["t1_c3h"] = "楽天市場：各ジャンルのレビュー数上位3,000商品の評価と価格中央値"
         S["t1_c2h"] = (
