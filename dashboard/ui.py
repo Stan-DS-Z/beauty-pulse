@@ -234,7 +234,6 @@ def sku_panel(row_, colour):
             html.P(row_["tier_group"].capitalize(), className="bp-detail-sub"),
         ]),
         _stat("Items in pull", f"{int(row_['sku_count']):,}", colour),
-        _stat("Avg reviews / SKU", f"{row_['avg_reviews']:.1f}", colour),
         _stat("Median price", f"¥{int(row_['med_price']):,}", colour),
         _stat("Avg rating (rated SKUs)",
               f"{row_['avg_rating']:.2f} ★ · {row_['rated_share']:.0%} rated", colour),

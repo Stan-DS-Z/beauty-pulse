@@ -175,19 +175,13 @@ def fig_sku_treemap(df_sku, color_col):
     df_sku = df_sku.copy()
     df_sku["cat_display"] = df_sku["category"].map(lambda x: CAT_LABELS.get(x, x))
     df_sku["tier_display"] = df_sku["tier_group"].str.capitalize()
-    COLOR_SCALES = {"avg_reviews": "Blues",
-                    "med_price": "Oranges", "avg_rating": "Greens"}
-    HOVER_LABELS = {"avg_reviews": "Avg reviews/SKU",
-                    "med_price": "Median price (¥)", "avg_rating": "Avg rating (rated SKUs)"}
+    COLOR_SCALES = {"med_price": "Oranges", "avg_rating": "Greens"}
+    HOVER_LABELS = {"med_price": "Median price (¥)", "avg_rating": "Avg rating (rated SKUs)"}
     hover_lbl = HOVER_LABELS[color_col]
-    # Build customdata array: [avg_reviews, med_price, avg_rating, tier, rated_share]
+    # customdata: [med_price, avg_rating, tier, rated_share]
     df_sku["_cval"] = df_sku[color_col]
-    CELL_LABELS = {
-        "avg_reviews": "rev/SKU avg",
-        "med_price": "median price", "avg_rating": "avg rating",
-    }
+    CELL_LABELS = {"med_price": "median price", "avg_rating": "avg rating"}
     CELL_FMT = {
-        "avg_reviews": lambda v: f"{v:.1f}",
         "med_price": lambda v: f"¥{v:,.0f}",
         "avg_rating": lambda v: f"{v:.2f} ★",
     }
@@ -201,7 +195,7 @@ def fig_sku_treemap(df_sku, color_col):
         values="sku_count",
         color=color_col,
         color_continuous_scale=COLOR_SCALES[color_col],
-        custom_data=["avg_reviews", "med_price", "avg_rating", "tier_group", "rated_share"],
+        custom_data=["med_price", "avg_rating", "tier_group", "rated_share"],
     )
     fig3.update_traces(
         texttemplate="<b>%{label}</b>",
@@ -210,11 +204,10 @@ def fig_sku_treemap(df_sku, color_col):
         hovertemplate=(
             "<b>%{label}</b><br>"
             "Items in pull: %{value:,}<br>"
-            "Avg reviews/SKU: %{customdata[0]:.1f}<br>"
-            "Median price: ¥%{customdata[1]:,.0f}<br>"
-            "Avg rating: %{customdata[2]:.2f} / 5.0 "
-            "(across the %{customdata[4]:.0%} of SKUs with ratings)"
-            "<extra>%{customdata[3]}</extra>"
+            "Median price: ¥%{customdata[0]:,.0f}<br>"
+            "Avg rating: %{customdata[1]:.2f} / 5.0 "
+            "(across the %{customdata[3]:.0%} of SKUs with ratings)"
+            "<extra>%{customdata[2]}</extra>"
         ),
     )
     fig3.update_layout(**_base(height=420))
@@ -236,19 +229,7 @@ def sku_detail(df_sku, label):
         return None
     row = match.iloc[0]
     return {"label": label, **{k: row[k] for k in (
-        "tier_group", "sku_count", "avg_reviews", "med_price", "avg_rating",
-        "rated_share")}}
-
-
-def korean_callout(df_sku):
-    """The Korean-cosmetics genre against all categories, or None if absent."""
-    _kr = df_sku[df_sku["category"] == "korean_cosmetics"]
-    if _kr.empty:
-        return None
-    _kr = _kr.iloc[0]
-    _all_rps = (df_sku["sku_count"] * df_sku["avg_reviews"]).sum() / df_sku["sku_count"].sum()
-    return {"sku_count": _kr["sku_count"], "avg_reviews": _kr["avg_reviews"],
-            "med_price": _kr["med_price"], "all_rps": _all_rps}
+        "tier_group", "sku_count", "med_price", "avg_rating", "rated_share")}}
 
 
 def fig_meti_groups(df_grp, HEADLINE, lang):

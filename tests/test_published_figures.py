@@ -52,7 +52,10 @@ def test_committed_notebooks_use_no_retired_measure():
     for nb_path in tracked:
         nb = json.loads((root / nb_path).read_text(encoding="utf-8"))
         for i, c in enumerate(nb["cells"]):
-            texts = ["".join(c["source"])] if c["cell_type"] == "markdown" else []
+            src = "".join(c["source"])
+            if src.startswith("## Revisions"):
+                continue
+            texts = [src] if c["cell_type"] == "markdown" else []
             for o in c.get("outputs", []):
                 texts.append("".join(o.get("text", "")))
                 texts.append("".join(o.get("data", {}).get("text/markdown", "")))

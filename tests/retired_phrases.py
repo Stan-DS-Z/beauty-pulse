@@ -4,6 +4,8 @@ Each entry is (regex, what it retired, where). A measure leaves this site when
 its revision retires it; these keep its wording from coming back. The sweep in
 recon/2026-09-27_sweep_retired-measures-as-shift-evidence.md lists claims still
 open; each is added here when it is fixed, so the list only ever grows.
+Notebook cells headed "## Revisions" record removals by name and are not
+checked.
 """
 
 RETIRED = [
@@ -21,6 +23,10 @@ RETIRED = [
      "YouTube comment counts across sides: set by the query list (Source roles)"),
     (r"YoY growth confirms the inflection|structural shift is not a calendar artefact",
      "@cosme review volume as shift evidence (NB03; Revision 2)"),
+    (r"Reviews per SKU|SKUあたりレビュー数|reviews per item, against|1商品あたりレビュー[\d.]+件（全",
+     "reviews per item across genres: measures how deep the 3,000 cap reaches (Revision 13)"),
+    (r"Vocabulary [Ss]hift \(|Vocabulary Shift — Pre vs Post|成分言及率の推移|Pre-COVID avg",
+     "@cosme vocabulary or ingredient mentions compared across years (Revision 2, Source roles)"),
 ]
 
 # The sources a "moved toward skincare after 2020" sentence may not cite: the

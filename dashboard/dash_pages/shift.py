@@ -26,14 +26,6 @@ def _date_range(df_cross, lo, hi):
     return (m[lo].to_pydatetime(), m[hi].to_pydatetime())
 
 
-def _kr_text(kr, lang):
-    if lang == "en":
-        return (f"  — {kr['avg_reviews']:.1f} reviews per item, against {kr['all_rps']:.1f} "
-                f"across all subcategories · ¥{int(kr['med_price']):,} median price")
-    return (f"  — 1商品あたりレビュー{kr['avg_reviews']:.1f}件（全サブカテゴリ平均{kr['all_rps']:.1f}件） · "
-            f"価格中央値 ¥{int(kr['med_price']):,}")
-
-
 def _rak_prompt(lang):
     return ui.caption("Click any tile to see category detail" if lang == "en"
                       else "タイルをクリックするとカテゴリの詳細を表示")
@@ -54,9 +46,6 @@ def build(lang, d):
     val_all, _ = d.frame("meti_annual")
     att = d.frame("attention_annual")
 
-    kr = figures.korean_callout(df_sku)
-    kr_note = (ui.note("Korean cosmetics" if lang == "en" else "韓国コスメ",
-                       _kr_text(kr, lang), "korean") if kr is not None else None)
 
     m2_cap = (f"Monthly, January 2019 – {_mon_en[H['ytd_m']]} {H['ytd_y']} · solid = the three "
               "lines with the step · dotted = comparison lines · log scale: equal vertical "
@@ -115,7 +104,6 @@ def build(lang, d):
                     html.Div(_rak_prompt(lang), id="sh-rak-detail", className="bp-detail-slot"),
                     html.Button("✕", id="sh-rak-clear", n_clicks=0, className="bp-clear hidden"),
                 ]),
-                kr_note,
             ]),
         ),
 

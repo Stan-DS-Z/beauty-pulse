@@ -16,9 +16,10 @@ Run it after NB01a. It fills three Rakuten tables from the raw snapshot files:
 The pull keeps each genre's 3,000 most-reviewed items, so products and
 products_weekly cannot say how many items a genre lists; a ratio of their
 counts measures how many genres are pulled. genre_totals holds the count the
-API reports for the whole genre. NB01a has saved it as `total_available` since
-2026-09-27; for 2026-09-20 it survives only in that run's log, which
---totals-from-log reads.
+API reports for each genre. From 2026-09-27 NB01a saves the whole 美容・コスメ・
+香水 tree (root, level 2, level 3) to data/raw/rakuten/genre_totals/, and each
+pulled genre's count in its product file as `total_available`. For 2026-09-20
+the counts survive only in that run's log, which --totals-from-log reads.
 
 This is the ingest path NB02 section 3 and NB02c sections 3-4 perform in the
 notebooks. It exists as a script so the weekly loop does not have to re-run all
@@ -68,6 +69,7 @@ from src.utils import DATA_RAW                      # noqa: E402
 
 PRODUCTS_DIR = DATA_RAW / "rakuten" / "products"
 RANKING_DIR = DATA_RAW / "rakuten" / "ranking"
+TOTALS_DIR = DATA_RAW / "rakuten" / "genre_totals"
 
 DDL = [
     """CREATE TABLE IF NOT EXISTS products_weekly (
@@ -93,10 +95,21 @@ DDL = [
         genre_id         TEXT    NOT NULL,
         genre_name       TEXT,
         total_available  INTEGER NOT NULL,
-        recorded_from    TEXT    NOT NULL,   -- 'snapshot file' | 'run log'
+        recorded_from    TEXT    NOT NULL,   -- 'genre tree' | 'snapshot file' | 'run log'
+        level            INTEGER,            -- 1 root, 2, 3; NULL where not recorded
+        parent_id        TEXT,
         PRIMARY KEY(snapshot_date, genre_id)
     )""",
 ]
+
+
+def migrate(conn) -> None:
+    """Add the columns genre_totals gained on 2026-09-27 to an older table."""
+    have = {r[1] for r in conn.execute("PRAGMA table_info(genre_totals)")}
+    for col, kind in (("level", "INTEGER"), ("parent_id", "TEXT")):
+        if col not in have:
+            conn.execute(f"ALTER TABLE genre_totals ADD COLUMN {col} {kind}")
+    conn.commit()
 
 
 class IngestError(RuntimeError):
@@ -189,16 +202,37 @@ def read_total(path: Path) -> tuple[str | None, int | None]:
 
 
 def store_total(conn, snapshot_date: str, genre_id: str, genre_name: str | None,
-                total: int, recorded_from: str) -> None:
+                total: int, recorded_from: str, level: int | None = None,
+                parent_id: str | None = None) -> None:
     conn.execute(
         """INSERT INTO genre_totals
-               (snapshot_date, genre_id, genre_name, total_available, recorded_from)
-           VALUES (?, ?, ?, ?, ?)
+               (snapshot_date, genre_id, genre_name, total_available, recorded_from,
+                level, parent_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(snapshot_date, genre_id) DO UPDATE SET
                genre_name = excluded.genre_name,
                total_available = excluded.total_available,
-               recorded_from = excluded.recorded_from""",
-        (snapshot_date, genre_id, genre_name, total, recorded_from))
+               recorded_from = excluded.recorded_from,
+               level = COALESCE(excluded.level, level),
+               parent_id = COALESCE(excluded.parent_id, parent_id)""",
+        (snapshot_date, genre_id, genre_name, total, recorded_from, level, parent_id))
+
+
+def tree_totals(conn, snapshot_date: str) -> int:
+    """The genre-tree file NB01a writes for a date, into genre_totals.
+
+    Returns the number of genres stored; 0 when the date has no tree file
+    (runs before 2026-09-27). A tree file overrides a product file's count for
+    the same genre, since the tree is read in one pass at the start of the run."""
+    path = TOTALS_DIR / f"rakuten_genre_totals_{snapshot_date}.json"
+    if not path.exists():
+        return 0
+    rows = json.loads(path.read_text(encoding="utf-8"))["genres"]
+    for r in rows:
+        store_total(conn, snapshot_date, r["genre_id"], r["name"], int(r["total_available"]),
+                    "genre tree", r["level"], r["parent_id"])
+    conn.commit()
+    return len(rows)
 
 
 def totals_from_log(conn, log_path: Path) -> int:
@@ -342,6 +376,9 @@ def ingest_date(conn, snapshot_date: str, genre_map: dict[str, int]) -> dict:
     if missing_totals:
         print(f"  no total_available in {len(missing_totals)} product file(s): "
               "the files predate 2026-09-27, or NB01a is not saving it")
+    n_tree = tree_totals(conn, snapshot_date)
+    print(f"  genre tree: {n_tree} genre totals" if n_tree
+          else "  genre tree: no file for this date")
     return totals
 
 
@@ -421,6 +458,7 @@ def main() -> int:
         for ddl in DDL:
             conn.execute(ddl)
         conn.commit()
+        migrate(conn)
 
         if args.totals_from_log:
             n = totals_from_log(conn, args.totals_from_log)

@@ -169,9 +169,9 @@ def test_ingredient_dropdown_draws_the_selected_terms(client):
 
 
 def test_lens_radio_recolours_the_treemap(client):
-    fig = _post(client, "sh-fig3.figure", [_in("sh-lens", "value", "med_price")],
+    fig = _post(client, "sh-fig3.figure", [_in("sh-lens", "value", "avg_rating")],
                 [_in("sh-lang", "data", "jp")])
-    assert fig["layout"]["coloraxis"]["colorbar"]["title"]["text"] == "Median price (¥)"
+    assert fig["layout"]["coloraxis"]["colorbar"]["title"]["text"] == "Avg rating (rated SKUs)"
 
 
 def test_rakuten_tile_click_selects_then_clears(client):
@@ -187,7 +187,7 @@ def test_rakuten_tile_click_selects_then_clears(client):
     detail = _post(client, "sh-rak-detail.children", [_in("sh-rak-sel", "data", "All-in-one")],
                    [_in("sh-lang", "data", "en")],
                    outputs=["sh-rak-detail.children", "sh-rak-clear.className"])
-    assert "All-in-one" in _text(detail) and "Avg reviews / SKU" in _text(detail)
+    assert "All-in-one" in _text(detail) and "Median price" in _text(detail)
 
 
 def test_wordcloud_pills_swap_the_image_and_note(client):

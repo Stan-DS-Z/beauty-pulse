@@ -35,7 +35,7 @@ STRINGS = {
         "t1_c3h": "",
         "t1_c3e": "Each rectangle is a Rakuten Ichiba subcategory, from each genre's 3,000 most-reviewed items on {date}. Size = items in the pull · colour = the measure selected below. Ratings average rated items only; price is the median.",
         "t1_lens": "Colour by",
-        "t1_lens_opts": {"Reviews per SKU": "avg_reviews", "Median price": "med_price", "Average rating": "avg_rating"},
+        "t1_lens_opts": {"Median price": "med_price", "Average rating": "avg_rating"},
 
         "t1_c4h": "In 2025, two years after mask guidance was relaxed, lipstick search was 36% of its 2019 level",
         "t1_c4e": "Monthly search interest for three makeup terms, each indexed to its own peak. Japan relaxed mask guidance on 13 March 2023. Lipstick and foundation search rose in 2023 and fell in 2024–2025; lipstick search in 2025 was below its 2021 low. Eyeshadow search rose while masks were worn and fell below its 2019 level after the guidance changed.",
@@ -171,7 +171,7 @@ STRINGS = {
         "t1_c3h":    "",   # rebuilt live from HEADLINE below
         "t1_c3e":    "各長方形は楽天市場のサブカテゴリ。{date}時点の各ジャンルのレビュー数上位3,000商品。サイズ = 取得した商品数 · 色 = 下で選択した指標。評価は評価のある商品のみの平均、価格は中央値。",
         "t1_lens":   "色分け基準",
-        "t1_lens_opts": {"SKUあたりレビュー数": "avg_reviews", "価格中央値": "med_price", "平均評価": "avg_rating"},
+        "t1_lens_opts": {"価格中央値": "med_price", "平均評価": "avg_rating"},
 
         "t1_c4h":    "マスク着用ルール緩和から2年後の2025年、口紅の検索は2019年の36%",
         "t1_c4e":    "メイク3語の月次検索関心度。各語は自身のピークを基準に指数化。日本は2023年3月13日にマスク着用ルールを緩和した。口紅とファンデーションの検索は2023年に上昇し、2024〜2025年に低下した。2025年の口紅検索は2021年の底を下回る。アイシャドウの検索はマスク着用期に上昇し、緩和後は2019年水準を下回った。",
@@ -393,7 +393,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"in {_h['conv_p1']} than in {_h['conv_p0']}.")
         S["t2_m2d"] = f"each period set to {_h['matched_n']} reviews · {_h['conv_ci']}"
         S["t1_m2d"] = f"Trends index, annual mean, {_h['ing_y0']} vs {_h['ing_y1']}"
-        S["t1_c3h"] = ("Rakuten Ichiba: reviews, rating and price for each genre's "
+        S["t1_c3h"] = ("Rakuten Ichiba: rating and median price for each genre's "
                        "3,000 most-reviewed items")
         S["t1_c2h"] = (
             f"Niacinamide search rose from {_h['nia_pre']} to {_h['nia_post']} on the Trends "
@@ -510,7 +510,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"{_h['conv_p0']}年より{_h['conv_p1']}年のほうが多い。")
         S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
         S["t1_m2d"] = f"トレンド指数の年平均、{_h['ing_y0']}年と{_h['ing_y1']}年"
-        S["t1_c3h"] = "楽天市場：各ジャンルのレビュー数上位3,000商品のレビュー数・評価・価格"
+        S["t1_c3h"] = "楽天市場：各ジャンルのレビュー数上位3,000商品の評価と価格中央値"
         S["t1_c2h"] = (
             f"ナイアシンアミドの検索は{_h['ing_y0']}年{_h['nia_pre']}→{_h['ing_y1']}年"
             f"{_h['nia_post']}に上昇（トレンド指数）")
