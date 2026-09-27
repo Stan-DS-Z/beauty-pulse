@@ -138,8 +138,8 @@ STRINGS = {
 
         "t3_yttfh": "YouTube commenters write about the video; @cosme reviewers write about the product",
         "t3_yttfe": "",   # rebuilt from HEADLINE (vocab_shared, vocab_top)
-        "t3_ytreg":  "Top terms by platform — ",
-        "t3_ytregb": "YouTube: 動画 (video), 参考 (reference), 思う (think). @cosme: しっとり (moist), 毛穴 (pores), 香り (scent). The creator name <b>かずのすけ</b> ranks among the top skincare comment terms.",
+        "t3_vcols":  ["", "@cosme reviews", "YouTube comments"],
+        "t3_vkey":   "Bold: in both lists. Both lists come from one tokeniser (nouns and adjectives) and one TF-IDF, ranked by mean weight across skincare documents.",
         "t3_ytdivtitle": "← More frequent in cosmetics comments  ·  More frequent in skincare comments →",
         "t3_ytdivax":    "Term frequency, skincare comments minus cosmetics comments",
 
@@ -272,8 +272,8 @@ STRINGS = {
 
         "t3_yttfh":  "YouTubeのコメントは動画について、@cosmeのレビューは商品について書かれている",
         "t3_yttfe":  "",  # rebuilt from HEADLINE (vocab_shared, vocab_top)
-        "t3_ytreg":  "プラットフォーム別の上位語 — ",
-        "t3_ytregb": "YouTube：動画・参考・思う。@cosme：しっとり・毛穴・香り。クリエイター名<b>かずのすけ</b>がスキンケアコメントの上位語に入る。",
+        "t3_vcols":  ["", "@cosmeレビュー", "YouTubeコメント"],
+        "t3_vkey":   "太字は両方のリストにある語。両リストとも同じトークナイザー（名詞と形容詞）とTF-IDFで作り、スキンケア文書での平均重みで順位を付けた。",
         "t3_ytdivtitle": "← コスメのコメントで多い  ·  スキンケアのコメントで多い →",
         "t3_ytdivax":    "語の出現頻度、スキンケアのコメント − コスメのコメント",
 

@@ -237,3 +237,9 @@ a.bp-kf:hover .bp-kf-go { color:var(--ink); }
   .bp-kf-go { text-align:left; }
 }
 
+/* two ranked term lists, shared terms in ink */
+.bp-vocab { max-width:520px; }
+.bp-vocab td { padding:4px 10px; }
+.bp-vocab-shared { color:var(--ink); font-weight:700; }
+.bp-vocab-own { color:var(--muted); }
+

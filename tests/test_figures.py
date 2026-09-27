@@ -33,7 +33,7 @@ def frames():
         ing=data.load_ingredient_surge(A), sku=data.load_sku_treemap(A),
         grp=df_grp, px_kg=px_kg, val_all=val_all,
         att=data.load_attention_annual(A), curve=data.load_cosine_sizecurve(A),
-        bc=data.load_blockc(A), ch=data.load_yt_channels(A), tfidf=data.load_yt_tfidf(A),
+        bc=data.load_blockc(A), ch=data.load_yt_channels(A),
         umap=data.load_umap(A))
 
 
@@ -61,7 +61,6 @@ def cases(f, H, L, lang, S, B=None):
         "fig_blockc": lambda: [figures.fig_blockc(
             f["bc"], next(iter(figures.blockc_window_options(S))), S)],
         "fig_yt_channels": lambda: [figures.fig_yt_channels(f["ch"])],
-        "fig_yt_tfidf": lambda: [figures.fig_yt_tfidf(f["tfidf"], S)],
         "fig_umap": lambda: [figures.fig_umap(f["umap"], figures.umap_year_options()[0], S)],
         "fig_brief_portfolio": lambda: [figures.fig_brief_portfolio(B, S)],
         "fig_brief_actives": lambda: [figures.fig_brief_actives(B, S)],

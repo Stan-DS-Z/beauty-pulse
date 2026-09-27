@@ -75,12 +75,19 @@ def _youtube_channels(S, d):
 
 
 def _youtube_terms(S, d):
-    try:
-        df = d.frame("yt_tfidf")
-    except FileNotFoundError:
-        return [ui.info("nb07_yt_tfidf.csv not found — run NB06 Section 6 to generate it.")]
-    return [ui.graph("dc-fig-yt-div", figures.fig_yt_tfidf(df, S)),
-            ui.note(S["t3_ytreg"], S["t3_ytregb"], "muted")]
+    """The two top-30 lists side by side, rank by rank; a term in both lists
+    is set in ink and bold, the rest in grey."""
+    df = d.frame("vocab_overlap")
+    cols = {src: g.set_index("rank") for src, g in df.groupby("source")}
+    cell = lambda r: html.Td(r["term"], className="bp-vocab-shared" if r["in_both"]   # noqa: E731
+                             else "bp-vocab-own")
+    head = html.Thead(html.Tr([html.Th(h) for h in S["t3_vcols"]]))
+    body = html.Tbody([html.Tr([html.Td(rank, className="num muted"),
+                                cell(cols["cosme"].loc[rank]), cell(cols["youtube"].loc[rank])])
+                       for rank in cols["cosme"].index])
+    return [html.Div(html.Table([head, body], className="bp-table bp-vocab"),
+                     className="bp-tablewrap"),
+            ui.caption(S["t3_vkey"])]
 
 
 def build(lang, d):

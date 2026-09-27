@@ -499,5 +499,7 @@ def load_attention_monthly(ASSETS: Path, cutoff=None):
     return cut_months(pd.read_csv(ASSETS / "nb04b_attention_monthly.csv"), cutoff)
 
 
-def load_yt_tfidf(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb07_yt_tfidf.csv")
+def load_vocab_overlap(ASSETS: Path):
+    """The two top-N skincare term lists, @cosme and YouTube, one method for
+    both (build_vocab_overlap.py): term, source, rank, in_both."""
+    return pd.read_csv(ASSETS / "vocab_overlap.csv")

@@ -1,4 +1,4 @@
-"""Phrasings of retired measures, shared by the docs test and the Shift page test.
+"""Phrasings of retired measures, shared by the docs test and the page tests.
 
 Each entry is (regex, what it retired, where). A measure leaves this site when
 its revision retires it; these keep its wording from coming back. The sweep in
@@ -31,6 +31,10 @@ RETIRED = [
      "pooled cross-period TF-IDF delta and its cross-checks (NB06 §1; Revision 2)"),
     (r"Avg review length|Review Engagement Quality",
      "@cosme review length compared across years (Source roles)"),
+    (r"動画 \(video\), 参考 \(reference\), 思う \(think\)|しっとり \(moist\)|"
+     r"動画・参考・思う|Top terms by platform|プラットフォーム別の上位語",
+     "Discovery's register note on NB06 §6's term lists, whose tokeniser kept verbs "
+     "(Revision 15)"),
 ]
 
 # The sources a "moved toward skincare after 2020" sentence may not cite: the

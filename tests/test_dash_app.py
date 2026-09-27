@@ -153,6 +153,27 @@ def test_shift_page_uses_no_retired_measure(pages, lang):
         assert not re.search(NOT_SHIFT_EVIDENCE, s), s
 
 
+@pytest.mark.parametrize("path", list(PAGES))
+@pytest.mark.parametrize("lang", ["en", "jp"])
+def test_no_page_uses_a_retired_phrase(pages, path, lang):
+    from retired_phrases import RETIRED
+    text = _text(_tree(pages[path].TREES[lang]))
+    hits = [(why, m.group(0)) for pat, why in RETIRED
+            for m in re.finditer(pat, text, re.I)]
+    assert not hits, hits
+
+
+def test_discovery_lists_both_top_terms_with_the_shared_ones_marked(pages):
+    import data_cache
+    d = data_cache.load()
+    df = d.frame("vocab_overlap")
+    tree = json.dumps(_tree(pages["/discovery"].TREES["en"]), ensure_ascii=False)
+    for _, r in df.iterrows():
+        cls = "bp-vocab-shared" if r["in_both"] else "bp-vocab-own"
+        assert f'"children": "{r["term"]}", "className": "{cls}"' in tree, r["term"]
+    assert d.S["en"]["t3_yttfe"].startswith(f"{int(df[df.source == 'cosme'].in_both.sum())} of")
+
+
 # ── One callback per control, with a non-default value ─────────────────────
 
 def test_crossover_slider_sets_the_visible_range(client, pages):
