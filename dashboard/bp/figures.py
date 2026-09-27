@@ -968,14 +968,15 @@ def fig_market_lines(M, S):
     fig = go.Figure(go.Bar(
         x=rows["value_y1"], y=[names[li] for li in rows.index], orientation="h",
         marker=dict(color=[C["ink"] if li in M["lead"] else _GREY for li in rows.index]),
-        text=vs, textposition="outside", cliponaxis=False,
+        text=[f"{d:+.0f}%" for d in rows["value_d"]], textposition="outside", cliponaxis=False,
         textfont=dict(size=11, color=C["muted"]),
         customdata=np.stack([list(rows.index), more], axis=-1),
         hovertemplate=(f"<b>%{{y}}</b> %{{customdata[0]}}<br>{S['mk_l_hover']} · "
                        "%{customdata[1]}<extra></extra>")))
     fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
-                      margin=dict(l=10, r=80, t=10, b=40),
-                      xaxis=_xax(title=dict(text=S["mk_l_x"], font=dict(size=11))),
+                      margin=dict(l=10, r=10, t=10, b=40),
+                      xaxis=_xax(title=dict(text=S["mk_l_x"], font=dict(size=11)),
+                                 range=[0, 1.2 * rows["value_y1"].max()]),
                       yaxis=_yax(automargin=True))
     return fig
 
@@ -999,9 +1000,10 @@ def fig_market_bridge(M, S):
             if S["mk_en"] else
             f"<b>%{{y}}</b><br>{name}：%{{x:+.0f}}%<extra></extra>"))
     fig.add_vline(x=0, line_width=1, line_color=C["border"])
-    fig.update_layout(**{**_base(560), "hovermode": "closest"},
-                      legend=dict(orientation="h", y=1.05, x=0),
-                      margin=dict(l=10, r=10, t=30, b=40),
+    # The exhibit note names the three markers: a legend wraps over the rows
+    # at phone width.
+    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=10, b=40),
                       xaxis=_xax(title=dict(text=S["mk_b_x"], font=dict(size=11)),
                                  ticksuffix="%", zeroline=False),
                       yaxis=_yax(automargin=True))
@@ -1033,6 +1035,7 @@ def fig_market_imports(M, S):
                            font=dict(size=11, color=C["ink"] if lead else C["muted"]))
     fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
                       margin=dict(l=10, r=100, t=20, b=30),
-                      xaxis=_xax(dtick=1),
+                      xaxis=_xax(tickformat="d", tickangle=0,
+                                 range=[f.columns[0] - 0.4, f.columns[-1] + 0.4]),
                       yaxis=_yax(S["mk_i_y"], rangemode="tozero"))
     return fig

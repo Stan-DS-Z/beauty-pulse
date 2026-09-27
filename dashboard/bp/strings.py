@@ -7,6 +7,7 @@ entry filled from the headline and launch dicts. Imports no UI framework.
 import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
+from .market import compute_market
 from .data import (LAUNCH_GATE, LAUNCH_WINDOW_START, load_ingredient_surge, load_makeup_rebound,
                    load_sku_treemap, load_trends_crossover)
 from .sources import EDITION, date_label
@@ -395,6 +396,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
     # so the prose is generated from HEADLINE rather than hardcoded — it can never
     # drift out of sync with the KPI cards or the size-curve chart.
     _h = HEADLINE
+    # The break note reads the Market page's figures, on the latest data.
+    _M = compute_market(ASSETS, None)
     if lang == "en":
         S["t2_intro"] = (
             f"Measured at equal sample sizes, skincare and cosmetics reviews shared more vocabulary "
@@ -428,21 +431,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
             f"skincare, makeup and sunscreen lines ({_h['aligned_y1']:,} 億円 in {_h['mkt_y1']}), "
             f"HS 3304 imports were {_h['imp_share_y1']}% in {_h['mkt_y1']} and "
             f"{_h['imp_share_brk']}% in {_h['mkt_break']}.")
-        S["t1_brkfn"] = (
-            "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, "
-            "units and kilograms for each product line. Yen divided by kilograms gives an average price "
-            "per kg. For 化粧水, 美容液 and 乳液 that price drops at January 2022. 化粧水 and 美容液 stay "
-            f"below their 2015–2021 range through {_MON_EN[_h['ytd_m']]} {_h['ytd_y']}; 乳液 was inside "
-            "its range in 2024 and below it in 2025. Comparing January 2022 with January 2021, shipped "
-            "value fell 38% for 化粧水 (116 → 72 億円), 34% for 美容液 (102 → 67 億円) and 40% for 乳液 "
-            "(53 → 32 億円), while モイスチャークリーム rose 6% and ファンデーション 18%. 口紅 and "
-            "アイメークアップ yen per kg also fall in 2022, with a different pattern: their kilograms rose "
-            "149% and 44% while shipped value rose 49% and 11%. A change in which companies or products "
-            "are counted would produce the skincare pattern; METI has published no such change and no "
-            "link coefficients for cosmetics. A skincare yen comparison between a year before 2022 and a "
-            f"year after includes the drop, so skincare yen changes on this tab are measured within "
-            f"2019–2021 or within 2022–{_h['mkt_y1']}. {_h['ytd_y']} figures come from METI's monthly "
-            "確報 release.")
+        S["t1_brkfn"] = _break_note_en(_M)
         S["f1_body"] = (
             f"Google Trends: {_pair(_h, 'en')[0].lower() + _pair(_h, 'en')[1:]} "
             f"Niacinamide search rose from "
@@ -543,18 +532,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
             f"経産省の皮膚用・仕上用・日やけ止めの出荷金額（{_h['mkt_y1']}年{_h['aligned_y1']:,}億円）に対し、"
             f"HS 3304の輸入は{_h['mkt_y1']}年に{_h['imp_share_y1']}%、{_h['mkt_break']}年に"
             f"{_h['imp_share_brk']}%。")
-        S["t1_brkfn"] = (
-            "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。"
-            "金額を重量で割るとkgあたりの平均単価になる。化粧水・美容液・乳液では、この単価が2022年1月に下落する。"
-            f"化粧水と美容液は{_h['ytd_y']}年{_h['ytd_m']}月まで2015〜2021年の範囲を下回り、乳液は2024年に範囲内、"
-            "2025年に範囲を下回った。2021年1月と2022年1月を比べると、出荷金額は化粧水が38%（116→72億円）、"
-            "美容液が34%（102→67億円）、乳液が40%（53→32億円）減少し、モイスチャークリームは6%、"
-            "ファンデーションは18%増加した。口紅とアイメークアップのkg単価も2022年に下落するが形が異なり、"
-            "重量が149%、44%増えた一方で出荷金額の増加は49%、11%だった。集計対象の企業や製品が変わった場合に"
-            "スキンケアのこの形になるが、経産省はそのような変更も化粧品のリンク係数も公表していない。"
-            "2022年より前の年と後の年を比べるスキンケアの金額にはこの下落が含まれるため、このタブのスキンケアの"
-            f"金額変化は2019〜2021年または2022〜{_h['mkt_y1']}年の内側で測っている。{_h['ytd_y']}年の数値は"
-            "経産省の月次確報による。")
+        S["t1_brkfn"] = _break_note_ja(_M)
         S["f1_body"] = (
             f"Googleトレンド：{_pair(_h, 'jp')}"
             f"ナイアシンアミドの検索は{_h['nia_pre']}→{_h['nia_post']}に上昇。"
@@ -902,7 +880,7 @@ def _brief_ja(B, H, REG):
         f"比率、括弧内は件数。出荷ピーク：{y0}〜{y1}年の季節指数が最も高い2カ月。")
     out["b_t_cols"] = [("カテゴリ", ""), ("経産省の品目", ""), (f"{y1}年の金額", "億円"),
                        ("金額", f"{y0}→{y1}年"), ("個数", f"{y0}→{y1}年"),
-                       ("1個あたり金額", f"{y0}→{y1}年"), ("金額", f"{H['mkt_y0']}→{y1}年"),
+                       ("1個あたり金額", f"{y0}→{y1}年"),
                        ("検索", f"{y0}→{y1}年、ポイント"), ("リリース構成比", f"{y0}→{y1}年"),
                        ("韓国系発行元", f"{y1}年リリースに占める比率"), ("出荷ピーク", "月")]
     out["b_t_partial"] = "一部"
@@ -1020,7 +998,7 @@ def _brief_en(B, H, REG):
         f"months with the highest seasonal index, {y0}–{y1}.")
     out["b_t_cols"] = [("Category", ""), ("METI line", ""), (f"Value {y1}", "¥億"),
                        ("Value", f"{y0}→{y1}"), ("Units", f"{y0}→{y1}"),
-                       ("Value / unit", f"{y0}→{y1}"), ("Value", f"{H['mkt_y0']}→{y1}"),
+                       ("Value / unit", f"{y0}→{y1}"),
                        ("Search", f"{y0}→{y1}, pts"), ("Launch share", f"{y0} → {y1}"),
                        ("Korean issuers", f"share of {y1} launches"), ("Shipment peak", "months")]
     out["b_t_partial"] = "partial"
@@ -1158,9 +1136,9 @@ def _market_en(M, REG):
     bu = [_line(li, "en", False) for li in M["by_units"]]
     out["mk_b_h"] = (f"{_and(fu)} grew through value per unit on fewer units; {_and(bu)} grew "
                      "mostly through units")
-    out["mk_b_e"] = (f"Change {y1} against {y0}: units (販売個数), value per unit (販売金額 ÷ "
-                     "販売個数) and shipped value. Value per unit moves with price and with "
-                     "product mix.")
+    out["mk_b_e"] = (f"Change {y1} against {y0}. Circle: units (販売個数). Diamond: value per "
+                     "unit (販売金額 ÷ 販売個数). Vertical mark: shipped value. Value per unit moves "
+                     "with price and with product mix.")
     out["mk_b_names"] = ["Units", "Value per unit", "Shipped value"]
     out["mk_b_x"] = f"Change {y1} vs {y0} (%)"
 
@@ -1189,40 +1167,8 @@ def _market_en(M, REG):
         f"country of origin, {I['y0']}–{I['y1']}. All HS 3304 sub-codes, including 3304.99-010.")
     out["mk_i_y"] = "億円"
 
-    J, R = B["jan"], B["range"]
-    below = [li for li, r in R.items() if not r["inside"] and not r["above"]]
-    other = [li for li in R if li not in below]
-    rng = []
-    if below:
-        rng.append(f"{_and(below)} stay below {'their' if len(below) > 1 else 'its'} "
-                   f"{B['pre'][0]}–{B['pre'][1]} range through {_MON_EN[lm]} {ly}")
-    for li in other:
-        r = R[li]
-        part = []
-        if r["inside"]:
-            part.append(f"inside its range in {_years_en(r['inside'])}")
-        if r["above"]:
-            part.append(f"above it in {_years_en(r['above'])}")
-        rng.append(f"{li} was {' and '.join(part)} and below it in the other years")
-    jan = lambda li: f"{abs(J[li][2]):.0f}% for {li} ({J[li][0]:.0f} → {J[li][1]:.0f} 億円)"  # noqa: E731
-    ctl = [li for li in J if li not in B["drop"]]
-    (k1, k2), kg = list(B["kg"]), B["kg"]
     out["mk_fn_t"] = f"About the January {y0} break"
-    out["mk_fn_b"] = (
-        "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, "
-        "units and kilograms for each product line. Yen divided by kilograms gives an average "
-        f"price per kg. For {_and(B['drop'])} that price drops at January {y0}. "
-        f"{'; '.join(rng)}. Comparing January {y0} with January {y0 - 1}, shipped value fell "
-        f"{_and(jan(li) for li in B['drop'])}, while "
-        f"{_and(f'{li} rose {J[li][2]:.0f}%' if i == 0 else f'{li} {J[li][2]:.0f}%' for i, li in enumerate(ctl))}. "
-        f"{k1} and {k2} yen per kg also fall in {y0}, with a different pattern: their kilograms "
-        f"rose {kg[k1][0]:.0f}% and {kg[k2][0]:.0f}% while shipped value rose {kg[k1][1]:.0f}% "
-        f"and {kg[k2][1]:.0f}%. A change in which companies or products are counted would "
-        "produce the skincare pattern; METI has published no such change and no link "
-        "coefficients for cosmetics. A skincare yen comparison between a year before "
-        f"{y0} and a year after includes the drop, so skincare yen changes are measured within "
-        f"{base}–{y0 - 1} or within {y0}–{y1}."
-        + (f" {Y['year']} figures come from METI's monthly 確報 release." if Y else ""))
+    out["mk_fn_b"] = _break_note_en(M)
 
     out["mk_src_meti"] = source_line(["meti"], REG)
     out["mk_src_trade"] = source_line(["trade"], REG)
@@ -1272,8 +1218,8 @@ def _market_ja(M, REG):
     bu = [_line(li, "jp") for li in M["by_units"]]
     out["mk_b_h"] = (f"{_and_ja(fu)}は個数が減るなか1個あたり金額で伸び、"
                      f"{_and_ja(bu)}は主に個数で伸びた")
-    out["mk_b_e"] = (f"{y0}年比の{y1}年の変化：個数（販売個数）、1個あたり金額（販売金額÷販売個数）、"
-                     "出荷金額。1個あたり金額は価格と製品構成の両方で動く。")
+    out["mk_b_e"] = (f"{y0}年比の{y1}年の変化。丸：個数（販売個数）、ひし形：1個あたり金額"
+                     "（販売金額÷販売個数）、縦線：出荷金額。1個あたり金額は価格と製品構成の両方で動く。")
     out["mk_b_names"] = ["個数", "1個あたり金額", "出荷金額"]
     out["mk_b_x"] = f"{y0}→{y1}年の変化（%）"
 
@@ -1300,6 +1246,62 @@ def _market_ja(M, REG):
         f"原産国別の輸入、{I['y0']}〜{I['y1']}年。HS 3304の全細分（3304.99-010を含む）。")
     out["mk_i_y"] = "億円"
 
+    out["mk_fn_t"] = f"{y0}年1月の断層について"
+    out["mk_fn_b"] = _break_note_ja(M)
+
+    out["mk_src_meti"] = source_line(["meti"], REG, "ja")
+    out["mk_src_trade"] = source_line(["trade"], REG, "ja")
+    return out
+
+
+
+def _break_note_en(M):
+    """The note on METI's January 2022 break, in English, worded
+    from market.compute_market: the Market page and the Shift page both carry it."""
+    y0, y1 = M["window"]
+    base, Y, B = M["base"], M["ytd"], M["brk"]
+    ly, lm = M["last_month"]
+    J, R = B["jan"], B["range"]
+    below = [li for li, r in R.items() if not r["inside"] and not r["above"]]
+    other = [li for li in R if li not in below]
+    rng = []
+    if below:
+        rng.append(f"{_and(below)} stay below {'their' if len(below) > 1 else 'its'} "
+                   f"{B['pre'][0]}–{B['pre'][1]} range through {_MON_EN[lm]} {ly}")
+    for li in other:
+        r = R[li]
+        part = []
+        if r["inside"]:
+            part.append(f"inside its range in {_years_en(r['inside'])}")
+        if r["above"]:
+            part.append(f"above it in {_years_en(r['above'])}")
+        rng.append(f"{li} was {' and '.join(part)} and below it in the other years")
+    jan = lambda li: f"{abs(J[li][2]):.0f}% for {li} ({J[li][0]:.0f} → {J[li][1]:.0f} 億円)"  # noqa: E731
+    ctl = [li for li in J if li not in B["drop"]]
+    (k1, k2), kg = list(B["kg"]), B["kg"]
+    return (
+        "METI's 生産動態統計 collects monthly shipments from cosmetics manufacturers: yen value, "
+        "units and kilograms for each product line. Yen divided by kilograms gives an average "
+        f"price per kg. For {_and(B['drop'])} that price drops at January {y0}. "
+        f"{'; '.join(rng)}. Comparing January {y0} with January {y0 - 1}, shipped value fell "
+        f"{_and(jan(li) for li in B['drop'])}, while "
+        f"{_and(f'{li} rose {J[li][2]:.0f}%' if i == 0 else f'{li} {J[li][2]:.0f}%' for i, li in enumerate(ctl))}. "
+        f"{k1} and {k2} yen per kg also fall in {y0}, with a different pattern: their kilograms "
+        f"rose {kg[k1][0]:.0f}% and {kg[k2][0]:.0f}% while shipped value rose {kg[k1][1]:.0f}% "
+        f"and {kg[k2][1]:.0f}%. A change in which companies or products are counted would "
+        "produce the skincare pattern; METI has published no such change and no link "
+        "coefficients for cosmetics. A skincare yen comparison between a year before "
+        f"{y0} and a year after includes the drop, so skincare yen changes are measured within "
+        f"{base}–{y0 - 1} or within {y0}–{y1}."
+        + (f" {Y['year']} figures come from METI's monthly 確報 release." if Y else ""))
+
+
+def _break_note_ja(M):
+    """The note on METI's January 2022 break, in Japanese, worded
+    from market.compute_market: the Market page and the Shift page both carry it."""
+    y0, y1 = M["window"]
+    base, Y, B = M["base"], M["ytd"], M["brk"]
+    ly, lm = M["last_month"]
     J, R = B["jan"], B["range"]
     below = [li for li, r in R.items() if not r["inside"] and not r["above"]]
     other = [li for li in R if li not in below]
@@ -1316,8 +1318,7 @@ def _market_ja(M, REG):
         rng.append(f"{li}は{'、'.join(part)}、それ以外の年は範囲を下回った")
     ctl = [li for li in J if li not in B["drop"]]
     (k1, k2), kg = list(B["kg"]), B["kg"]
-    out["mk_fn_t"] = f"{y0}年1月の断層について"
-    out["mk_fn_b"] = (
+    return (
         "経産省の生産動態統計は、化粧品メーカーから品目ごとの出荷金額・個数・重量（kg）を毎月集計している。"
         "金額を重量で割るとkgあたりの平均単価になる。"
         f"{'・'.join(B['drop'])}では、この単価が{y0}年1月に下落する。{'、'.join(rng)}。"
@@ -1333,7 +1334,3 @@ def _market_ja(M, REG):
         f"この下落が含まれるため、皮膚用の金額変化は{base}〜{y0 - 1}年または{y0}〜{y1}年の内側で"
         "測る。"
         + (f"{Y['year']}年の数値は経産省の月次確報による。" if Y else ""))
-
-    out["mk_src_meti"] = source_line(["meti"], REG, "ja")
-    out["mk_src_trade"] = source_line(["trade"], REG, "ja")
-    return out

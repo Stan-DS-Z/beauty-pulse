@@ -92,13 +92,12 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
         serum_vpu=100 * ((val.loc[serum, y1] / units.loc[serum, y1])
                          / (val.loc[serum, y0] / units.loc[serum, y0]) - 1))
 
-    # ── Table: the funnel rows plus units, value per unit, the base year,
-    # Korean issuers' share and the shipment peak
+    # ── Table: the funnel rows plus units, value per unit, Korean issuers'
+    # share and the shipment peak
     line = rows["meti_line"]
     rows["units_d"] = [100 * (units.loc[li, y1] / units.loc[li, y0] - 1) for li in line]
     rows["vpu_d"] = [100 * ((val.loc[li, y1] / units.loc[li, y1])
                             / (val.loc[li, y0] / units.loc[li, y0]) - 1) for li in line]
-    rows["base_d"] = [100 * (val.loc[li, y1] / val.loc[li, base] - 1) for li in line]
 
     core = _core(ASSETS, cutoff)
     cat1 = core[(core["year"] == y1) & (core["category"] != "")]

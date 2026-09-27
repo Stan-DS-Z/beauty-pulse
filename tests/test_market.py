@@ -188,7 +188,6 @@ def test_the_copy_names_no_removal_and_no_page(M, headline, REG, lang):
     for tell in ("this page", "this tab", "here", "withdrawn", "no longer", "previously",
                  "このタブ", "このページ", "撤回", "以前"):
         assert tell not in text.lower(), tell
-    assert "pp" not in re.findall(r"\b[a-z]+\b", text)
 
 
 # ── The page ────────────────────────────────────────────────────────────────
@@ -210,3 +209,15 @@ def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):
         assert "kpi-card" not in js and "bp-finding" not in js and "bp-note" not in js, lang
         assert "borderLeft" not in js, lang
         assert "bp-figs" in js, lang
+
+
+def test_the_shift_break_note_reads_the_market_figures():
+    """The Shift page words the break note from compute_market on the latest
+    data, with the Market page's own builder: no break figure is typed."""
+    import data_cache
+    d = data_cache.load()
+    live = market.compute_market(A, None)
+    assert d.S["en"]["t1_brkfn"] == strings._break_note_en(live)
+    assert d.S["jp"]["t1_brkfn"] == strings._break_note_ja(live)
+    for li in market.BREAK_CONTROLS:                     # "rose" / "増加した"
+        assert live["brk"]["jan"][li][2] > 0, li

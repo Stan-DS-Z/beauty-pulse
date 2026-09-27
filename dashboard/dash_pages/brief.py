@@ -57,7 +57,6 @@ def category_table(B, S):
             html.Td(ui.div_bar(r["ship_d"] / dmax, _signed(r["ship_d"])), className="num barcell"),
             html.Td(_signed(r["units_d"]), className="num"),
             html.Td(_signed(r["vpu_d"]), className="num"),
-            html.Td(_signed(r["base_d"]), className="num muted"),
             html.Td(_signed(r["search_d"], ""), className="num"),
             html.Td(f"{r['launch_s0']:.1f} → {r['launch_s1']:.1f}%", className="num"),
             html.Td([f"{r['kr_s']:.0f}% " if r["kr_n"] else "— ",
