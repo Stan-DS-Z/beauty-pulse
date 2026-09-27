@@ -72,7 +72,7 @@ All data self-sourced and self-collected. No Kaggle datasets.
 |---|---|---|
 | @cosme | Consumer reviews — used for *language* analysis | <!--f:cosme_reviews-->45,510<!--/f--> reviews |
 | Rakuten Ichiba API | Product catalog, prices, review counts | <!--f:rakuten_skus-->47,380<!--/f--> SKUs · <!--f:weekly_rows-->637,811<!--/f--> weekly rows |
-| Amazon | Name, price, aggregate rating, review count | <!--f:amazon_asins-->161<!--/f--> ASINs · <!--f:amazon_reviews-->1,076<!--/f--> reviews |
+| Amazon | Name, price, aggregate rating, review count. Collected; no finding or chart uses it | <!--f:amazon_asins-->161<!--/f--> ASINs · <!--f:amazon_reviews-->1,076<!--/f--> reviews |
 | Google Trends JP | Monthly search interest (2019–2026) | <!--f:trends_rows-->2,024<!--/f--> rows |
 | YouTube Data API v3 | Beauty video comments | <!--f:yt_videos-->296<!--/f--> videos · <!--f:yt_comments-->74,679<!--/f--> comments |
 

@@ -75,13 +75,6 @@ lens:
   active_group: "all"
   benchmark_groups: []
 
-# ── NLP settings ───────────────────────────────────────────────────────────
-nlp:
-  tokenizer: "sudachipy"               # primary: sudachipy | fallback: mecab
-  min_review_chars: 20                 # filter stub reviews below this length
-  tfidf_time_windows: "6M"            # 6-month windows for NB06 TF-IDF
-  min_term_frequency: 5               # ignore terms below this count
-
 # ── Exclusions ─────────────────────────────────────────────────────────────
 # Source of truth: config/keywords.xlsx → exclusions sheet.
 # Duplicated here for runtime convenience (avoid Excel read on every call).

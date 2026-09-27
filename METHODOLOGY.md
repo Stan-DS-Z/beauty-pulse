@@ -86,6 +86,12 @@ Google Trends scales each request to its own maximum. Stored series had been joi
 - **改訂1の比較 / The Revision 1 comparison.** 1回のリクエストで測ると、化粧品の検索は2019→2025年で-33%（修正前-32%）、化粧品とスキンケアの差は62.2→30.8ポイント（-50%）、スキンケア対化粧品の検索比は0.28→0.47（修正前0.31→0.53）。改訂1の記述はそのまま残す。 / Measured in one request, 化粧品 search 2019→2025 is -33% (-32% before), the 化粧品 − スキンケア gap is 62.2 → 30.8 points (-50%), and the skincare-to-cosmetics ratio is 0.28 → 0.47 (0.31 → 0.53 before). Revision 1 stays as written.
 - **市場層の検索 / Search in the market layer.** カテゴリ別の検索変化（美容液・化粧水・乳液・ファンデーション・口紅・アイシャドウ）は、各語の自身の年との比較のみであるため、block_Aから取る。 / Per-category search changes are each term against its own earlier years, so they now come from block_A.
 - **公開DB / Public DB.** 企業別のブロック（block_D_kao・block_E_loreal・block_F_shiseido）は公開DBに含めない。`trends_weekly`は2,024行。 / The per-company blocks no longer ship in the public DB; `trends_weekly` has 2,024 rows.
+
+**改訂10 — 本文のないAmazonレビューを削除（2026年9月27日）/ Revision 10 — Amazon reviews with no text removed (27 September 2026)**  
+データベースのAmazonレビュー1,124件のうち48件は本文が空だった。45件は2026年6月13日の取得分で、Amazonがレビューのマークアップを変えた後に旧セレクタで取得したもの、3件はそれ以前のファイルで既に空だった。48件を削除し、公開DBを再構築した。Amazonのレビューは1,076件。  
+Of the 1,124 Amazon reviews in the database, 48 had no text. 45 came from the 13 June 2026 pull, made with the old selectors after Amazon changed its review markup; 3 were already empty in the earlier files. The 48 are removed and the public DB rebuilt; Amazon holds 1,076 reviews.
+- **発見・チャート / Findings and charts.** Amazonの商品にはカテゴリがなく、カテゴリで集計する分析にAmazonは含まれていなかった。発見とチャートは変わらない。 / Amazon products carry no category, so no analysis that aggregates by category included Amazon. No finding or chart changes.
+- **取込 / Ingest.** `src/ingest.py`は本文のないAmazonレビューを取り込まない。 / `src/ingest.py` no longer ingests an Amazon review with no text.
 ---
 
 ## 方法論的注意点 / Methodological Caveats
@@ -115,8 +121,8 @@ Google Trends scales each request to its own maximum. Stored series had been joi
    Search volumes are not comparable across starting terms. Metrics are normalised within each starting term; treemaps show relative signal strength.
 
 7. **ソースの非独立性 / Source non-independence**  
-   @cosmeの運営会社アイスタイル（istyle）は2022年にAmazonおよび三井物産と資本業務提携しており（Amazonが筆頭株主）、本プロジェクトの@cosmeレビューとAmazon JPデータは厳密には独立でない。楽天カタログ・Googleトレンド・YouTubeは@cosmeから独立している。  
-   @cosme is operated by istyle, which entered a capital/business alliance with Amazon and Mitsui in 2022 (Amazon is its largest shareholder) — so this project's @cosme reviews and Amazon JP data are not strictly independent of each other. The Rakuten catalog, Google Trends and YouTube are independent of @cosme.
+   @cosmeの運営会社アイスタイル（istyle）は2022年にAmazonおよび三井物産と資本業務提携している（Amazonが筆頭株主）。Amazon JPのデータは収集しているが、どの発見・チャートにも使っていない。Amazonの商品にはカテゴリがなく、カテゴリで集計する分析はすべてAmazonを含まない。楽天カタログ・Googleトレンド・YouTubeは@cosmeから独立している。  
+   @cosme is operated by istyle, which entered a capital and business alliance with Amazon and Mitsui in 2022; Amazon is its largest shareholder. Amazon JP data is collected, but no finding or chart uses it: Amazon products carry no category, and every analysis that aggregates by category leaves them out. The Rakuten catalog, Google Trends and YouTube are independent of @cosme.
 
 8. **SudachiPy Mode Cの複合語分割 / Compound word splitting**  
    ナイアシンアミド → ナイアシン + アミドに分割される。成分検出はTF-IDF経由ではなく生テキスト検索で実施。  
