@@ -7,9 +7,10 @@ figure. src/prtimes.coverage reads every fetch instead: the first fetch's reach
 is where the stored history starts, and a later fetch in which every item was
 new is a gap.
 
-src/prtimes imports requests, which CI does not install, so the module is
-imported lazily and these tests skip there. The store test also needs the
-gitignored data/prtimes.db.
+src.prtimes is imported directly, not through importorskip: its dependencies
+are in requirements-dev.txt, so a missing one fails CI instead of skipping these
+tests unseen. Only the store test skips, because it needs the gitignored
+data/prtimes.db.
 """
 
 import sqlite3
@@ -24,7 +25,8 @@ DB = ROOT / "data" / "prtimes.db"
 
 @pytest.fixture(scope="module")
 def pt():
-    return pytest.importorskip("src.prtimes")
+    from src import prtimes
+    return prtimes
 
 
 def _log(rows):

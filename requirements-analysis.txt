@@ -22,6 +22,7 @@ pytrends
 seaborn                  # src/viz.py, NB03, NB04, NB05
 squarify                 # NB05_the_shift, NB06_discovery
 python-dotenv            # src/utils.py
+tenacity                 # src/utils.py: get_with_retry; undeclared until 2026-09-27
 PyYAML                   # src/config.py
 google-api-python-client # NB01e YouTube pulls (scrape + recon)
 ipython                  # IPython.display in NB04-NB07 and the three brand lenses

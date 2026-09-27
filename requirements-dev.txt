@@ -1,5 +1,12 @@
-# Test dependencies. The suite needs only the dashboard stack, so install this
-# on top of requirements.txt — not requirements-analysis.txt, whose heavy
-# modelling deps (xgboost, umap-learn, hdbscan) no test touches.
+# Test dependencies. The suite needs the dashboard stack plus what src.prtimes
+# imports, so install this on top of requirements.txt — not
+# requirements-analysis.txt, whose heavy modelling deps (xgboost, umap-learn,
+# hdbscan) no test touches.
 -r requirements.txt
 pytest==9.1.1
+# tests/test_prtimes_coverage.py imports src.prtimes, and src/utils.py imports
+# these three at module level. Until 2026-09-27 none was listed here, so CI
+# skipped those tests without failing. Pinned at the versions the Mac runs.
+requests==2.34.2
+tenacity==9.1.4
+python-dotenv==1.2.3
