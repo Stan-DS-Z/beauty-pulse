@@ -27,6 +27,15 @@ def test_the_docs_publish_no_sku_ratio(docs):
     assert not found, f"docs carry ratios {found}"
 
 
+def test_the_docs_use_no_retired_measure(docs):
+    """No phrasing of a retired measure in README or METHODOLOGY (outside the
+    revision log, which records them). See tests/retired_phrases.py."""
+    from retired_phrases import RETIRED
+    hits = [(why, m.group(0)) for pat, why in RETIRED
+            for m in re.finditer(pat, docs, re.I)]
+    assert not hits, hits
+
+
 def test_ingredient_levels_match(docs, headline):
     """"A→B" level pairs must be the niacinamide and retinol endpoints."""
     # (?<![\d.]) / (?![\d.]) so "0.31→0.53" is not read as 31→0.

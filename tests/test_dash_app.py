@@ -137,6 +137,22 @@ def test_shift_page_publishes_no_rakuten_sku_ratio(pages, app, lang):
     assert date_label(snap, "day", "en" if lang == "en" else "ja") in text
 
 
+@pytest.mark.parametrize("lang", ["en", "jp"])
+def test_shift_page_uses_no_retired_measure(pages, lang):
+    """No retired measure's phrasing on the Shift page, and the "after 2020 …
+    moved toward skincare" sentence cites neither Rakuten (no data before
+    2026) nor @cosme reviews (review-volume share retired, Revision 2)."""
+    from retired_phrases import NOT_SHIFT_EVIDENCE, RETIRED
+    text = _text(_tree(pages["/shift"].TREES[lang]))
+    hits = [(why, m.group(0)) for pat, why in RETIRED
+            for m in re.finditer(pat, text, re.I)]
+    assert not hits, hits
+    shift = re.findall(r"After 2020[^.]*moved toward skincare\.|2020年以降[^。]*比重を高めた。", text)
+    assert shift, "the intro's shift sentence was not found"
+    for s in shift:
+        assert not re.search(NOT_SHIFT_EVIDENCE, s), s
+
+
 # ── One callback per control, with a non-default value ─────────────────────
 
 def test_crossover_slider_sets_the_visible_range(client, pages):

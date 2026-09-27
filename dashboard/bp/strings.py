@@ -406,8 +406,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"index, {_h['ing_y0']}→{_h['ing_y1']}")
         S["f1_title"] = "Finding 1 — Makeup fell in search and in shipped value; skincare shipped value steps down in 2022"
         S["t1_intro"] = (
-            "After 2020, Japanese beauty search, @cosme reviews and YouTube comments moved toward "
-            "skincare. METI shipment statistics record the makeup side in yen: foundation "
+            "After 2020, Japanese beauty search and YouTube comments moved toward skincare. "
+            "METI shipment statistics record the makeup side in yen: foundation "
             f"shipped value fell {abs(_h['found_d'])}% and lipstick {abs(_h['lip_d'])}% from "
             f"{_h['mkt_y0']} to {_h['mkt_y1']}. METI's skincare lines step down in January "
             f"{_h['mkt_break']}, and serum shipped value falls when measured across that step and rises "
@@ -522,7 +522,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"{_h['nia_post']}に上昇（トレンド指数）")
         S["f1_title"] = "発見1 —— メイクは検索・出荷金額ともに減少、スキンケアの出荷金額は2022年に段差"
         S["t1_intro"] = (
-            "2020年以降、美容の検索、@cosmeレビュー、YouTubeコメントはスキンケアの比重を高めた。"
+            "2020年以降、美容の検索とYouTubeコメントはスキンケアの比重を高めた。"
             f"経産省の出荷統計はメイク側を金額で記録しており、{_h['mkt_y0']}年から{_h['mkt_y1']}年にかけて"
             f"ファンデーションの出荷金額は{abs(_h['found_d'])}%、口紅は{abs(_h['lip_d'])}%減少した。"
             f"スキンケアの品目は{_h['mkt_break']}年1月に段差があり、美容液の出荷金額は段差をまたいで測ると減少、"
