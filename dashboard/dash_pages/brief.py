@@ -50,7 +50,7 @@ def category_table(B, S):
         body.append(html.Tr([
             html.Td([html.Span(className="bp-swatch",
                                style={"background": GROUP_COLOUR[r["group"]]}),
-                     LAUNCH_CAT[key][0]]),
+                     LAUNCH_CAT[key][S["b_catix"]]]),
             html.Td([r["meti_line"], *tag], className="bp-jp"),
             html.Td(ui.cell_bar(r["value_y1"] / vmax, f"{r['value_y1']:,.0f}"),
                     className="num barcell"),

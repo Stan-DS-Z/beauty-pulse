@@ -946,12 +946,20 @@ def fig_brief_portfolio(BRIEF, S):
     """Each category's launch-share change against its shipped-value change."""
     rows = BRIEF["rows"]
     y0, y1 = BRIEF["window"]
+    ix = S["b_catix"]
+    hover = (f"<b>%{{text}}</b> %{{customdata[0]}}<br>Shipped value {y0}→{y1}: %{{x:+.0f}}% "
+             f"(¥%{{customdata[1]:,}}億 in {y1})<br>Launch share %{{customdata[4]}}% → "
+             "%{customdata[5]}% (%{customdata[2]} → %{customdata[3]} releases)<extra></extra>"
+             if ix == 0 else
+             f"<b>%{{text}}</b><br>出荷金額 {y0}→{y1}年：%{{x:+.0f}}%（{y1}年 %{{customdata[1]:,}}"
+             "億円）<br>リリース構成比 %{customdata[4]}% → %{customdata[5]}%（%{customdata[2]}件 → "
+             "%{customdata[3]}件）<extra></extra>")
     fig = go.Figure()
     for group in ("skincare", "sunscreen", "makeup"):
         g = rows[rows["group"] == group]
         fig.add_trace(go.Scatter(
             x=g["ship_d"], y=g["launch_d"], mode="markers+text", name=S["b_p_groups"][group],
-            text=[LAUNCH_CAT[k][0] for k in g.index],
+            text=[LAUNCH_CAT[k][ix] for k in g.index],
             textposition=[_PORTFOLIO_TEXT.get(k, "top center") for k in g.index],
             textfont=dict(size=11, color=C["ink"]),
             marker=dict(size=1.1 * np.sqrt(g["value_y1"]), color=GROUP_COLOUR[group],
@@ -959,10 +967,7 @@ def fig_brief_portfolio(BRIEF, S):
             customdata=np.stack([[LAUNCH_CAT[k][1] for k in g.index], g["value_y1"].round(),
                                  g["launch_n0"], g["launch_n1"], g["launch_s0"].round(1),
                                  g["launch_s1"].round(1)], axis=-1),
-            hovertemplate=(f"<b>%{{text}}</b> %{{customdata[0]}}<br>Shipped value {y0}→{y1}: "
-                           f"%{{x:+.0f}}% (¥%{{customdata[1]:,}}億 in {y1})<br>Launch share "
-                           "%{customdata[4]}% → %{customdata[5]}% (%{customdata[2]} → "
-                           "%{customdata[3]} releases)<extra></extra>")))
+            hovertemplate=hover))
     for text, x, y, xa, ya in zip(S["b_p_q"], (0.99, 0.99, 0.01, 0.01), (0.98, 0.02, 0.98, 0.02),
                                   ("right", "right", "left", "left"),
                                   ("top", "bottom", "top", "bottom")):
@@ -982,18 +987,23 @@ def fig_brief_portfolio(BRIEF, S):
 def fig_brief_actives(BRIEF, S):
     """Each tracked active's search change against its share of launch releases."""
     A = BRIEF["actives"]
+    y0, y1 = BRIEF["window"]
+    den = BRIEF["demand"]["launch_den"]
     named = set(BRIEF["demand"]["top3"])
+    hover = (f"<b>%{{customdata[0]}}</b><br>Search %{{customdata[1]}} → %{{customdata[2]}} "
+             f"({y0}→{y1})<br>%{{customdata[3]}} of {den:,} launch releases<extra></extra>"
+             if S["b_namecol"] == "en" else
+             f"<b>%{{customdata[0]}}</b><br>検索 %{{customdata[1]}} → %{{customdata[2]}}"
+             f"（{y0}→{y1}年）<br>新商品リリース{den:,}件中%{{customdata[3]}}件<extra></extra>")
     colours = [C["ink"] if k in named else _GREY for k in A.index]
     fig = go.Figure(go.Scatter(
         x=A["d"], y=A["share"], mode="markers+text",
-        text=[f"{en} ({n})" for en, n in zip(A["en"], A["n"])], textposition="top center",
+        text=[f"{name} ({n})" for name, n in zip(A[S["b_namecol"]], A["n"])],
+        textposition="top center",
         textfont=dict(size=11, color=C["ink"]),
         marker=dict(size=14, color=colours, line=dict(color="#fff", width=2)),
         customdata=np.stack([A["ja"], A["s0"].round(), A["s1"].round(), A["n"]], axis=-1),
-        hovertemplate=(f"<b>%{{customdata[0]}}</b><br>Search %{{customdata[1]}} → "
-                       f"%{{customdata[2]}} ({BRIEF['window'][0]}→{BRIEF['window'][1]})<br>"
-                       f"%{{customdata[3]}} of {BRIEF['demand']['launch_den']:,} launch "
-                       "releases<extra></extra>")))
+        hovertemplate=hover))
     fig.add_vline(x=float(A["d"].median()), line_width=1, line_dash="dot", line_color=C["border"])
     fig.add_hline(y=float(A["share"].median()), line_width=1, line_dash="dot",
                   line_color=C["border"])

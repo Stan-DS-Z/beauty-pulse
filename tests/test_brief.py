@@ -58,7 +58,7 @@ def test_supply_line_holds(B):
     assert all(rows.loc[k, "launch_d"] > 0 for k in s["gainers"])  # "gained"
     assert s["loss"] < 0                                             # "lost"
     (k0, n0), (k1, n1) = s["kr_first"], s["kr_last"]
-    assert n0 and n1
+    assert n0 and n1 and k1 / n1 > k0 / n0                           # "from …%" (JA: から上昇)
 
 
 def test_governing_thought_and_portfolio_title_hold(B):
@@ -79,11 +79,34 @@ def test_korean_share_compares_complete_halves_inside_the_launch_window(B):
         assert set(want) <= set(months), h
 
 
-def test_the_top_actives_are_never_ranked(B, S):
-    """The three are named in alphabetical order, never by their rise."""
-    names = [B["actives"].loc[k, "en"].lower() for k in B["demand"]["top3"]]
-    first = {n: S["b_kf_demand"].index(n) for n in names}
-    assert sorted(first, key=first.get) == sorted(names)
+@pytest.mark.parametrize("lang", ["en", "jp"])
+def test_the_top_actives_are_never_ranked(B, headline, launch, lang):
+    """The three are named in alphabetical (EN) or 五十音 (JA) order, never by
+    their rise."""
+    S = strings.build_strings(lang, headline, launch, A, B,
+                              sources.build_registry(A, sources.EDITION))
+    col = S["b_namecol"]
+    names = [B["actives"].loc[k, col] for k in B["demand"]["top3"]]
+    names = [n.lower() for n in names] if lang == "en" else names
+    for key in ("b_kf_demand", "b_a_h"):
+        first = {n: S[key].index(n) for n in names}
+        assert sorted(first, key=first.get) == sorted(names), key
+
+
+def test_the_japanese_brief_is_complete_and_carries_the_same_figures(B, headline, launch):
+    """Every Brief string exists in Japanese, and every number in an English
+    line appears in its Japanese line."""
+    reg = sources.build_registry(A, sources.EDITION)
+    en = strings.build_strings("en", headline, launch, A, B, reg)
+    ja = strings.build_strings("jp", headline, launch, A, B, reg)
+    keys = [k for k in en if k.startswith("b_")]
+    assert keys and all(k in ja for k in keys)
+    num = re.compile(r"\d+(?:[.,]\d+)*")
+    for k in keys:
+        if isinstance(en[k], str) and k not in ("b_kicker", "b_namecol"):
+            assert re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", ja[k]), k
+            en_text = re.sub(r"\bH[12]\b", "", en[k])       # 2026 H1 is 2026年上期
+            assert set(num.findall(en_text)) <= set(num.findall(ja[k])), k
 
 
 def test_the_table_holds_every_category_largest_value_first(B):
