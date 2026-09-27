@@ -419,9 +419,6 @@ def load_blockc(ASSETS: Path):
 def load_umap(ASSETS: Path):
     return pd.read_csv(ASSETS / "umap_embedding.csv")
 
-def load_tfidf_delta(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb07_tfidf_delta.csv")
-
 def load_cosine_sizecurve(ASSETS: Path):
     return pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
 

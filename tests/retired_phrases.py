@@ -17,7 +17,7 @@ RETIRED = [
      "'five sources': three of them were retired (Revisions 2, 3, 11)"),
     (r"review[- ]volume[^.。]{0,30}\bis a (market )?signal",
      "@cosme review-volume share as a signal (Revision 2)"),
-    (r"(multiple|several|three|five) independent (signals|sources)|複数の独立した",
+    (r"(multiple|several|two|three|five) independent (signals|sources)|複数の独立した",
      "'independent signals': the within-side instruments are not (Source roles)"),
     (r"YouTube comments?[^.。]{0,40}(moved toward|outnumbered)|YouTubeコメント[^。]{0,20}比重",
      "YouTube comment counts across sides: set by the query list (Source roles)"),
@@ -27,6 +27,10 @@ RETIRED = [
      "reviews per item across genres: measures how deep the 3,000 cap reaches (Revision 13)"),
     (r"Vocabulary [Ss]hift \(|Vocabulary Shift — Pre vs Post|成分言及率の推移|Pre-COVID avg",
      "@cosme vocabulary or ingredient mentions compared across years (Revision 2, Source roles)"),
+    (r"TF-IDF Delta 2019|[Dd]ouble-confirmed|DOUBLE-CONFIRMED|Vocabulary shift — TF-IDF delta",
+     "pooled cross-period TF-IDF delta and its cross-checks (NB06 §1; Revision 2)"),
+    (r"Avg review length|Review Engagement Quality",
+     "@cosme review length compared across years (Source roles)"),
 ]
 
 # The sources a "moved toward skincare after 2020" sentence may not cite: the

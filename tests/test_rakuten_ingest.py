@@ -73,29 +73,36 @@ def test_a_file_overrides_a_log_for_the_same_date(ing, conn):
 
 def test_the_genre_tree_file_fills_every_level(ing, conn, tmp_path, monkeypatch):
     monkeypatch.setattr(ing, "TOTALS_DIR", tmp_path)
+    every = json.dumps({"availability": 0, "genreInformationFlag": 1, "hits": 1}, sort_keys=True)
+    stock = json.dumps({"availability": 1, "genreInformationFlag": 1, "hits": 1}, sort_keys=True)
     (tmp_path / "rakuten_genre_totals_2026-10-04.json").write_text(json.dumps({"genres": [
         {"genre_id": "100939", "name": "美容・コスメ・香水", "level": 1, "parent_id": None,
-         "total_available": 3615664},
-        {"genre_id": "204233", "name": "ベースメイク・メイクアップ", "level": 2,
-         "parent_id": "100939", "total_available": 401292},
-        {"genre_id": "210457", "name": "ファンデーション", "level": 3,
-         "parent_id": "204233", "total_available": 67931},
+         "total_available": 4782164, "request": every},
+        {"genre_id": "564517", "name": "韓国コスメ", "level": 2,
+         "parent_id": "100939", "total_available": 29392, "request": every},
+        {"genre_id": "564517", "name": "韓国コスメ", "level": 2,
+         "parent_id": "100939", "total_available": 24534, "request": stock},
     ]}), encoding="utf-8")
     assert ing.tree_totals(conn, "2026-10-04") == 3
     assert ing.tree_totals(conn, "2026-10-11") == 0      # no file for that date
-    got = conn.execute("SELECT genre_id, level, parent_id, total_available, recorded_from "
-                       "FROM genre_totals ORDER BY level").fetchall()
-    assert got == [("100939", 1, None, 3615664, "genre tree"),
-                   ("204233", 2, "100939", 401292, "genre tree"),
-                   ("210457", 3, "204233", 67931, "genre tree")]
+    got = conn.execute("SELECT genre_id, level, parent_id, availability, total_available "
+                       "FROM genre_totals ORDER BY genre_id, availability").fetchall()
+    # The same genre on one date is two series: every listing, and in stock only.
+    assert got == [("100939", 1, None, 0, 4782164),
+                   ("564517", 2, "100939", 0, 29392),
+                   ("564517", 2, "100939", 1, 24534)]
 
 
-def test_an_older_table_gains_the_tree_columns(ing):
+def test_an_older_table_is_rebuilt_with_availability(ing):
     c = sqlite3.connect(":memory:")
     c.execute("""CREATE TABLE genre_totals (snapshot_date TEXT NOT NULL, genre_id TEXT NOT NULL,
                  genre_name TEXT, total_available INTEGER NOT NULL, recorded_from TEXT NOT NULL,
                  PRIMARY KEY(snapshot_date, genre_id))""")
+    c.execute("INSERT INTO genre_totals VALUES ('2026-09-20', '564517', '韓国コスメ', 30039, 'run log')")
     ing.migrate(c)
     ing.migrate(c)                                         # a second run is a no-op
     cols = [r[1] for r in c.execute("PRAGMA table_info(genre_totals)")]
-    assert cols[-2:] == ["level", "parent_id"]
+    assert cols[-4:] == ["level", "parent_id", "availability", "request"]
+    # Stored before 2026-09-27 from the API default: in stock only.
+    row = c.execute("SELECT availability, request FROM genre_totals").fetchone()
+    assert row[0] == 1 and json.loads(row[1])["availability"] == 1

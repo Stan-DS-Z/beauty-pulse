@@ -98,17 +98,35 @@ DDL = [
         recorded_from    TEXT    NOT NULL,   -- 'genre tree' | 'snapshot file' | 'run log'
         level            INTEGER,            -- 1 root, 2, 3; NULL where not recorded
         parent_id        TEXT,
-        PRIMARY KEY(snapshot_date, genre_id)
+        availability     INTEGER NOT NULL DEFAULT 1,  -- 1 in stock only (API default), 0 every listing
+        request          TEXT,               -- the parameters that produced the count, as JSON
+        PRIMARY KEY(snapshot_date, genre_id, availability)
     )""",
 ]
 
+# The item search NB01a runs for each pulled genre; its count is in-stock only.
+ITEM_SEARCH_REQUEST = json.dumps({"availability": 1, "hits": 30, "sort": "-reviewCount"},
+                                 sort_keys=True)
+
 
 def migrate(conn) -> None:
-    """Add the columns genre_totals gained on 2026-09-27 to an older table."""
+    """Bring an older genre_totals to the current definition.
+
+    Adds level and parent_id, then rebuilds the table with availability in the
+    key. Rows stored before 2026-09-27 came from the API's default, in-stock
+    only, so they carry availability 1 and the item search's parameters."""
     have = {r[1] for r in conn.execute("PRAGMA table_info(genre_totals)")}
     for col, kind in (("level", "INTEGER"), ("parent_id", "TEXT")):
         if col not in have:
             conn.execute(f"ALTER TABLE genre_totals ADD COLUMN {col} {kind}")
+    if "availability" not in have:
+        conn.execute("ALTER TABLE genre_totals RENAME TO genre_totals_old")
+        conn.execute(DDL[-1])
+        conn.execute("""INSERT INTO genre_totals
+                        SELECT snapshot_date, genre_id, genre_name, total_available,
+                               recorded_from, level, parent_id, 1, ?
+                        FROM genre_totals_old""", (ITEM_SEARCH_REQUEST,))
+        conn.execute("DROP TABLE genre_totals_old")
     conn.commit()
 
 
@@ -203,19 +221,22 @@ def read_total(path: Path) -> tuple[str | None, int | None]:
 
 def store_total(conn, snapshot_date: str, genre_id: str, genre_name: str | None,
                 total: int, recorded_from: str, level: int | None = None,
-                parent_id: str | None = None) -> None:
+                parent_id: str | None = None, request: str = ITEM_SEARCH_REQUEST) -> None:
+    availability = int(json.loads(request)["availability"])
     conn.execute(
         """INSERT INTO genre_totals
                (snapshot_date, genre_id, genre_name, total_available, recorded_from,
-                level, parent_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(snapshot_date, genre_id) DO UPDATE SET
+                level, parent_id, availability, request)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(snapshot_date, genre_id, availability) DO UPDATE SET
                genre_name = excluded.genre_name,
                total_available = excluded.total_available,
                recorded_from = excluded.recorded_from,
                level = COALESCE(excluded.level, level),
-               parent_id = COALESCE(excluded.parent_id, parent_id)""",
-        (snapshot_date, genre_id, genre_name, total, recorded_from, level, parent_id))
+               parent_id = COALESCE(excluded.parent_id, parent_id),
+               request = excluded.request""",
+        (snapshot_date, genre_id, genre_name, total, recorded_from, level, parent_id,
+         availability, request))
 
 
 def tree_totals(conn, snapshot_date: str) -> int:
@@ -230,7 +251,7 @@ def tree_totals(conn, snapshot_date: str) -> int:
     rows = json.loads(path.read_text(encoding="utf-8"))["genres"]
     for r in rows:
         store_total(conn, snapshot_date, r["genre_id"], r["name"], int(r["total_available"]),
-                    "genre tree", r["level"], r["parent_id"])
+                    "genre tree", r["level"], r["parent_id"], r["request"])
     conn.commit()
     return len(rows)
 

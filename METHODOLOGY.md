@@ -116,6 +116,12 @@ The published SKU ratio (7.46× relabelled, 3.56× as tagged) counted this proje
 - **ツリーマップ / Treemap.** 「SKUあたりレビュー数」の色分けと韓国コスメの注記を外した。1商品あたりのレビュー数は、3,000商品の上限がジャンルのどこまで届くかで決まる：掲載631,905件のスキンケアでは上位3,000商品の平均が187件、30,039件の韓国コスメでは15件。評価と価格中央値は残し、キャプションに取得の枠を記す。 / The "Reviews per SKU" colour option and the Korean-cosmetics callout are removed. Reviews per item depend on how far the 3,000-item cap reaches into a genre: the top 3,000 of スキンケア's 631,905 listings average 187 reviews, and those of 韓国コスメ's 30,039 average 15. Rating and median price stay, and the caption states the frame.
 - **NB04.** 期間前後の語彙シフト（改訂2で撤回したプール型のTF-IDFデルタ）を外した。成分への言及率はコーパス全体で1つの値とし（スキンケアレビューの18.8%）、年をまたぐ比較はしない（情報源の役割）。 / The before-and-after vocabulary shift (a pooled TF-IDF delta, retired in Revision 2) is removed. Ingredient mentions are one figure for the whole corpus, 18.8% of skincare reviews, with no comparison across years (Source roles).
 
+
+**改訂14 — 語彙の期間比較を外し、楽天の件数の定義を固定（2026年9月27日）/ Revision 14 — cross-period vocabulary removed, and Rakuten's counts given a fixed definition (27 September 2026)**  
+- **NB06.** 第1節（2019→2026年のTF-IDFデルタ、2019〜20年の304件と2023〜26年の38,342件の比較）を、その図と出力ファイル、NB07の対応する図とともに外した。改訂2で撤回したプール型のTF-IDFデルタである。 / §1 (the 2019→2026 TF-IDF delta, comparing 304 reviews from 2019–20 with 38,342 from 2023–26) is removed with its chart, its export and NB07's panel of it: the pooled TF-IDF delta retired in Revision 2.
+- **NB04.** 期間前後のレビューの長さの比較を外した（情報源の役割）。 / The pre/post-COVID review-length comparison is removed (Source roles).
+- **楽天の件数 / Rakuten's counts.** 楽天APIの件数は既定で在庫のある商品のみを数える（`availability=1`）。2026年9月27日の韓国コスメは在庫あり24,534件、全掲載29,392件。9月20日の30,039件も在庫ありの件数であり、1週間の変化には在庫の変動が含まれる。NB01aは美容・コスメ・香水の全166ジャンル（第2・第3階層）の件数を、全掲載（`availability=0`）と在庫あり（`availability=1`）の両方で毎週記録し、各件数に要求のパラメータを添える。 / The Rakuten API counts in-stock items by default (`availability=1`). On 27 September 2026 韓国コスメ had 24,534 in stock and 29,392 listed; the 30,039 of 20 September was also an in-stock count, so the week's change includes stock movement. NB01a records every genre of the 美容・コスメ・香水 tree (166 genres, levels 2 and 3) each week, both as every listing (`availability=0`) and in stock only (`availability=1`), each count stored with the request parameters that produced it.
+
 ---
 
 ## 情報源の役割 / Source roles
