@@ -103,7 +103,7 @@ def test_the_japanese_brief_is_complete_and_carries_the_same_figures(B, headline
     assert keys and all(k in ja for k in keys)
     num = re.compile(r"\d+(?:[.,]\d+)*")
     for k in keys:
-        if isinstance(en[k], str) and k not in ("b_kicker", "b_namecol"):
+        if isinstance(en[k], str) and k not in ("b_kicker", "b_namecol", "b_t_monsep"):
             assert re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", ja[k]), k
             en_text = re.sub(r"\bH[12]\b", "", en[k])       # 2026 H1 is 2026年上期
             assert set(num.findall(en_text)) <= set(num.findall(ja[k])), k

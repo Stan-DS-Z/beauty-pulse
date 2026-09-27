@@ -787,8 +787,9 @@ def _ym_ja(ym):
 
 
 def _half_ja(h):
-    """"2026 H1" -> "2026年上期"."""
-    return f"{h[:4]}年{'上' if h.endswith('1') else '下'}期"
+    """"2026 H1" -> "2026年1〜6月". Not 上期: in Japanese business writing 上期
+    is often the fiscal half, April to September."""
+    return f"{h[:4]}年{'1〜6' if h.endswith('1') else '7〜12'}月"
 
 
 def brief_strings(lang, B, H, REG):
@@ -816,8 +817,8 @@ def _brief_ja(B, H, REG):
 
     out["b_kicker"] = f"レポート · {ed.year}年{ed.month}月版 · 日本の美容市場"
     out["b_governing"] = (
-        f"{y0}年以降、新商品リリースの構成比、検索、出荷金額は、それぞれ異なるカテゴリで伸びた。"
-        f"構成比が最も伸びたのは{_and_ja(cj(k) for k in P['gainers'])}で、その出荷金額の変化は"
+        f"{y0}年以降、新商品リリースの構成比（以下、リリース構成比）、検索、出荷金額は、それぞれ"
+        f"異なるカテゴリで伸びた。リリース構成比が最も伸びたのは{_and_ja(cj(k) for k in P['gainers'])}で、その出荷金額の変化は"
         f"{_pct(P['gain_ship_lo'])}〜{_pct(P['gain_ship_hi'])}である。検索が最も伸びたのは、"
         f"新商品リリースでの言及が少ない成分名である。出荷金額が最も伸びたのは"
         f"{_and_ja(cj(k) for k in P['risers'])}である。")
@@ -828,21 +829,21 @@ def _brief_ja(B, H, REG):
         f"下回る。美容液の{_pct(M['serum_d'])}は、個数が{abs(M['serum_units']):.0f}%減るなかで"
         f"1個あたり金額が{_pct(M['serum_vpu'])}となったことによる。")
     _within = _and_ja(sorted(A.loc[Dm["within"], "ja"]))
-    _up = "、".join(f"{cj(k)}は{v:.0f}ポイント上昇" for k, v in Dm["words_up"].items())
+    _up = "、".join(f"{cj(k)}は{v:.0f}ポイント上昇" for k, v in Dm["words_up"].items()) + "し"
     _wwords = _and_ja(cj(k) for k in Dm["words_within"])
     out["b_kf_demand"] = (
         f"追跡する{Dm['n_actives']}成分のうち{Dm['n_rose']}成分で、{y0}→{y1}年に検索が"
         f"<b>{Dm['rose_lo']:.0f}〜{Dm['rose_hi']:.0f}ポイント</b>上昇した。最も伸びたのは"
-        f"{_and_ja(top3)}である。{_within}の変化は、同じ月を再取得したときのばらつき"
-        f"（{TRENDS_PULL_SPREAD}ポイント）の範囲内にある。カテゴリ語{Dm['n_words']}語では"
-        f"{Dm['words_down']}語が低下し、{_up}、{_wwords}はばらつきの範囲内だった。")
+        f"{_and_ja(top3)}の3成分である。{_within}の変化は、同じ月を再取得したときのばらつき"
+        f"（{TRENDS_PULL_SPREAD}ポイント）の範囲内にある。カテゴリ語{Dm['n_words']}語のうち"
+        f"{Dm['words_down']}語は低下した。{_up}、{_wwords}はばらつきの範囲内だった。")
     _g = (f"それぞれ<b>{Sp['gain_lo']:.0f}ポイント</b>" if round(Sp["gain_lo"]) == round(Sp["gain_hi"])
           else f"<b>{Sp['gain_lo']:.0f}〜{Sp['gain_hi']:.0f}ポイント</b>")
     (k0, n0), (k1, n1) = Sp["kr_first"], Sp["kr_last"]
     out["b_kf_supply"] = (
-        f"{y0}→{y1}年に、新商品リリースの構成比は{_and_ja(cj(k) for k in Sp['gainers'])}が"
-        f"{_g}上昇し、{cj(Sp['loser'])}は{abs(Sp['loss']):.0f}ポイント低下した。コア新商品リリースに"
-        f"占める韓国系発行元の比率は、{_half_ja(Sp['h_last'])}に<b>{100 * k1 / n1:.0f}%</b>"
+        f"{y0}→{y1}年に、リリース構成比は{_and_ja(cj(k) for k in Sp['gainers'])}が"
+        f"{_g}上昇し、{cj(Sp['loser'])}は{abs(Sp['loss']):.0f}ポイント低下した。コア発行元の新商品"
+        f"リリースのうち韓国系発行元によるものは、{_half_ja(Sp['h_last'])}に<b>{100 * k1 / n1:.0f}%</b>"
         f"（{n1}件中{k1}件）で、{_half_ja(Sp['h_first'])}の{100 * k0 / n0:.0f}%"
         f"（{n0}件中{k0}件）から上昇した。")
     out["b_kf_consumer"] = (
@@ -851,7 +852,7 @@ def _brief_ja(B, H, REG):
         f"<b>{H['conv_lo']} → {H['conv_hi']}</b>となった（{H['conv_ci_jp']}）。")
     (a0, a1, lo, hi), (b0, b1, blo, bhi) = T["ship"], T["search"]
     out["b_kf_timing"] = (
-        f"日焼け止めの出荷は<b>{a0}〜{a1}月</b>にピークとなる（季節指数{lo:.0f}〜{hi:.0f}、"
+        f"日焼け止めの出荷金額は<b>{a0}〜{a1}月</b>にピークとなる（季節指数{lo:.0f}〜{hi:.0f}、"
         f"月平均 = 100）。検索のピークは{b0}〜{b1}月である（{blo:.0f}〜{bhi:.0f}）。メイクの新商品"
         f"リリースは{_and_ja(f'{m}月' for m in T['makeup_peaks'])}に多い（{y0}〜{y1}年）。")
     out["b_kf_labels"] = {"market": "市場", "demand": "需要", "supply": "供給",
@@ -859,14 +860,15 @@ def _brief_ja(B, H, REG):
 
     # Exhibit 1: launch share against shipped value
     out["b_p_h"] = (
-        f"構成比が最も伸びた{_and_ja(cj(k) for k in P['gainers'])}の出荷金額は"
+        f"リリース構成比が最も伸びた{_and_ja(cj(k) for k in P['gainers'])}の出荷金額は"
         f"{_pct(P['gain_ship_lo'])}〜{_pct(P['gain_ship_hi'])}、構成比が下がった"
         f"{_and_ja(cj(k) for k in P['fell'])}の出荷金額は"
         f"{P['fell_ship_lo']:.0f}〜{P['fell_ship_hi']:.0f}%増")
     n_y0, n_y1 = P["den"]
     out["b_p_e"] = (
-        f"各バブルは製品カテゴリ。横軸：経産省の出荷金額、{y1}年の{y0}年比。縦軸：カテゴリ分類"
-        f"済みのコア新商品リリースに占める比率の差、{y1}年（{n_y1}件）−{y0}年（{n_y0}件）。"
+        f"各バブルは製品カテゴリ。横軸：経産省の出荷金額、{y1}年の{y0}年比。縦軸：カテゴリを"
+        f"判定できたコア発行元の新商品リリースに占める比率の差、{y1}年（{n_y1}件）−{y0}年"
+        f"（{n_y0}件）。"
         f"バブルの面積：{y1}年の出荷金額。カーソルを合わせると件数を表示する。")
     out["b_p_x"] = f"出荷金額、{y1}年の{y0}年比（%）"
     out["b_p_y"] = f"リリース構成比、{y1}年−{y0}年（ポイント）"
@@ -881,19 +883,19 @@ def _brief_ja(B, H, REG):
         f"この3成分を含む新商品リリースは{Dm['launch_den']:,}件中{Dm['top3_n']}件")
     out["b_a_e"] = (
         f"GoogleトレンドとPR TIMESの双方で追跡する{Dm['n_actives']}成分。横軸：検索関心度、"
-        f"{y1}年の年平均−{y0}年（各語は自身のピーク = 100）。縦軸：成分名を含むコア新商品"
-        f"リリースの比率、{_ym_ja(Dm['launch_from'])}〜{_ym_ja(Dm['launch_to'])}、再発売・"
+        f"{y1}年の年平均−{y0}年（各語は自身のピーク = 100）。縦軸：成分名を含む、コア発行元の"
+        f"新商品リリースの比率、{_ym_ja(Dm['launch_from'])}〜{_ym_ja(Dm['launch_to'])}、再発売・"
         "詰め替え・限定パッケージを除く。括弧内は件数。点線は中央値。")
     out["b_a_x"] = f"検索関心度、{y1}年−{y0}年（ポイント、自身のピーク = 100）"
     out["b_a_y"] = "新商品リリースに占める比率（%）"
-    out["b_a_q"] = "検索の上昇は中央値超 · リリース比率は中央値未満"
+    out["b_a_q"] = "検索の上昇は中央値超、リリースに占める比率は中央値未満"
     out["b_a_src"] = source_line(["trends", "prtimes"], REG, "ja")
 
     # Exhibit 3: the category table
     out["b_t_h"] = f"{B['n_rows']}カテゴリを同じ尺度で比較"
     out["b_t_e"] = (
         "PR TIMESの新商品リリースと経産省の品目の双方にあるカテゴリ。検索はカテゴリ語を追跡して"
-        f"いる場合のみ表示する。韓国系：カテゴリの{y1}年コア新商品リリースに占める韓国系発行元の"
+        f"いる場合のみ表示する。韓国系発行元：カテゴリの{y1}年のコア発行元の新商品リリースに占める"
         f"比率、括弧内は件数。出荷ピーク：{y0}〜{y1}年の季節指数が最も高い2カ月。")
     out["b_t_cols"] = [("カテゴリ", ""), ("経産省の品目", ""), (f"{y1}年の金額", "億円"),
                        ("金額", f"{y0}→{y1}年"), ("個数", f"{y0}→{y1}年"),
@@ -902,11 +904,12 @@ def _brief_ja(B, H, REG):
                        ("韓国系発行元", f"{y1}年リリースに占める比率"), ("出荷ピーク", "月")]
     out["b_t_partial"] = "一部"
     out["b_t_months"] = [None] + [f"{m}月" for m in range(1, 13)]
+    out["b_t_monsep"] = "、"
     out["b_t_src"] = source_line(["meti", "trends", "prtimes"], REG, "ja")
     _G = LAUNCH_GATE
     out["b_fn_t"] = "各指標の範囲"
     out["b_fn_b"] = (
-        "出荷金額は、国内の化粧品メーカーが経産省に報告する出荷で、輸入を含まない。リリース構成比"
+        "出荷金額は、国内の化粧品メーカーが経産省に報告する出荷の金額で、輸入を含まない。リリース構成比"
         f"は、PR TIMES上の履歴が{_ym_ja(LAUNCH_WINDOW_START)}まで遡る{B['n_core']}社のプレス"
         f"リリースで測る。ブランドリストのデパコス{_G['prestige_n']}ブランドのうち"
         f"{_G['prestige_unseen']}ブランドは、保存済みリリースに一度も現れない"
@@ -1019,6 +1022,7 @@ def _brief_en(B, H, REG):
                        ("Korean issuers", f"share of {y1} launches"), ("Shipment peak", "months")]
     out["b_t_partial"] = "partial"
     out["b_t_months"] = _MON_ABBR
+    out["b_t_monsep"] = ", "
     out["b_t_src"] = source_line(["meti", "trends", "prtimes"], REG)
     _G = LAUNCH_GATE
     out["b_fn_t"] = "How each measure is bounded"

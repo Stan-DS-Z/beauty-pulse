@@ -929,7 +929,8 @@ def fig_brief_actives(BRIEF, S):
     colours = [C["ink"] if k in named else _GREY for k in A.index]
     fig = go.Figure(go.Scatter(
         x=A["d"], y=A["share"], mode="markers+text",
-        text=[f"{name} ({n})" for name, n in zip(A[S["b_namecol"]], A["n"])],
+        text=[f"{name} ({n})" if S["b_namecol"] == "en" else f"{name}（{n}）"
+              for name, n in zip(A[S["b_namecol"]], A["n"])],
         textposition="top center",
         textfont=dict(size=11, color=C["ink"]),
         marker=dict(size=14, color=colours, line=dict(color="#fff", width=2)),

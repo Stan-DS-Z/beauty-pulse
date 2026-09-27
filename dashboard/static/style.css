@@ -243,3 +243,7 @@ a.bp-kf:hover .bp-kf-go { color:var(--ink); }
 .bp-vocab-shared { color:var(--ink); font-weight:700; }
 .bp-vocab-own { color:var(--muted); }
 
+/* Japanese has no spaces, so a narrow heading breaks inside a word (body sets
+   overflow-wrap:anywhere); keep-all with overflow-wrap normal
+   breaks only at punctuation such as 、 */
+.bp-page:lang(ja) .bp-table th { word-break:keep-all; overflow-wrap:normal; }
