@@ -353,6 +353,36 @@ def store(conn: sqlite3.Connection, items: list[dict], run_date: str, rv: str) -
     return conn.total_changes - before
 
 
+# ── Coverage ──────────────────────────────────────────────────────────────────
+
+def coverage(fetch_log: pd.DataFrame) -> pd.DataFrame:
+    """What the store holds for each feed, read from every fetch, not the latest.
+
+    A capped feed returns only its newest FEED_CAP releases, so its reach moves
+    forward each time the issuer publishes. The store keeps what earlier
+    fetches returned: its history for a feed starts at the first successful
+    fetch's reach, and is complete if that fetch was, as long as no later
+    fetch left a gap.
+
+    A gap is a later fetch of a capped feed in which every item was new.
+    Nothing it returned was already stored, so releases published between the
+    previous fetch and this one's reach may be missing from the store.
+
+    Returns one row per feed: company_id; feed_reach and history_complete as
+    of the first successful fetch; fetched, the latest run date; and gaps,
+    the run dates that left one."""
+    ok = fetch_log[fetch_log["http_status"] == 200].sort_values("run_date")
+    rows = []
+    for cid, g in ok.groupby("company_id"):
+        first, later = g.iloc[0], g.iloc[1:]
+        gap = later[(later["history_complete"] == 0) & (later["new_items"] == later["items"])]
+        rows.append({"company_id": cid, "feed_reach": first["feed_reach"],
+                     "history_complete": bool(first["history_complete"]),
+                     "fetched": g["run_date"].iloc[-1], "gaps": list(gap["run_date"])})
+    return pd.DataFrame(rows, columns=["company_id", "feed_reach", "history_complete",
+                                       "fetched", "gaps"])
+
+
 # ── Window ────────────────────────────────────────────────────────────────────
 
 def core_window(health: pd.DataFrame, releases: pd.DataFrame, last_month: str,

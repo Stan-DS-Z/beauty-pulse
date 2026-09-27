@@ -106,6 +106,12 @@ def cmd_fetch() -> None:
             continue
         dates = sorted(pt.jst_date(i["published"]) for i in items if i["published"])
         new = pt.store(conn, items, TODAY, rv)
+        if len(items) >= pt.FEED_CAP and new == len(items) and conn.execute(
+                "SELECT 1 FROM fetch_log WHERE company_id = ? AND run_date < ? "
+                "AND http_status = 200", (r.company_id, TODAY)).fetchone():
+            log.warning("%s (%s): every item on this capped feed is new — releases before %s "
+                        "may be missing from the store; build_prtimes_launches.py will stop",
+                        r.entity, r.company_id, dates[0] if dates else "?")
         rec.update(http_status=status, feed_corp=corp, items=len(items), new_items=new,
                    feed_reach=dates[0] if dates else "", newest=dates[-1] if dates else "",
                    history_complete=len(items) < pt.FEED_CAP, error="",

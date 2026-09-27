@@ -9,9 +9,14 @@ here. What leaves is the release's metadata and the tags computed from it.
   prtimes_feeds.csv             one row per active feed: panel membership
   prtimes_ingredient_terms.csv  canonical ingredient -> display labels and Trends term
 
-The panel is fixed by WINDOW_START: a feed is core when its history is
-complete or its feed reaches that month, and present-forward otherwise. The
-feed-health record is the newest data/interim/prtimes_feed_health_*.json.
+The panel is fixed by WINDOW_START: a feed is core when its stored history is
+complete or reaches that month, and present-forward otherwise. Both come from
+the feed's first successful fetch in fetch_log (src/prtimes.coverage), not
+from the latest one. A capped feed's reach moves forward as the issuer
+publishes; judged on the latest fetch, a core feed would turn present-forward
+and take its whole history out of every historical figure. The build stops if
+any fetch left a gap in a feed's stored history. The roster of active feeds
+comes from the newest data/interim/prtimes_feed_health_*.json.
 
 The ingredient table is exported because the dashboard does not read .xlsx:
 openpyxl is not in requirements.txt, which is all the Cloud Run image installs.
@@ -57,8 +62,18 @@ def main() -> int:
     health = json.loads(health_path.read_text(encoding="utf-8"))
     h = pd.DataFrame(health["rows"])
     h = h[h["error"] != "no_feed"].copy()
-    h["history_complete"] = h["history_complete"].astype(bool)
-    h["panel"] = ["core" if c or str(r)[:7] <= pt.WINDOW_START else "present_forward"
+    with sqlite3.connect(pt.DB_PATH) as conn:
+        cov = pt.coverage(pd.read_sql("SELECT * FROM fetch_log", conn)).set_index("company_id")
+    gaps = cov[cov["gaps"].str.len() > 0]
+    if len(gaps):
+        raise SystemExit(
+            "fetch left a gap in the stored history of: "
+            + ", ".join(f"{c} ({', '.join(g)})" for c, g in gaps["gaps"].items())
+            + ". Every item on those capped feeds was new, so releases between that fetch "
+              "and the one before may be missing. Decide how to handle it before exporting.")
+    h["feed_reach"] = h["company_id"].map(cov["feed_reach"]).fillna("")
+    h["history_complete"] = h["company_id"].map(cov["history_complete"]).fillna(False).astype(bool)
+    h["panel"] = ["core" if c or (r and r[:7] <= pt.WINDOW_START) else "present_forward"
                   for c, r in zip(h["history_complete"], h["feed_reach"])]
 
     roster = pt.load_roster(active_only=True)

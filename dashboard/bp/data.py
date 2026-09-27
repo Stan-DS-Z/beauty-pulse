@@ -341,8 +341,9 @@ def compute_headline(ASSETS: Path):
 
 # ── Launch layer — PR TIMES product-launch releases ──────────────────────
 # Written by build_prtimes_launches.py; one row per release that gate v2
-# calls a launch. The core panel is the feeds whose PR TIMES history reaches
-# LAUNCH_WINDOW_START (src/prtimes.WINDOW_START; the app does not import src/).
+# calls a launch. The core panel is the feeds whose stored PR TIMES history
+# reaches LAUNCH_WINDOW_START (src/prtimes.WINDOW_START; the app does not import
+# src/). feed_reach in prtimes_feeds.csv is where that stored history starts.
 # Every historical figure uses the core only, so an issuer whose feed starts
 # later never puts a step in the series. Launch timing is seasonal, so changes
 # are read as 12-month totals against the 12 months before, never month on month.
