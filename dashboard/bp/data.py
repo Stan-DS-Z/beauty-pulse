@@ -48,6 +48,18 @@ METI_SUN = ["日やけ止め及び日やけ用化粧品"]
 METI_BREAK = 2022
 
 
+def cut_months(d, cutoff, year="year", month="month"):
+    """Rows dated no later than `cutoff` ("YYYY-MM", inclusive), or every row
+    when it is None. A row with month 0 is a whole year, kept when its December
+    is inside the cut. The report computes on data cut at its edition
+    (sources.EDITION); the monitor passes None and reads everything."""
+    if cutoff is None:
+        return d
+    c = int(cutoff[:4]) * 100 + int(cutoff[5:7])
+    ym = d[year].astype(int) * 100 + d[month].astype(int).where(d[month].astype(int) >= 1, 12)
+    return d[ym <= c]
+
+
 def _full_years(d):
     """Drop years whose monthly rows stop short of December.
 
@@ -328,17 +340,22 @@ LAUNCH_GATE = dict(asof="2026-09-19", n_holdout=100, n_store=6554,
                    edition_found=7, edition_n=13)
 
 
-def compute_launch_headline(ASSETS: Path):
-    """Launch-layer figures, or None when the export is absent."""
+def compute_launch_headline(ASSETS: Path, cutoff=None):
+    """Launch-layer figures, or None when the export is absent. With a cutoff
+    ("YYYY-MM"), no release dated after that month enters any figure."""
     path = ASSETS / "prtimes_launches.csv"
     if not path.exists():
         return None
     d = pd.read_csv(path, dtype=str).fillna("")
+    if cutoff is not None:
+        d = d[d["month"] <= cutoff]
     feeds = pd.read_csv(ASSETS / "prtimes_feeds.csv", dtype=str).fillna("")
     terms = pd.read_csv(ASSETS / "prtimes_ingredient_terms.csv", dtype=str).fillna("")
 
     # The fetch month is partial; the last complete month is the one before it.
     last = pd.Period(feeds["fetched"].max()[:7], freq="M") - 1
+    if cutoff is not None:
+        last = min(last, pd.Period(cutoff, freq="M"))
     months = pd.period_range(LAUNCH_WINDOW_START, last, freq="M").astype(str)
     l12, p12 = list(months[-12:]), list(months[-24:-12])
     core = d[(d["panel"] == "core") & d["month"].isin(months)]
@@ -436,13 +453,13 @@ def load_yt_volume(ASSETS: Path):
 def load_yt_channels(ASSETS: Path):
     return pd.read_csv(ASSETS / "nb07_yt_channels.csv")
 
-def load_meti_annual(ASSETS: Path):
+def load_meti_annual(ASSETS: Path, cutoff=None):
     """METI shipments, annual, by product line. 販売金額 in 億円, 販売個数 in 十個.
 
     Annual figures are summed from the monthly rows (month >= 1) rather than
     read from the month == 0 annual rows: the annual rows are a 時系列表 restated
     in a later table, so mixing the two would put two vintages in one series."""
-    d = _full_years(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"))
+    d = _full_years(cut_months(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"), cutoff))
     d = d[d["month"] >= 1]
     val = d[d["measure"] == "販売金額"].groupby(["item", "year"])["value"].sum().unstack() / 1e5
     units = d[d["measure"] == "販売個数"].groupby(["item", "year"])["value"].sum().unstack()
@@ -469,14 +486,17 @@ def load_meti_monthly(ASSETS: Path):
     return groups, val * 1000 / kg
 
 
-def load_attention_annual(ASSETS: Path):
-    return (pd.read_csv(ASSETS / "nb04b_attention_annual.csv")
+def load_attention_annual(ASSETS: Path, cutoff=None):
+    """block_A annual means, full years only; with a cutoff, the years whose
+    December is inside it."""
+    d = pd.read_csv(ASSETS / "nb04b_attention_annual.csv").assign(month=0)
+    return (cut_months(d, cutoff)
             .pivot(index="year", columns="term", values="interest"))
 
 
-def load_attention_monthly(ASSETS: Path):
+def load_attention_monthly(ASSETS: Path, cutoff=None):
     """block_A by month, full years only: term, year, month, interest."""
-    return pd.read_csv(ASSETS / "nb04b_attention_monthly.csv")
+    return cut_months(pd.read_csv(ASSETS / "nb04b_attention_monthly.csv"), cutoff)
 
 
 def load_yt_tfidf(ASSETS: Path):

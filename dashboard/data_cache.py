@@ -28,8 +28,9 @@ class Data:
     assets: Path
     HEADLINE: dict
     LAUNCH: dict | None
-    BRIEF: dict | None             # brief.compute_brief, None without the launch export
-    REGISTRY: dict                 # sources.build_registry
+    BRIEF: dict | None             # brief.compute_brief at the edition, None without the launch export
+    REGISTRY: dict                 # sources.build_registry, the latest data (monitor)
+    REPORT_REGISTRY: dict          # the same, cut at the edition (report pages)
     S: dict                        # lang -> string table
 
     def frame(self, name):
@@ -44,10 +45,13 @@ def build_data(assets: Path, launch: bool = True) -> Data:
     launch export would see it."""
     headline = bp_data.compute_headline(assets)
     lau = bp_data.compute_launch_headline(assets) if launch else None
-    brief = bp_brief.compute_brief(assets, headline, lau)
+    # Report pages compute on data cut at the edition; the monitor on the latest.
+    brief = bp_brief.compute_brief(assets, headline, sources.EDITION) if launch else None
     registry = sources.build_registry(assets)
+    report_registry = sources.build_registry(assets, sources.EDITION)
     return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, REGISTRY=registry,
-                S={lang: strings.build_strings(lang, headline, lau, assets, brief, registry)
+                REPORT_REGISTRY=report_registry,
+                S={lang: strings.build_strings(lang, headline, lau, assets, brief, report_registry)
                    for lang in LANGS})
 
 

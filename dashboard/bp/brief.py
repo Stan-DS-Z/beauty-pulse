@@ -2,8 +2,11 @@
 and the Brief's three exhibits.
 
 Every figure is computed here from the shipped assets; strings.py words them.
-Windows come from the data: the category window is funnel.funnel_window's, the
-launch window is compute_launch_headline's. Like data.py, nothing runs at import.
+The Brief is a report page, so it computes on data cut at its edition
+(sources.EDITION): no row dated after the cut-off month enters a figure, and
+newer data reaches it only when a new edition moves the cut-off. Windows come
+from the cut data: the category window is funnel.funnel_window's, the launch
+window is compute_launch_headline's. Like data.py, nothing runs at import.
 """
 
 from pathlib import Path
@@ -11,8 +14,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from .data import (METI_MAKE, METI_SKIN, load_attention_annual,
-                   load_attention_monthly, load_meti_annual)
+from .data import (METI_MAKE, METI_SKIN, compute_launch_headline, cut_months,
+                   load_attention_annual, load_attention_monthly, load_meti_annual)
 from .funnel import CATEGORIES, compute_funnel_matrix
 
 # Repeat Google Trends pulls differ by 5–20 index points on the same month
@@ -44,15 +47,15 @@ def _peak_run(idx: pd.Series, run: int = PEAK_RUN):
     return months[best], months[(best + run - 1) % 12], min(got), max(got)
 
 
-def _meti_monthly_value(ASSETS: Path) -> pd.DataFrame:
-    d = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
+def _meti_monthly_value(ASSETS: Path, cutoff) -> pd.DataFrame:
+    d = cut_months(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"), cutoff)
     d = d[(d["month"] >= 1) & (d["measure"] == "販売金額")]
     return d.groupby(["item", "year", "month"])["value"].sum()
 
 
-def _core(ASSETS: Path) -> pd.DataFrame:
+def _core(ASSETS: Path, cutoff) -> pd.DataFrame:
     d = pd.read_csv(ASSETS / "prtimes_launches.csv", dtype=str).fillna("")
-    d = d[d["panel"] == "core"].copy()
+    d = d[(d["panel"] == "core") & (d["month"] <= cutoff)].copy()
     d["year"] = d["month"].str[:4].astype(int)
     return d
 
@@ -61,16 +64,19 @@ def _half(month: str) -> str:
     return f"{month[:4]} H{1 if int(month[5:7]) <= 6 else 2}"
 
 
-def compute_brief(ASSETS: Path, HEADLINE: dict, LAUNCH: dict | None):
-    """The Brief's figures, or None without the launch export (the Brief rests
-    on launches as much as on shipments and search)."""
+def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
+    """The Brief's figures on data up to `cutoff` ("YYYY-MM"), or None without
+    the launch export (the Brief rests on launches as much as on shipments and
+    search). From HEADLINE it takes only mkt_y0, the first METI year, and the
+    size-matched cosine, which is computed on the single @cosme scrape."""
+    LAUNCH = compute_launch_headline(ASSETS, cutoff)
     if LAUNCH is None:
         return None
-    fm = compute_funnel_matrix(ASSETS)
+    fm = compute_funnel_matrix(ASSETS, cutoff)
     y0, y1 = fm["window"]
     rows = fm["rows"].copy()
-    val, units = load_meti_annual(ASSETS)
-    att = load_attention_annual(ASSETS)
+    val, units = load_meti_annual(ASSETS, cutoff)
+    att = load_attention_annual(ASSETS, cutoff)
     base = int(HEADLINE["mkt_y0"])
 
     # ── Market: shipped value by side, and serum's split into units and price
@@ -94,14 +100,14 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, LAUNCH: dict | None):
                             / (val.loc[li, y0] / units.loc[li, y0]) - 1) for li in line]
     rows["base_d"] = [100 * (val.loc[li, y1] / val.loc[li, base] - 1) for li in line]
 
-    core = _core(ASSETS)
+    core = _core(ASSETS, cutoff)
     cat1 = core[(core["year"] == y1) & (core["category"] != "")]
     tags1 = cat1["category"].str.split("|")
     rows["kr_n"] = [int(tags1.apply(lambda t, k=k: k in t).sum()) for k in rows.index]
     rows["kr_s"] = [100 * (cat1.loc[tags1.apply(lambda t, k=k: k in t), "origin"] == "KR").mean()
                     if n else np.nan for k, n in zip(rows.index, rows["kr_n"])]
 
-    mv = _meti_monthly_value(ASSETS)
+    mv = _meti_monthly_value(ASSETS, cutoff)
     years = range(y0, y1 + 1)
     seas_meti = {li: _seasonal(mv.loc[li].to_frame(), years) for li in line.unique()}
     rows["peak"] = [list(seas_meti[li].sort_values(ascending=False).index[:PEAK_TOP])
@@ -178,7 +184,7 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, LAUNCH: dict | None):
 
     # ── Timing: sunscreen's shipment and search peaks, and makeup launches
     sun_line, _, sun_term, _ = CATEGORIES["sunscreen"]
-    am = load_attention_monthly(ASSETS)
+    am = load_attention_monthly(ASSETS, cutoff)
     sun_search = am[am["term"] == sun_term].set_index(["year", "month"])[["interest"]]
     s_ship = _peak_run(seas_meti[sun_line])
     s_search = _peak_run(_seasonal(sun_search, years))
@@ -187,6 +193,6 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, LAUNCH: dict | None):
     timing = dict(ship=s_ship, search=s_search,
                   makeup_peaks=sorted(moy.nlargest(PEAK_TOP).index))
 
-    return dict(window=(y0, y1), market=market, demand=demand, supply=supply,
+    return dict(cutoff=cutoff, window=(y0, y1), market=market, demand=demand, supply=supply,
                 portfolio=portfolio, timing=timing, rows=rows, actives=actives,
                 n_rows=len(rows), n_core=LAUNCH["n_core"])

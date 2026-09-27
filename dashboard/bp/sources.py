@@ -33,10 +33,11 @@ REPORT_PAGES = ("brief", "market", "demand", "supply", "consumer", "timing", "me
 MONITOR_PAGES = ("funnel", "categories", "sources")
 PAGES = REPORT_PAGES + MONITOR_PAGES
 
-# The report's edition: the month it was issued, "YYYY-MM". Report pages carry
-# this one date; monitor exhibits carry each source's own. It is set when an
-# edition is issued, not derived, because issuing one is a decision about the
-# copy as well as the data (the cadence is open, brief §10).
+# The report's edition, "YYYY-MM". Report pages compute on data cut at the end
+# of this month and carry this one date; monitor pages compute on the latest
+# data and carry each source's own date. Issuing a new edition is this one
+# line: data that arrives meanwhile reaches the monitor at once and the report
+# only then. The cadence is Stan's decision.
 EDITION = "2026-09"
 
 # key: (English name, Japanese name, kind, pages that use it)
@@ -108,21 +109,30 @@ def _exported(ASSETS: Path):
     return {(r.source, r.date_kind): r.value for r in df.itertuples()}
 
 
-def build_registry(ASSETS: Path) -> dict:
-    """Every source, keyed as in DECLARED, dated from the assets in ASSETS."""
+def build_registry(ASSETS: Path, cutoff=None) -> dict:
+    """Every source, keyed as in DECLARED, dated from the assets in ASSETS.
+
+    With a cutoff ("YYYY-MM"), the series sources the report reads (METI, trade,
+    Trends, PR TIMES) are dated on their rows up to that month, so a report
+    page's source line states the data it computed on. The others are dated
+    only by the weekly export, which keeps no history, and are left as they are:
+    no report exhibit reads them yet."""
     ex = _exported(ASSETS)
+    c = int(cutoff.replace("-", "")) if cutoff else None
+    upto = (lambda ym: ym <= c) if c else (lambda ym: ym == ym)
     ts = lambda v: pd.Timestamp(v) if v is not None else None
     found = {}
 
     meti = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv",
                        usecols=["year", "month", "edition"])
-    meti = meti[meti["month"] >= 1]
+    meti = meti[(meti["month"] >= 1) & upto(meti["year"] * 100 + meti["month"])]
     months = pd.to_datetime(dict(year=meti["year"], month=meti["month"], day=1))
     found["meti"] = dict(data_to=months.max(), precision="month",
                          cadence=_cadence(months), first=months.min(),
                          edition=str(meti.loc[months.idxmax(), "edition"]))
 
     years = pd.read_csv(ASSETS / "estat_trade_hs3304.csv", usecols=["year"])["year"]
+    years = years[upto(years * 100 + 12)]
     stamps = pd.to_datetime(years.astype(str) + "-01-01")
     found["trade"] = dict(data_to=stamps.max(), precision="year",
                           cadence=_cadence(stamps), first=stamps.min())
@@ -131,6 +141,7 @@ def build_registry(ASSETS: Path) -> dict:
     # and another not, the older one bounds what the site shows.
     tr = [pd.read_csv(ASSETS / f, usecols=["week_start"], parse_dates=["week_start"])
           ["week_start"] for f in TRENDS_ASSETS]
+    tr = [t[upto(t.dt.year * 100 + t.dt.month)] for t in tr]
     found["trends"] = dict(data_to=min(s.max() for s in tr), precision="month",
                            cadence=_cadence(tr[0]), first=max(s.min() for s in tr),
                            collected=ts(ex.get(("trends", "collected"))))
@@ -138,6 +149,7 @@ def build_registry(ASSETS: Path) -> dict:
     found["trends_related"] = dict(data_to=None, precision=None, cadence=None)
 
     launches = pd.read_csv(ASSETS / "prtimes_launches.csv", usecols=["published"])
+    launches = launches[upto(launches["published"].str[:7].str.replace("-", "").astype(int))]
     feeds = pd.read_csv(ASSETS / "prtimes_feeds.csv", usecols=["fetched"])
     found["prtimes"] = dict(data_to=pd.Timestamp(launches["published"].max()),
                             precision="day", cadence="per_release",

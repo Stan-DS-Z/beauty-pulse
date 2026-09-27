@@ -27,12 +27,13 @@ def launch():
 
 @pytest.fixture(scope="module")
 def B(headline, launch):
-    return brief.compute_brief(A, headline, launch)
+    return brief.compute_brief(A, headline, sources.EDITION)
 
 
 @pytest.fixture(scope="module")
 def S(headline, launch, B):
-    return strings.build_strings("en", headline, launch, A, B, sources.build_registry(A))
+    return strings.build_strings("en", headline, launch, A, B,
+                                 sources.build_registry(A, sources.EDITION))
 
 
 # ── The directions the copy states ──────────────────────────────────────────
@@ -69,9 +70,9 @@ def test_governing_thought_and_portfolio_title_hold(B):
 
 # ── Windows and rules ───────────────────────────────────────────────────────
 
-def test_korean_share_compares_complete_halves_inside_the_launch_window(B, launch):
+def test_korean_share_compares_complete_halves_inside_the_launch_window(B):
     s = B["supply"]
-    months = pd.Series(launch["months"])
+    months = pd.Series(data.compute_launch_headline(A, sources.EDITION)["months"])
     for h in (s["h_first"], s["h_last"]):
         y, half = int(h[:4]), int(h[-1])
         want = [f"{y}-{m:02d}" for m in (range(1, 7) if half == 1 else range(7, 13))]
@@ -91,14 +92,90 @@ def test_the_table_holds_every_category_largest_value_first(B):
     assert list(rows["value_y1"]) == sorted(rows["value_y1"], reverse=True)
 
 
-def test_the_edition_is_not_older_than_the_data_it_reports():
-    """A report dated one month cannot carry a later month's data."""
-    assert re.fullmatch(r"\d{4}-\d{2}", sources.EDITION)
-    reg = sources.build_registry(A)
-    for key in ("meti", "trends", "prtimes"):
-        assert "brief" in reg[key].used_on, key
-        to = reg[key].data_to
-        assert to.strftime("%Y-%m") <= sources.EDITION, key
+# ── The edition cut-off ─────────────────────────────────────────────────────
+
+def _later(ym, n):
+    p = pd.Period(ym, freq="M") + n
+    return p.year, p.month
+
+
+def _assets_copy(dest, future):
+    """The shipped assets under `dest`, linked, with the fetch dated long after
+    the edition so every month up to the cut-off is complete. With `future`,
+    rows dated after the cut-off are added to every dated asset the report
+    reads, with values far from the real ones."""
+    import shutil
+    dest.mkdir()
+    for f in A.iterdir():
+        if f.is_file():
+            (dest / f.name).symlink_to(f)
+    def write(name, frame, **kw):
+        (dest / name).unlink()
+        frame.to_csv(dest / name, index=False, **kw)
+    cut = sources.EDITION
+    after = [_later(cut, n) for n in range(1, 16)]          # the next fifteen months
+
+    feeds = pd.read_csv(A / "prtimes_feeds.csv", dtype=str)
+    feeds["fetched"] = f"{after[-1][0] + 1}-01-15"
+    write("prtimes_feeds.csv", feeds)
+    if not future:
+        return dest
+
+    meti = pd.read_csv(A / "estat_meti_cosmetics.csv")
+    src = meti[(meti["year"] == meti["year"].max() - 1) & (meti["month"] >= 1)]
+    add = [src[src["month"] == m].assign(year=y, value=lambda x: x["value"] * 10)
+           for y, m in after]
+    add.append(src[src["month"] == 1].assign(year=after[-1][0] + 1, month=0))
+    write("estat_meti_cosmetics.csv", pd.concat([meti, *add]))
+
+    lau = pd.read_csv(A / "prtimes_launches.csv", dtype=str)
+    core = lau[lau["panel"] == "core"].head(400)
+    add = [core.assign(month=f"{y}-{m:02d}", published=f"{y}-{m:02d}-15",
+                       origin="KR", category="toner_lotion", ingredients="アゼライン酸")
+           for y, m in after]
+    write("prtimes_launches.csv", pd.concat([lau, *add]))
+
+    am = pd.read_csv(A / "nb04b_attention_monthly.csv")
+    src = am[am["year"] == am["year"].max()]
+    add = [src[src["month"] == m].assign(year=y, interest=100.0) for y, m in after]
+    write("nb04b_attention_monthly.csv", pd.concat([am, *add]))
+    an = pd.read_csv(A / "nb04b_attention_annual.csv")
+    add = [an[an["year"] == an["year"].max()].assign(year=y, interest=100.0)
+           for y in sorted({y for y, _ in after})]
+    write("nb04b_attention_annual.csv", pd.concat([an, *add]))
+
+    for name in sources.TRENDS_ASSETS:
+        t = pd.read_csv(A / name, encoding="utf-8-sig")
+        last = t[t["week_start"] == t["week_start"].max()]
+        add = [last.assign(week_start=f"{y}-{m:02d}-01") for y, m in after]
+        write(name, pd.concat([t, *add]), encoding="utf-8-sig")
+    tr = pd.read_csv(A / "estat_trade_hs3304.csv")
+    write("estat_trade_hs3304.csv",
+          pd.concat([tr, tr[tr["year"] == tr["year"].max()].assign(year=after[-1][0] + 1)]))
+    return dest
+
+
+def test_no_report_figure_uses_data_past_the_edition(tmp_path, headline):
+    """Data dated after the edition's month changes nothing on the Brief: not a
+    figure, not a sentence, not a source line. The baseline has the same late
+    fetch, so the months up to the cut-off are complete in both."""
+    cut = sources.EDITION
+    base_dir = _assets_copy(tmp_path / "base", future=False)
+    fut_dir = _assets_copy(tmp_path / "future", future=True)
+    base = brief.compute_brief(base_dir, headline, cut)
+    fut = brief.compute_brief(fut_dir, headline, cut)
+    pd.testing.assert_frame_equal(base["rows"], fut["rows"])
+    pd.testing.assert_frame_equal(base["actives"], fut["actives"])
+    for lang in ("en", "jp"):
+        assert (strings.brief_strings(lang, base, headline, sources.build_registry(base_dir, cut))
+                == strings.brief_strings(lang, fut, headline, sources.build_registry(fut_dir, cut)))
+    # and the added data is really there for the monitor to read
+    assert (sources.build_registry(fut_dir)["meti"].data_to
+            > sources.build_registry(base_dir)["meti"].data_to)
+
+
+def test_the_edition_is_a_month():
+    assert re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", sources.EDITION)
 
 
 # ── The page ────────────────────────────────────────────────────────────────
@@ -119,7 +196,7 @@ def page_json():
 
 
 def test_every_exhibit_carries_a_source_line_from_the_registry(S):
-    reg = sources.build_registry(A)
+    reg = sources.build_registry(A, sources.EDITION)
     for key, srcs in (("b_p_src", ["meti", "prtimes"]), ("b_a_src", ["trends", "prtimes"]),
                       ("b_t_src", ["meti", "trends", "prtimes"])):
         assert S[key] == sources.source_line(srcs, reg)
@@ -134,6 +211,7 @@ def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):
 
 def test_the_nav_has_no_emoji(headline, launch, B):
     for lang in ("en", "jp"):
-        S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A))
+        S = strings.build_strings(lang, headline, launch, A, B,
+                                  sources.build_registry(A, sources.EDITION))
         for key in ("nav_report", "nav_brief", "tab1", "tab2", "tab3"):
             assert not EMOJI.search(S[key]), (lang, key)

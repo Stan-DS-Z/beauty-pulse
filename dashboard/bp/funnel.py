@@ -70,20 +70,21 @@ STAGES = (("launch", 1, "prtimes"), ("social", 2, None), ("verification", 3, "co
 REASONS = ("not_collected", "single_scrape", "term_not_tracked", "no_releases")
 
 
-def _core_categorised(ASSETS: Path):
+def _core_categorised(ASSETS: Path, cutoff=None):
     d = pd.read_csv(ASSETS / "prtimes_launches.csv", dtype=str,
                     usecols=["panel", "month", "category"]).fillna("")
-    d = d[(d["panel"] == "core") & (d["category"] != "")].copy()
+    d = d[(d["panel"] == "core") & (d["category"] != "")
+          & ((d["month"] <= cutoff) if cutoff else True)].copy()
     d["year"] = d["month"].str[:4].astype(int)
     d["tags"] = d["category"].str.split("|")
     return d
 
 
-def funnel_window(ASSETS: Path, *, _launch=None, _val=None, _att=None):
+def funnel_window(ASSETS: Path, *, cutoff=None, _launch=None, _val=None, _att=None):
     """(first year, last year) that every stage holds in full."""
-    launch = _core_categorised(ASSETS) if _launch is None else _launch
-    val = load_meti_annual(ASSETS)[0] if _val is None else _val
-    att = load_attention_annual(ASSETS) if _att is None else _att
+    launch = _core_categorised(ASSETS, cutoff) if _launch is None else _launch
+    val = load_meti_annual(ASSETS, cutoff)[0] if _val is None else _val
+    att = load_attention_annual(ASSETS, cutoff) if _att is None else _att
 
     # The launch panel starts mid-year; its first full year is the next one if
     # the start month is not January. Its last full year is the last with a
@@ -100,8 +101,9 @@ def funnel_window(ASSETS: Path, *, _launch=None, _val=None, _att=None):
     return y0, y1
 
 
-def compute_funnel_matrix(ASSETS: Path):
+def compute_funnel_matrix(ASSETS: Path, cutoff=None):
     """The matrix, one row per category, with each cell's counts for hover.
+    With a cutoff ("YYYY-MM"), it is computed on data dated up to that month.
 
     Returns a dict:
       window   (y0, y1)
@@ -117,9 +119,9 @@ def compute_funnel_matrix(ASSETS: Path):
                that column only
       launch_den  (categorised core releases in y0, in y1)
     """
-    launch = _core_categorised(ASSETS)
-    val, _ = load_meti_annual(ASSETS)
-    att = load_attention_annual(ASSETS)
+    launch = _core_categorised(ASSETS, cutoff)
+    val, _ = load_meti_annual(ASSETS, cutoff)
+    att = load_attention_annual(ASSETS, cutoff)
     y0, y1 = funnel_window(ASSETS, _launch=launch, _val=val, _att=att)
 
     c0, c1 = launch[launch["year"] == y0], launch[launch["year"] == y1]
