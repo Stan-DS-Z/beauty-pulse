@@ -124,17 +124,17 @@ def test_version_reports_the_build_and_the_data_months(client):
 
 
 @pytest.mark.parametrize("lang", ["en", "jp"])
-def test_shift_page_shows_the_measured_ratio_and_its_range(pages, headline, lang):
-    """The reclassified SKU ratio, its 95% CI and its sensitivity span reach the
-    page, from a HEADLINE computed independently of the app's own."""
-    H = headline
-    sep = "–" if lang == "en" else "〜"
+def test_shift_page_publishes_no_rakuten_sku_ratio(pages, app, lang):
+    """The pull keeps each genre's 3,000 most-reviewed items, so a ratio of its
+    counts measures the pull, not Rakuten (METHODOLOGY Revision 11). The page
+    shows no multiplier, and the treemap caption states the frame and its date."""
+    import pandas as pd
+    from bp.sources import date_label
     text = _text(_tree(pages["/shift"].TREES[lang]))
-    assert f"{H['sku_measured']:.1f}x" in text
-    assert f"{H['sku_lo']:.1f}{sep}{H['sku_hi']:.1f}" in text, \
-        "the CI must be shown, not just the point"
-    assert f"{H['sku_span_lo']:.1f}{sep}{H['sku_span_hi']:.1f}" in text, \
-        "the sensitivity span must be shown"
+    assert not re.search(r"\d+\.\d+\s*[x×倍]", text), re.findall(r"\d+\.\d+\s*[x×倍]", text)
+    snap = pd.Timestamp(pd.read_csv(app.ASSETS / "nb07_sku_treemap.csv")["snapshot_date"].max())
+    assert "3,000" in text
+    assert date_label(snap, "day", "en" if lang == "en" else "ja") in text
 
 
 # ── One callback per control, with a non-default value ─────────────────────

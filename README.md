@@ -156,7 +156,7 @@ questions resolve into against first-party data.
 |---|---|
 | Googleトレンドの検索需要 / Search demand (Google Trends) | 獲得単価・広告転換率 / Paid-search CPA and conversion |
 | @cosmeのレビュー言語 / Review language (@cosme) | CRM・アプリ内行動・再購買率 / CRM, in-app behaviour, repeat rate |
-| 楽天のSKU棚シェア / Shelf share by SKU (Rakuten) | POS実売・在庫回転・粗利 / POS sell-through, stock turns, margin |
+| 楽天の商品別レビュー数・評価・価格 / Reviews, rating and price per item (Rakuten) | POS実売・在庫回転・粗利 / POS sell-through, stock turns, margin |
 
 注意点12（公開統計での検証）は実行済みであり、その結果が上の検証結果である。残る限界は三つ:
 経産省統計の年次値は2025年まで、2026年は1〜7月の月次確報で、年報の公表時に改定される。皮膚用の金額系列は2022年1月に断層があり、

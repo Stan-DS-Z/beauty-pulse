@@ -167,23 +167,26 @@ def lens_options(S):
 
 
 def fig_sku_treemap(df_sku, color_col):
-    """Rakuten subcategories sized by SKU count and coloured by color_col."""
+    """Rakuten subcategories, coloured by color_col.
+
+    Tiles are sized by the items each subcategory has in the pull: each genre's
+    3,000 most-reviewed items. That size is set by the pull, not by Rakuten's
+    listings, so no tile shows it as a count of what Rakuten sells."""
     df_sku = df_sku.copy()
     df_sku["cat_display"] = df_sku["category"].map(lambda x: CAT_LABELS.get(x, x))
     df_sku["tier_display"] = df_sku["tier_group"].str.capitalize()
-    COLOR_SCALES = {"sku_count": "RdPu", "avg_reviews": "Blues",
+    COLOR_SCALES = {"avg_reviews": "Blues",
                     "med_price": "Oranges", "avg_rating": "Greens"}
-    HOVER_LABELS = {"sku_count": "SKUs", "avg_reviews": "Avg reviews/SKU",
+    HOVER_LABELS = {"avg_reviews": "Avg reviews/SKU",
                     "med_price": "Median price (¥)", "avg_rating": "Avg rating (rated SKUs)"}
     hover_lbl = HOVER_LABELS[color_col]
     # Build customdata array: [avg_reviews, med_price, avg_rating, tier, rated_share]
     df_sku["_cval"] = df_sku[color_col]
     CELL_LABELS = {
-        "sku_count": "SKUs", "avg_reviews": "rev/SKU avg",
+        "avg_reviews": "rev/SKU avg",
         "med_price": "median price", "avg_rating": "avg rating",
     }
     CELL_FMT = {
-        "sku_count": lambda v: f"{v:,.0f}",
         "avg_reviews": lambda v: f"{v:.1f}",
         "med_price": lambda v: f"¥{v:,.0f}",
         "avg_rating": lambda v: f"{v:.2f} ★",
@@ -201,12 +204,12 @@ def fig_sku_treemap(df_sku, color_col):
         custom_data=["avg_reviews", "med_price", "avg_rating", "tier_group", "rated_share"],
     )
     fig3.update_traces(
-        texttemplate="<b>%{label}</b><br>%{value:,} SKUs",
+        texttemplate="<b>%{label}</b>",
         textfont=dict(size=10),
         marker_line=dict(width=2, color=C["bg"]),
         hovertemplate=(
             "<b>%{label}</b><br>"
-            "SKUs: %{value:,}<br>"
+            "Items in pull: %{value:,}<br>"
             "Avg reviews/SKU: %{customdata[0]:.1f}<br>"
             "Median price: ¥%{customdata[1]:,.0f}<br>"
             "Avg rating: %{customdata[2]:.2f} / 5.0 "

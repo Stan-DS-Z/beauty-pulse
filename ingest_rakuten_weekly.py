@@ -5,11 +5,20 @@
     python ingest_rakuten_weekly.py --latest        # newest complete snapshot
     python ingest_rakuten_weekly.py --all           # every snapshot on disk
     python ingest_rakuten_weekly.py --check         # resolve genres, ingest nothing
+    python ingest_rakuten_weekly.py --totals-from-log outputs/weekly_runs/X.log
 
-Run it after NB01a. It fills both Rakuten tables from the raw snapshot files:
+Run it after NB01a. It fills three Rakuten tables from the raw snapshot files:
 
   products         current state — one row per SKU, newest values
   products_weekly  history — one row per (product_id, snapshot_date)
+  genre_totals     Rakuten's own listing count per genre and date
+
+The pull keeps each genre's 3,000 most-reviewed items, so products and
+products_weekly cannot say how many items a genre lists; a ratio of their
+counts measures how many genres are pulled. genre_totals holds the count the
+API reports for the whole genre. NB01a has saved it as `total_available` since
+2026-09-27; for 2026-09-20 it survives only in that run's log, which
+--totals-from-log reads.
 
 This is the ingest path NB02 section 3 and NB02c sections 3-4 perform in the
 notebooks. It exists as a script so the weekly loop does not have to re-run all
@@ -45,6 +54,7 @@ ranking files, both in sorted filename order, first file to carry the SKU wins.
 
 import argparse
 import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -78,6 +88,14 @@ DDL = [
     "CREATE INDEX IF NOT EXISTS idx_pw_date ON products_weekly(snapshot_date)",
     "CREATE INDEX IF NOT EXISTS idx_pw_product ON products_weekly(product_id)",
     "CREATE INDEX IF NOT EXISTS idx_pw_new ON products_weekly(is_new_product, snapshot_date)",
+    """CREATE TABLE IF NOT EXISTS genre_totals (
+        snapshot_date    TEXT    NOT NULL,
+        genre_id         TEXT    NOT NULL,
+        genre_name       TEXT,
+        total_available  INTEGER NOT NULL,
+        recorded_from    TEXT    NOT NULL,   -- 'snapshot file' | 'run log'
+        PRIMARY KEY(snapshot_date, genre_id)
+    )""",
 ]
 
 
@@ -158,6 +176,51 @@ def check_complete(files: list[tuple[Path, bool]], expected_genres: int) -> None
                 f"{n} {label} file(s) for {expected_genres} genres — the scrape "
                 "is incomplete. Re-run NB01a."
             )
+
+
+def read_total(path: Path) -> tuple[str | None, int | None]:
+    """(genre_name, total_available) from a product file; total is None when
+    the file predates NB01a saving it."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return None, None
+    total = data.get("total_available")
+    return data.get("genre_name"), int(total) if total is not None else None
+
+
+def store_total(conn, snapshot_date: str, genre_id: str, genre_name: str | None,
+                total: int, recorded_from: str) -> None:
+    conn.execute(
+        """INSERT INTO genre_totals
+               (snapshot_date, genre_id, genre_name, total_available, recorded_from)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(snapshot_date, genre_id) DO UPDATE SET
+               genre_name = excluded.genre_name,
+               total_available = excluded.total_available,
+               recorded_from = excluded.recorded_from""",
+        (snapshot_date, genre_id, genre_name, total, recorded_from))
+
+
+def totals_from_log(conn, log_path: Path) -> int:
+    """Genre totals from an update_data.command log, for runs before NB01a
+    saved them. Each genre's block reads:
+
+        PULLING  美容液 (id=216348)
+            Total available: 69,616 items across 100 pages
+          SAVED 3,000 items → rakuten_products_216348_2026-09-20.json
+
+    The date comes from the saved file's name, so a genre that was skipped
+    (already on disk) or failed records nothing."""
+    pat = re.compile(r"PULLING\s+(?P<name>.+?) \(id=(?P<gid>\d+)\)\s*\n"
+                     r"\s*Total available: (?P<n>[\d,]+) items.*\n"
+                     r"\s*SAVED [\d,]+ items → rakuten_products_(?P=gid)_(?P<date>\d{4}-\d{2}-\d{2})\.json")
+    n = 0
+    for m in pat.finditer(log_path.read_text(encoding="utf-8")):
+        store_total(conn, m["date"], m["gid"], m["name"], int(m["n"].replace(",", "")),
+                    "run log")
+        n += 1
+    conn.commit()
+    return n
 
 
 def ingest_item(conn, item: dict, category_id: int, snapshot_date: str,
@@ -256,8 +319,15 @@ def ingest_date(conn, snapshot_date: str, genre_map: dict[str, int]) -> dict:
         return conn.execute("SELECT COUNT(*) FROM products_weekly").fetchone()[0]
 
     totals = {"files": 0, "rows": 0, "new": 0}
+    missing_totals = []
     for path, is_ranking in files:
         genre_id = path.stem.split("_")[2]
+        if not is_ranking:
+            name, total = read_total(path)
+            if total is None:
+                missing_totals.append(genre_id)
+            else:
+                store_total(conn, snapshot_date, genre_id, name, total, "snapshot file")
         items = read_items(path)
         before = weekly_rows()
         for i, item in enumerate(items):
@@ -269,6 +339,9 @@ def ingest_date(conn, snapshot_date: str, genre_map: dict[str, int]) -> dict:
         totals["files"] += 1
         totals["rows"] += added
         print(f"  {path.name:<48} {added:>6,} new rows  ({len(items):,} items)")
+    if missing_totals:
+        print(f"  no total_available in {len(missing_totals)} product file(s): "
+              "the files predate 2026-09-27, or NB01a is not saving it")
     return totals
 
 
@@ -331,6 +404,8 @@ def main() -> int:
     g.add_argument("--latest", action="store_true",
                    help="newest complete snapshot on disk, whatever its date")
     ap.add_argument("--check", action="store_true", help="resolve genres and exit")
+    ap.add_argument("--totals-from-log", type=Path, metavar="LOG",
+                    help="store the genre totals printed in a run log, then exit")
     args = ap.parse_args()
 
     conn = get_connection()
@@ -346,6 +421,11 @@ def main() -> int:
         for ddl in DDL:
             conn.execute(ddl)
         conn.commit()
+
+        if args.totals_from_log:
+            n = totals_from_log(conn, args.totals_from_log)
+            print(f"genre_totals: {n} genre(s) from {args.totals_from_log.name}")
+            return 0 if n else 1
 
         if args.all:
             target = None

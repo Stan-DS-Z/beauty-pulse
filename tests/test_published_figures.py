@@ -12,25 +12,19 @@ import re
 import pandas as pd
 
 
-def test_every_sku_ratio_in_the_docs_is_a_computed_one(docs):
-    """Any "N.N x/×/倍" in the docs must be a value build_sku_ratio.py produced.
+def test_the_docs_publish_no_sku_ratio(docs):
+    """No "N.N x/×/倍" in the live docs.
 
-    The ratio is deliberately published as a range now — 6.6x measured, 3.7x as
-    Rakuten tags it, 9.7x and 10.7x under the other two treatments — so a single
-    expected value no longer describes the docs. What must still hold is that
-    every figure traces to the asset; a hand-typed or stale one fails.
+    The Rakuten SKU ratio (7.5x relabelled, 3.6x as tagged) counted our pull:
+    each genre's 3,000 most-reviewed items, nine genres on the skincare side and
+    two on the makeup side, added up across 22 pulls. It measured the pull, not
+    Rakuten's listings, and was withdrawn (METHODOLOGY Revision 11). No shelf
+    ratio returns until Rakuten's own genre totals cover eight weeks and the
+    relabel proportions are re-measured outside the most-reviewed 3,000. The
+    revision log, which quotes the withdrawn figures, is excluded by the fixture.
     """
-    from pathlib import Path
-    ratios = pd.read_csv(
-        Path(__file__).resolve().parent.parent / "dashboard" / "assets" / "nb07_sku_ratio.csv"
-    )["ratio"]
-    allowed = {f"{round(float(r), 1):.1f}" for r in ratios}
-
-    found = {m.group(1) for m in re.finditer(r"(\d+\.\d+)\s*[×x倍]", docs)}
-    stray = found - allowed
-    assert not stray, (
-        f"docs carry ratios {sorted(stray)} that build_sku_ratio.py does not "
-        f"produce; it computes {sorted(allowed)}")
+    found = sorted({m.group(0) for m in re.finditer(r"\d+\.\d+\s*[×x倍]", docs)})
+    assert not found, f"docs carry ratios {found}"
 
 
 def test_ingredient_levels_match(docs, headline):

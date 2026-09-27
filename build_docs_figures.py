@@ -18,21 +18,20 @@ HTML comments render as nothing on GitHub, so the published page is unchanged.
 Running this rewrites whatever sits between the markers, so the docs cannot
 disagree with the assets they are quoting.
 
-The registry has three sources, in order of authority:
+The registry has these sources, in order of authority:
 
   HEADLINE   dashboard/bp/data.py's compute_headline() — the exact values
              the deployed page renders, so docs and dashboard cannot diverge
   LAUNCH     compute_launch_headline() and prtimes_feeds.csv — the launch
              panel's feed counts
-  nb07_sku_ratio.csv   the ratio treatments, which HEADLINE only spans
   the database         corpus sizes for the data-source tables
 
 Not everything is derivable. Hand-label proportions, classifier scores and the
 2022 break diagnostics are measurements recorded once, not recomputed per pull;
 they stay as prose and --check ignores them.
 
-Run it after NB07 and build_sku_ratio.py, which is where the assets it reads
-are written. update_data.command does this.
+Run it after NB07 and the weekly asset builds, which write the assets it reads.
+update_data.command does this.
 """
 
 import argparse
@@ -75,12 +74,6 @@ def launch_feeds() -> dict:
     }
 
 
-def ratios() -> pd.Series:
-    return pd.read_csv(
-        ROOT / "dashboard" / "assets" / "nb07_sku_ratio.csv"
-    ).set_index("basis")["ratio"]
-
-
 def corpus() -> dict:
     conn = get_connection()
     q = lambda sql: conn.execute(sql).fetchone()[0]          # noqa: E731
@@ -105,7 +98,7 @@ def corpus() -> dict:
 
 
 def build_registry() -> dict[str, str]:
-    h, r, c = headline(), ratios(), corpus()
+    h, c = headline(), corpus()
 
     def pct(x) -> str:
         """Signed percentages are written without the sign in prose that already
@@ -115,17 +108,6 @@ def build_registry() -> dict[str, str]:
     reg = {
         # ── corpus sizes ────────────────────────────────────────────────────
         **{k: f"{v:,}" for k, v in c.items()},
-
-        # ── SKU ratio treatments ────────────────────────────────────────────
-        "sku_as_tagged":      f"{r['as_labelled']:.1f}",
-        "sku_564517_only":    f"{r['reclassified_564517_only']:.1f}",
-        "sku_reclassified":   f"{r['reclassified']:.1f}",
-        "sku_ci_lo":          f"{r['reclassified_lo']:.1f}",
-        "sku_ci_hi":          f"{r['reclassified_hi']:.1f}",
-        "sku_origin_dropped": f"{r['origin_genre_dropped']:.1f}",
-        "sku_product_type":   f"{r['product_type_genres']:.1f}",
-        "skin_skus":          f"{int(h['skin_skus']):,}",
-        "cosm_skus":          f"{int(h['cosm_skus']):,}",
 
         # ── attention layer ─────────────────────────────────────────────────
         "cosm_decline":  pct(h["cosm_decline"]),

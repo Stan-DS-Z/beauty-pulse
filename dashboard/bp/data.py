@@ -62,40 +62,9 @@ def compute_headline(ASSETS: Path):
 
     The Google Trends comparison uses block_B, スキンケア and 化粧品 from one
     request (one scale); convergence is the size-matched cosine."""
-    # Rakuten SKU counts — full in-scope (ALL_TIERS) from NB07's headline export.
-    # The treemap CSV excludes beauty_all-categorised products, so summing it
-    # undercounts the catalogue and lands on a different ratio; fall back to it
-    # only if the headline export is missing. No figures quoted here on purpose
-    # — both move with every weekly snapshot.
-    _hl_path = ASSETS / "nb07_headline.csv"
-    if _hl_path.exists():
-        _hl = pd.read_csv(_hl_path).set_index("metric")["value"]
-        skin_skus, cosm_skus = int(_hl["skin_skus"]), int(_hl["cosm_skus"])
-    else:
-        df_sku = pd.read_csv(ASSETS / "nb07_sku_treemap.csv")
-        skin_skus = int(df_sku[df_sku["tier_group"] == "skincare"]["sku_count"].sum())
-        cosm_skus = int(df_sku[df_sku["tier_group"] == "cosmetics"]["sku_count"].sum())
-    sku_ratio = round(skin_skus / max(cosm_skus, 1), 1)
-
-    # The SKU ratio is not one number. Genre 564517 韓国コスメ carries
-    # tier='cosmetics' but is a country-of-origin genre: 150 of its products
-    # labelled by hand are 49% skincare, 36% makeup, 15% neither. It is also
-    # 62% of the cosmetics denominator. The one real makeup genre is 24%
-    # out of scope as well, so both sides are hand-measured now.
-    # build_sku_ratio.py writes every treatment; we report the
-    # reclassified figure with its bootstrap CI and keep the span for the
-    # caveat. Older assets predate the file — fall back to the raw ratio.
-    _sr_path = ASSETS / "nb07_sku_ratio.csv"
-    if _sr_path.exists():
-        _sr = pd.read_csv(_sr_path).set_index("basis")["ratio"]
-        sku_measured = round(float(_sr["reclassified"]), 1)
-        sku_lo = round(float(_sr["reclassified_lo"]), 1)
-        sku_hi = round(float(_sr["reclassified_hi"]), 1)
-        sku_span_lo = round(float(_sr["as_labelled"]), 1)
-        sku_span_hi = round(float(_sr["product_type_genres"]), 1)
-    else:
-        sku_measured = sku_lo = sku_hi = sku_ratio
-        sku_span_lo = sku_span_hi = sku_ratio
+    # No Rakuten SKU count or ratio is computed here. The pulled frame is each
+    # genre's 3,000 most-reviewed items, so a ratio of its counts measures how
+    # many genres are pulled, not what Rakuten lists (METHODOLOGY Revision 11).
 
     # Google Trends — block_B: スキンケア and 化粧品 from one request, one scale
     df_tr = pd.read_csv(ASSETS / "nb07_trends_crossover.csv", parse_dates=["week_start"])
@@ -263,14 +232,6 @@ def compute_headline(ASSETS: Path):
 
 
     return {
-        "sku_ratio":     sku_ratio,
-        "sku_measured":  sku_measured,
-        "sku_lo":        sku_lo,
-        "sku_hi":        sku_hi,
-        "sku_span_lo":   sku_span_lo,
-        "sku_span_hi":   sku_span_hi,
-        "skin_skus":    skin_skus,
-        "cosm_skus":    cosm_skus,
         "cosm_decline": cosm_decline,
         "skin_change":  skin_change,
         "gap_change":   gap_change,

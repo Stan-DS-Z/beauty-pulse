@@ -1,20 +1,23 @@
-"""Regenerate the two Rakuten SKU assets NB07 produces from the products table.
+"""Regenerate the Rakuten treemap asset from the latest weekly snapshot.
 
     python build_sku_assets.py
 
-  nb07_headline.csv     skin_skus / cosm_skus — the dashboard's shelf-share KPI
-  nb07_sku_treemap.csv  per-category counts, reviews, rating and price
+  nb07_sku_treemap.csv  per subcategory: items, reviews per item, rating, price
 
-Both are written to outputs/ and dashboard/assets/, which NB07 keeps identical.
+Written to outputs/ and dashboard/assets/.
 
-The queries are NB07 cells 6 and 13 unchanged, lifted here so the SKU assets can
-be refreshed on the weekly Rakuten cadence without re-running an 8 MB notebook
-that would also regenerate the wordclouds, the UMAP render and the language
-panel — none of which move when a Rakuten snapshot lands. Same reason
-build_sku_ratio.py exists.
+The frame is what NB01a pulls: each genre's 3,000 most-reviewed items, one
+snapshot. Only per-item measures are read from it. The number of items per
+subcategory is set by how many genres are pulled and by the cap, not by what
+Rakuten lists, so no count or ratio of counts is published from this frame
+(METHODOLOGY Revision 11). Rakuten's own listing counts per genre are stored in
+genre_totals by ingest_rakuten_weekly.py.
 
-Run it after ingest_rakuten_weekly.py, then build_sku_ratio.py, then check the
-published prose still matches: pytest tests/test_published_figures.py.
+Until 2026-09-27 this read the products table, which holds every SKU seen in any
+pull, and also wrote nb07_headline.csv, the skincare and makeup SKU counts
+behind the withdrawn ratio.
+
+Run it after ingest_rakuten_weekly.py.
 """
 
 import sys
@@ -44,44 +47,28 @@ def write_both(df: pd.DataFrame, name: str) -> None:
     print(f"wrote {name} -> outputs/ and dashboard/assets/")
 
 
-def headline(conn) -> pd.DataFrame:
-    """NB07 cell 6. Full ALL_TIERS counts, so the KPI matches the headline.
-
-    The treemap drops beauty_all-categorised products, so summing it understates
-    the catalogue. These counts do not.
-    """
-    def count(tiers: str) -> int:
-        return conn.execute(f"""
-            SELECT COUNT(*) FROM products p
-            JOIN categories c ON p.category_id = c.category_id
-            WHERE p.source_id = 1 AND {CANON} IN ({tiers})""").fetchone()[0]
-
-    skin, cosm = count(SKIN_TIERS), count(COSM_TIERS)
-    print(f"  skin_skus={skin:,}  cosm_skus={cosm:,}  "
-          f"as-tagged ratio={skin / cosm:.2f}x")
-    return pd.DataFrame({"metric": ["skin_skus", "cosm_skus"],
-                         "value": [skin, cosm]})
-
-
 def treemap(conn) -> pd.DataFrame:
-    """NB07 cell 13.
+    """Per-item measures by subcategory, from the latest weekly snapshot.
 
     avg_rating is over RATED SKUs only — review_avg = 0 means "no reviews yet",
     not "rated zero". Price is the MEDIAN: Rakuten listings carry ¥1 junk and
     ¥300k+ outliers that distort a mean.
     """
+    (snap,) = conn.execute("SELECT MAX(snapshot_date) FROM products_weekly").fetchone()
     raw = pd.read_sql(f"""
         SELECT
             CASE WHEN {CANON} IN ({SKIN_TIERS})
                  THEN 'skincare' ELSE 'cosmetics' END AS tier_group,
             c.normalized_name AS category,
-            p.review_count, p.review_avg, p.price_jpy
-        FROM products p
+            w.review_count, w.review_avg, w.price_jpy
+        FROM products_weekly w
+        JOIN products p ON w.product_id = p.product_id
         JOIN categories c ON p.category_id = c.category_id
         WHERE p.source_id = 1
+          AND w.snapshot_date = ?
           AND {CANON} IN ({ALL_TIERS})
           AND c.normalized_name != 'beauty_all'
-    """, conn)
+    """, conn, params=(snap,))
 
     return (raw
             .groupby(["tier_group", "category"])
@@ -96,15 +83,14 @@ def treemap(conn) -> pd.DataFrame:
             }), include_groups=False)
             .reset_index()
             .astype({"sku_count": int})
-            .sort_values(["tier_group", "sku_count"], ascending=[True, False]))
+            .sort_values(["tier_group", "sku_count"], ascending=[True, False])
+            .assign(snapshot_date=snap[:10]))
 
 
 def main() -> int:
     conn = get_connection()
     try:
-        print("nb07_headline.csv")
-        write_both(headline(conn), "nb07_headline.csv")
-        print("\nnb07_sku_treemap.csv")
+        print("nb07_sku_treemap.csv")
         df = treemap(conn)
         write_both(df, "nb07_sku_treemap.csv")
         print()

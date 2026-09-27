@@ -4,8 +4,11 @@ build_strings() returns the table for one language with every figure-bearing
 entry filled from the headline and launch dicts. Imports no UI framework.
 """
 
+import pandas as pd
+
 from .data import (LAUNCH_GATE, load_ingredient_surge, load_makeup_rebound,
-                   load_trends_crossover)
+                   load_sku_treemap, load_trends_crossover)
+from .sources import date_label
 
 STRINGS = {
     "en": {
@@ -18,7 +21,6 @@ STRINGS = {
 
         "t1_m1": "Cosmetics search",  "t1_m1d": "化粧品 search interest, full years 2019→2025 (Google Trends, one request with スキンケア)",
         "t1_m2": "Niacinamide search",   "t1_m2d": "",
-        "t1_m3": "Rakuten SKU ratio",
         "t1_m4": "Makeup shipped value",  "t1_m4d": "",
 
         "t1_c1h": "Cosmetics search fell by about a third and stayed above skincare search in every year",
@@ -31,9 +33,9 @@ STRINGS = {
         # the rebuild covers it and a silent contradiction if it does not;
         # empty means a missing rebuild shows up as a blank heading.
         "t1_c3h": "",
-        "t1_c3e": "Each rectangle is a Rakuten Ichiba subcategory. Size = products listed · colour = the measure selected below. Ratings average rated SKUs only; price is the median.",
+        "t1_c3e": "Each rectangle is a Rakuten Ichiba subcategory, from each genre's 3,000 most-reviewed items on {date}. Size = items in the pull, not Rakuten's listings · colour = the measure selected below. Ratings average rated items only; price is the median.",
         "t1_lens": "Colour by",
-        "t1_lens_opts": {"Reviews per SKU": "avg_reviews", "SKU count": "sku_count", "Median price": "med_price", "Average rating": "avg_rating"},
+        "t1_lens_opts": {"Reviews per SKU": "avg_reviews", "Median price": "med_price", "Average rating": "avg_rating"},
 
         "t1_c4h": "In 2025, two years after mask guidance was relaxed, lipstick search was 36% of its 2019 level",
         "t1_c4e": "Monthly search interest for three makeup terms, each indexed to its own peak. Japan relaxed mask guidance on 13 March 2023. Lipstick and foundation search rose in 2023 and fell in 2024–2025; lipstick search in 2025 was below its 2021 low. Eyeshadow search rose while masks were worn and fell below its 2019 level after the guidance changed.",
@@ -161,7 +163,6 @@ STRINGS = {
 
         "t1_m1":     "化粧品の検索",  "t1_m1d": "化粧品の検索関心度、暦年ベース2019→2025年（Googleトレンド、スキンケアと同一リクエスト）",
         "t1_m2":     "ナイアシンアミドの検索",  "t1_m2d": "",
-        "t1_m3":     "楽天SKU比率",
         "t1_m4":     "メイク出荷金額",  "t1_m4d": "",
 
         "t1_c1h":    "化粧品の検索は約3分の1低下し、全ての年でスキンケアの検索を上回った",
@@ -171,9 +172,9 @@ STRINGS = {
         "t1_c2cap":  "点線 = 2020年以前から検索が安定していた成分  ·  実線 = 2020年以降に検索が上昇した成分  ·  {tr_part}",
         "t1_ingr_sel": "成分を選択",
         "t1_c3h":    "",   # rebuilt live from HEADLINE below
-        "t1_c3e":    "各長方形は楽天市場のサブカテゴリ。サイズ = 掲載商品数 · 色 = 下で選択した指標。評価は評価のあるSKUのみの平均、価格は中央値。",
+        "t1_c3e":    "各長方形は楽天市場のサブカテゴリ。{date}時点の各ジャンルのレビュー数上位3,000商品。サイズ = 取得した商品数（楽天の掲載数ではない） · 色 = 下で選択した指標。評価は評価のある商品のみの平均、価格は中央値。",
         "t1_lens":   "色分け基準",
-        "t1_lens_opts": {"SKUあたりレビュー数": "avg_reviews", "SKU数": "sku_count", "価格中央値": "med_price", "平均評価": "avg_rating"},
+        "t1_lens_opts": {"SKUあたりレビュー数": "avg_reviews", "価格中央値": "med_price", "平均評価": "avg_rating"},
 
         "t1_c4h":    "マスク着用ルール緩和から2年後の2025年、口紅の検索は2019年の36%",
         "t1_c4e":    "メイク3語の月次検索関心度。各語は自身のピークを基準に指数化。日本は2023年3月13日にマスク着用ルールを緩和した。口紅とファンデーションの検索は2023年に上昇し、2024〜2025年に低下した。2025年の口紅検索は2021年の底を下回る。アイシャドウの検索はマスク着用期に上昇し、緩和後は2019年水準を下回った。",
@@ -358,6 +359,9 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
     S["t1_c1e"] = S["t1_c1e"].format(tr_years=_cr_years, tr_part=_cr_part, pair=_pair(HEADLINE, lang))
     S["t1_c2cap"] = S["t1_c2cap"].format(tr_part=_trends_span(load_ingredient_surge(ASSETS), lang)[1])
     S["t1_c4cap"] = S["t1_c4cap"].format(tr_part=_trends_span(load_makeup_rebound(ASSETS), lang)[1])
+    # The treemap is one weekly snapshot; its caption names the date from the asset.
+    _snap = pd.Timestamp(load_sku_treemap(ASSETS)["snapshot_date"].max())
+    S["t1_c3e"] = S["t1_c3e"].format(date=date_label(_snap, "day", "ja" if lang == "jp" else "en"))
     # Makeup rebound: each term's full-year mean indexed to its own 2019. Google
     # samples every request, so these move on each re-pull; they are read from
     # the asset rather than typed.
@@ -395,25 +399,15 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"in {_h['conv_p1']} than in {_h['conv_p0']}.")
         S["t2_m2d"] = f"each period set to {_h['matched_n']} reviews · {_h['conv_ci']}"
         S["t1_m2d"] = f"Trends index, annual mean, {_h['ing_y0']} vs {_h['ing_y1']}"
-        S["t1_m3"] = "Rakuten SKU ratio (relabelled)"
-        S["t1_c3h"] = (
-            f"Rakuten lists {_h['sku_measured']}× more skincare SKUs than makeup SKUs "
-            f"after relabelling the Korean-cosmetics genre")
-        S["t1_c3e"] = (
-            f"Both makeup-side genres were sampled at 150 products each and labelled by hand. "
-            f"The Korean-cosmetics genre, tagged as makeup, is 49% skincare, 36% makeup and "
-            f"15% other, and is 62% of the makeup total. The base-makeup genre is 75% makeup "
-            f"and 24% other, mostly lash-extension and double-eyelid products. Relabelling "
-            f"both gives {_h['sku_measured']}× (95% CI {_h['sku_lo']}–{_h['sku_hi']}); the "
-            f"original tags give {_h['sku_span_lo']}×; genres whose names fix the product type "
-            f"give {_h['sku_span_hi']}×. " + S["t1_c3e"])
+        S["t1_c3h"] = ("Rakuten Ichiba: reviews, rating and price for each genre's "
+                       "3,000 most-reviewed items")
         S["t1_c2h"] = (
             f"Niacinamide search rose from {_h['nia_pre']} to {_h['nia_post']} on the Trends "
             f"index, {_h['ing_y0']}→{_h['ing_y1']}")
         S["f1_title"] = "Finding 1 — Makeup fell in search and in shipped value; skincare shipped value steps down in 2022"
         S["t1_intro"] = (
-            "After 2020, Japanese beauty search, Rakuten listings, @cosme reviews and YouTube comments "
-            "moved toward skincare. METI shipment statistics record the makeup side in yen: foundation "
+            "After 2020, Japanese beauty search, @cosme reviews and YouTube comments moved toward "
+            "skincare. METI shipment statistics record the makeup side in yen: foundation "
             f"shipped value fell {abs(_h['found_d'])}% and lipstick {abs(_h['lip_d'])}% from "
             f"{_h['mkt_y0']} to {_h['mkt_y1']}. METI's skincare lines step down in January "
             f"{_h['mkt_break']}, and serum shipped value falls when measured across that step and rises "
@@ -446,8 +440,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"2019–2021 or within 2022–{_h['mkt_y1']}. {_h['ytd_y']} figures come from METI's monthly "
             "確報 release.")
         S["f1_body"] = (
-            f"Google Trends: {_pair(_h, 'en')[0].lower() + _pair(_h, 'en')[1:]} Rakuten lists "
-            f"{_h['sku_measured']}× more skincare SKUs than makeup SKUs. Niacinamide search rose from "
+            f"Google Trends: {_pair(_h, 'en')[0].lower() + _pair(_h, 'en')[1:]} "
+            f"Niacinamide search rose from "
             f"{_h['nia_pre']} to {_h['nia_post']}. Lipstick, foundation and eyeshadow search stayed "
             "below 2019 after mask guidance was relaxed."
             f"<br><br>METI shipments: foundation shipped value fell {abs(_h['found_d'])}% and lipstick "
@@ -522,22 +516,13 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"{_h['conv_p0']}年より{_h['conv_p1']}年のほうが多い。")
         S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
         S["t1_m2d"] = f"トレンド指数の年平均、{_h['ing_y0']}年と{_h['ing_y1']}年"
-        S["t1_m3"] = "楽天SKU比率（再分類後）"
-        S["t1_c3h"] = (
-            f"韓国コスメジャンルの再分類後、楽天のスキンケアSKUはメイクの{_h['sku_measured']}倍")
-        S["t1_c3e"] = (
-            f"メイク側の2ジャンルからそれぞれ150件を抽出し、手作業で分類した。"
-            f"メイクとして分類されている韓国コスメジャンルは、スキンケア49%・メイク36%・その他15%で、"
-            f"メイク総数の62%を占める。ベースメイクジャンルはメイク75%・その他24%で、その他の大半は"
-            f"まつげエクステ用品と二重まぶた用品。両ジャンルを再分類すると{_h['sku_measured']}倍"
-            f"（95%CI {_h['sku_lo']}〜{_h['sku_hi']}）、元の分類のままでは{_h['sku_span_lo']}倍、"
-            f"商品種別が名称で定まるジャンルのみでは{_h['sku_span_hi']}倍。" + S["t1_c3e"])
+        S["t1_c3h"] = "楽天市場：各ジャンルのレビュー数上位3,000商品のレビュー数・評価・価格"
         S["t1_c2h"] = (
             f"ナイアシンアミドの検索は{_h['ing_y0']}年{_h['nia_pre']}→{_h['ing_y1']}年"
             f"{_h['nia_post']}に上昇（トレンド指数）")
         S["f1_title"] = "発見1 —— メイクは検索・出荷金額ともに減少、スキンケアの出荷金額は2022年に段差"
         S["t1_intro"] = (
-            "2020年以降、美容の検索、楽天の掲載、@cosmeレビュー、YouTubeコメントはスキンケアの比重を高めた。"
+            "2020年以降、美容の検索、@cosmeレビュー、YouTubeコメントはスキンケアの比重を高めた。"
             f"経産省の出荷統計はメイク側を金額で記録しており、{_h['mkt_y0']}年から{_h['mkt_y1']}年にかけて"
             f"ファンデーションの出荷金額は{abs(_h['found_d'])}%、口紅は{abs(_h['lip_d'])}%減少した。"
             f"スキンケアの品目は{_h['mkt_break']}年1月に段差があり、美容液の出荷金額は段差をまたいで測ると減少、"
@@ -565,8 +550,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
             f"金額変化は2019〜2021年または2022〜{_h['mkt_y1']}年の内側で測っている。{_h['ytd_y']}年の数値は"
             "経産省の月次確報による。")
         S["f1_body"] = (
-            f"Googleトレンド：{_pair(_h, 'jp')}楽天のスキンケアSKUはメイクの"
-            f"{_h['sku_measured']}倍。ナイアシンアミドの検索は{_h['nia_pre']}→{_h['nia_post']}に上昇。"
+            f"Googleトレンド：{_pair(_h, 'jp')}"
+            f"ナイアシンアミドの検索は{_h['nia_pre']}→{_h['nia_post']}に上昇。"
             "口紅・ファンデーション・アイシャドウの検索は、マスク着用ルール緩和後も2019年を下回る。"
             f"<br><br>経産省出荷統計：{_h['mkt_y0']}年から{_h['mkt_y1']}年に、ファンデーションの出荷金額は"
             f"{abs(_h['found_d'])}%、口紅は{abs(_h['lip_d'])}%減少した。減少の大半は{_h['mkt_y0']}→{_h['mkt_pre1']}年"

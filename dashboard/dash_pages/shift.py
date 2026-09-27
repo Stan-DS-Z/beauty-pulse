@@ -28,11 +28,9 @@ def _date_range(df_cross, lo, hi):
 
 def _kr_text(kr, lang):
     if lang == "en":
-        return (f"  — {int(kr['sku_count']):,} SKUs · "
-                f"{kr['avg_reviews']:.1f} reviews per SKU, against {kr['all_rps']:.1f} "
-                f"across all categories · ¥{int(kr['med_price']):,} median price")
-    return (f"  — {int(kr['sku_count']):,} SKU · "
-            f"SKUあたりレビュー{kr['avg_reviews']:.1f}件（全カテゴリ平均{kr['all_rps']:.1f}件） · "
+        return (f"  — {kr['avg_reviews']:.1f} reviews per item, against {kr['all_rps']:.1f} "
+                f"across all subcategories · ¥{int(kr['med_price']):,} median price")
+    return (f"  — 1商品あたりレビュー{kr['avg_reviews']:.1f}件（全サブカテゴリ平均{kr['all_rps']:.1f}件） · "
             f"価格中央値 ¥{int(kr['med_price']):,}")
 
 
@@ -55,12 +53,6 @@ def build(lang, d):
     df_grp, px_kg_m = d.frame("meti_monthly")
     val_all, _ = d.frame("meti_annual")
     att = d.frame("attention_annual")
-
-    sub3 = (f"95% CI {H['sku_lo']}–{H['sku_hi']} · "
-            f"{H['sku_span_lo']}–{H['sku_span_hi']} across genre treatments"
-            if lang == "en" else
-            f"95%CI {H['sku_lo']}〜{H['sku_hi']} · "
-            f"ジャンル処理により{H['sku_span_lo']}〜{H['sku_span_hi']}倍")
 
     kr = figures.korean_callout(df_sku)
     kr_note = (ui.note("Korean cosmetics" if lang == "en" else "韓国コスメ",
@@ -91,9 +83,8 @@ def build(lang, d):
         ui.row(
             ui.kpi_card(S["t1_m1"], f"{H['cosm_decline']}%", S["t1_m1d"], arrow=None),
             ui.kpi_card(S["t1_m2"], f"{H['nia_pre']} → {H['nia_post']}", S["t1_m2d"]),
-            ui.kpi_card(S["t1_m3"], f"{H['sku_measured']}x", sub3),
             ui.kpi_card(S["t1_m4"], f"{H['found_d']}%", S["t1_m4d"], arrow=None),
-            cls="cols-4 bp-kpis"),
+            cls="cols-3 bp-kpis"),
 
         ui.panel_header(S["t1_p1"], S["t1_p1d"]),
         ui.chart_head(S["t1_c1h"], S["t1_c1e"]),
