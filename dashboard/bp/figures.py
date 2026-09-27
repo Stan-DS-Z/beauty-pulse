@@ -947,3 +947,92 @@ def fig_brief_actives(BRIEF, S):
                       xaxis=_xax(title=dict(text=S["b_a_x"], font=dict(size=11)), zeroline=False),
                       yaxis=_yax(S["b_a_y"], suffix="%", rangemode="tozero"))
     return fig
+
+
+# ── Market ──────────────────────────────────────────────────────────────────
+# No title here is about skincare against makeup, so each exhibit is grey with
+# its one accent in ink; the group chart (fig_meti_groups) is the one that
+# sets skincare against makeup, in the pair's colours.
+_GREY_DARK = "#6B6862"
+
+
+def fig_market_lines(M, S):
+    """Each METI product line's shipped value in the last full year, the
+    lines the title names in ink; label: the change since the break year."""
+    rows = M["rows"].sort_values("value_y1")
+    y0, y1 = M["window"]
+    names = S["mk_line"]
+    vs = [S["mk_l_vs"].format(d=r["value_d"], y=y0) for _, r in rows.iterrows()]
+    more = [v + (" · " + S["mk_l_vs"].format(d=r["base_d"], y=M["base"])
+                 if r["group"] == "makeup" else "") for v, (_, r) in zip(vs, rows.iterrows())]
+    fig = go.Figure(go.Bar(
+        x=rows["value_y1"], y=[names[li] for li in rows.index], orientation="h",
+        marker=dict(color=[C["ink"] if li in M["lead"] else _GREY for li in rows.index]),
+        text=vs, textposition="outside", cliponaxis=False,
+        textfont=dict(size=11, color=C["muted"]),
+        customdata=np.stack([list(rows.index), more], axis=-1),
+        hovertemplate=(f"<b>%{{y}}</b> %{{customdata[0]}}<br>{S['mk_l_hover']} · "
+                       "%{customdata[1]}<extra></extra>")))
+    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=80, t=10, b=40),
+                      xaxis=_xax(title=dict(text=S["mk_l_x"], font=dict(size=11))),
+                      yaxis=_yax(automargin=True))
+    return fig
+
+
+def fig_market_bridge(M, S):
+    """Each line's change since the break year in units, value per unit and
+    shipped value, largest value change at the top."""
+    rows = M["rows"].sort_values("value_d")
+    y = [S["mk_line"][li] for li in rows.index]
+    fig = go.Figure()
+    marks = (("units_d", dict(color="rgba(0,0,0,0)", size=10, symbol="circle",
+                              line=dict(color=C["muted"], width=1.5))),
+             ("vpu_d", dict(color=_GREY_DARK, size=10, symbol="diamond",
+                            line=dict(color=_GREY_DARK, width=1))),
+             ("value_d", dict(color=C["ink"], size=16, symbol="line-ns",
+                              line=dict(color=C["ink"], width=2.5))))
+    for (col, marker), name in zip(marks, S["mk_b_names"]):
+        fig.add_trace(go.Scatter(
+            x=rows[col], y=y, mode="markers", name=name, marker=marker,
+            hovertemplate=f"<b>%{{y}}</b><br>{name}: %{{x:+.0f}}%<extra></extra>"
+            if S["mk_en"] else
+            f"<b>%{{y}}</b><br>{name}：%{{x:+.0f}}%<extra></extra>"))
+    fig.add_vline(x=0, line_width=1, line_color=C["border"])
+    fig.update_layout(**{**_base(560), "hovermode": "closest"},
+                      legend=dict(orientation="h", y=1.05, x=0),
+                      margin=dict(l=10, r=10, t=30, b=40),
+                      xaxis=_xax(title=dict(text=S["mk_b_x"], font=dict(size=11)),
+                                 ticksuffix="%", zeroline=False),
+                      yaxis=_yax(automargin=True))
+    return fig
+
+
+def fig_market_imports(M, S):
+    """HS 3304 imports by origin, the largest origins in the last year; the
+    leading origin in ink, each line labelled at its end."""
+    I = M["imports"]
+    f = I["frame"]
+    en = S["mk_en"]
+    # End labels, moved apart where two lines end close together.
+    gap, label_y = 0.06 * f.values.max(), {}
+    for c, v in f.iloc[:, -1].sort_values().items():
+        label_y[c] = max(v, max(label_y.values(), default=-gap) + gap)
+    fig = go.Figure()
+    for c, row in f.iterrows():
+        name = S["mk_origin"][c]
+        lead = c == I["leader"]
+        colour = C["ink"] if lead else _GREY
+        fig.add_trace(go.Scatter(
+            x=list(f.columns), y=row.values, mode="lines+markers", name=name,
+            line=dict(color=colour, width=2.5 if lead else 1.5), marker=dict(size=5),
+            hovertemplate=(f"{name} %{{x}}: ¥%{{y:,.0f}}億<extra></extra>" if en else
+                           f"{name} %{{x}}年：%{{y:,.0f}}億円<extra></extra>")))
+        fig.add_annotation(x=f.columns[-1], y=label_y[c], text=name, showarrow=False,
+                           xanchor="left", xshift=8,
+                           font=dict(size=11, color=C["ink"] if lead else C["muted"]))
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=100, t=20, b=30),
+                      xaxis=_xax(dtick=1),
+                      yaxis=_yax(S["mk_i_y"], rangemode="tozero"))
+    return fig

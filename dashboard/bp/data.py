@@ -466,12 +466,12 @@ def load_meti_annual(ASSETS: Path, cutoff=None):
     return val, units
 
 
-def load_meti_monthly(ASSETS: Path):
+def load_meti_monthly(ASSETS: Path, cutoff=None):
     """Monthly shipped value by group (億円) and yen per kg by product line.
 
     Monthly rows exist from January 2019; the annual loaders above reach back to
     2015 through the 時系列表 rows, which carry no month."""
-    d = pd.read_csv(ASSETS / "estat_meti_cosmetics.csv")
+    d = cut_months(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"), cutoff)
     d = d[d["month"] >= 1].assign(date=lambda x: pd.to_datetime(
         dict(year=x["year"], month=x["month"], day=1)))
     wide = lambda m: d[d["measure"] == m].pivot_table(index="date", columns="item",

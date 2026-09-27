@@ -12,6 +12,7 @@ from pathlib import Path
 
 from bp import brief as bp_brief
 from bp import data as bp_data
+from bp import market as bp_market
 from bp import sources, strings
 
 ASSETS = Path(__file__).parent / "assets"
@@ -29,6 +30,7 @@ class Data:
     HEADLINE: dict
     LAUNCH: dict | None
     BRIEF: dict | None             # brief.compute_brief at the cut-off, None without the launch export
+    MARKET: dict                   # market.compute_market at the cut-off
     REGISTRY: dict                 # sources.build_registry, the latest data (monitor)
     REPORT_REGISTRY: dict          # the same, on the frozen edition (report pages)
     S: dict                        # lang -> string table
@@ -49,7 +51,8 @@ def build_report(assets: Path, launch: bool = True):
         raise FileNotFoundError(f"{frozen} is missing: run issue_edition.py")
     headline = bp_data.compute_headline(frozen)
     brief = bp_brief.compute_brief(frozen, headline, sources.CUTOFF) if launch else None
-    return brief, sources.build_registry(frozen, sources.CUTOFF)
+    market = bp_market.compute_market(frozen, sources.CUTOFF)
+    return brief, market, sources.build_registry(frozen, sources.CUTOFF)
 
 
 def build_data(assets: Path, launch: bool = True) -> Data:
@@ -57,11 +60,12 @@ def build_data(assets: Path, launch: bool = True) -> Data:
     launch export would see it."""
     headline = bp_data.compute_headline(assets)
     lau = bp_data.compute_launch_headline(assets) if launch else None
-    brief, report_registry = build_report(assets, launch)
+    brief, market, report_registry = build_report(assets, launch)
     registry = sources.build_registry(assets)
-    return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, REGISTRY=registry,
-                REPORT_REGISTRY=report_registry,
-                S={lang: strings.build_strings(lang, headline, lau, assets, brief, report_registry)
+    return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, MARKET=market,
+                REGISTRY=registry, REPORT_REGISTRY=report_registry,
+                S={lang: strings.build_strings(lang, headline, lau, assets, brief,
+                                               report_registry, market)
                    for lang in LANGS})
 
 

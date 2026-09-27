@@ -32,7 +32,7 @@ def href(path, lang):
 # dash.page_registry is incomplete while pages import; a test pins it to the
 # registry. The Shift, Language and Discovery pages stay in the report group
 # until the report and monitor pages that replace them are built.
-NAV = [("nav_report", [("/brief", "nav_brief"), ("/shift", "tab1"),
+NAV = [("nav_report", [("/brief", "nav_brief"), ("/market", "nav_market"), ("/shift", "tab1"),
                        ("/language", "tab2"), ("/discovery", "tab3")])]
 NAV_PATHS = [path for _, items in NAV for path, _ in items]
 
@@ -166,6 +166,15 @@ def key_findings(items):
         lines.append(dcc.Link(kids, href=link, className="bp-kf") if link
                      else html.Div(kids, className="bp-kf"))
     return html.Div(lines, className="bp-kfs")
+
+
+def key_figures(items):
+    """A row of key figures set as type: (label, figure, one line under it)."""
+    return html.Div([html.Div([html.Div(label, className="bp-fig-label"),
+                               html.Div(value, className="bp-fig-value"),
+                               html.Div(sub, className="bp-fig-sub")])
+                     for label, value, sub in items],
+                    className=f"bp-figs cols-{len(items)}")
 
 
 def source(text):

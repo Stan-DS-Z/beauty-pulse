@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pytest
 
-from bp import brief, data, figures, sources, strings
+from bp import brief, data, figures, market, sources, strings
 
 A = data.ASSETS
 BUILDERS = sorted(n for n in vars(figures) if n.startswith("fig_"))
@@ -37,7 +37,7 @@ def frames():
         umap=data.load_umap(A))
 
 
-def cases(f, H, L, lang, S, B=None):
+def cases(f, H, L, lang, S, B=None, M=None):
     """Builder name -> the figures it draws with default controls."""
     return {
         "fig_trends_crossover": lambda: [figures.fig_trends_crossover(
@@ -64,6 +64,9 @@ def cases(f, H, L, lang, S, B=None):
         "fig_umap": lambda: [figures.fig_umap(f["umap"], figures.umap_year_options()[0], S)],
         "fig_brief_portfolio": lambda: [figures.fig_brief_portfolio(B, S)],
         "fig_brief_actives": lambda: [figures.fig_brief_actives(B, S)],
+        "fig_market_lines": lambda: [figures.fig_market_lines(M, S)],
+        "fig_market_bridge": lambda: [figures.fig_market_bridge(M, S)],
+        "fig_market_imports": lambda: [figures.fig_market_imports(M, S)],
     }
 
 
@@ -73,8 +76,9 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
     B = brief.compute_brief(A, headline, sources.CUTOFF)
-    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A))
-    table = cases(frames, headline, launch, lang, S, B)
+    M = market.compute_market(A, sources.CUTOFF)
+    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M)
+    table = cases(frames, headline, launch, lang, S, B, M)
     assert name in table, f"{name} has no case in tests/test_figures.py"
     for fig in table[name]():
         assert isinstance(fig, go.Figure)
@@ -90,7 +94,8 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
     B = brief.compute_brief(A, headline, sources.CUTOFF)
-    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A))
+    M = market.compute_market(A, sources.CUTOFF)
+    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M)
     default = pio.templates[pio.templates.default].to_plotly_json()
-    for fig in cases(frames, headline, launch, "en", S, B)[name]():
+    for fig in cases(frames, headline, launch, "en", S, B, M)[name]():
         assert fig.layout.template.to_plotly_json() == default

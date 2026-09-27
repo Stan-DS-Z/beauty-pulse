@@ -196,6 +196,18 @@ a.bp-kf:hover .bp-kf-go { color:var(--ink); }
 .kpi-sub, .kpi-sub.up, .kpi-sub.down, .kpi-sub.flat { color:var(--muted); white-space:normal;
                                                      overflow:visible; cursor:default; }
 
+.bp-figs { display:grid; gap:0; margin:6px 0 8px; border-top:1px solid var(--ink);
+           border-bottom:1px solid var(--rule); }
+.bp-figs.cols-3 { grid-template-columns:repeat(3,1fr); }
+.bp-figs.cols-4 { grid-template-columns:repeat(4,1fr); }
+.bp-figs > div { padding:14px 20px 14px 0; }
+.bp-figs > div + div { padding-left:20px; border-left:1px solid var(--rule); }
+.bp-fig-label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+                font-weight:600; margin-bottom:6px; }
+.bp-fig-value { font-size:30px; font-weight:600; letter-spacing:-.5px; line-height:1.1;
+                margin-bottom:6px; font-family:Georgia, serif; font-variant-numeric:tabular-nums; }
+.bp-fig-sub { font-size:12px; color:var(--muted); }
+
 /* findings and notes: no fills, no rims */
 .bp-finding, .bp-finding.tone-skin, .bp-finding.tone-cosm, .bp-finding.tone-korean {
   background:none; border:0; border-top:1px solid var(--rule); border-radius:0; padding:12px 0 0;
@@ -233,6 +245,8 @@ a.bp-kf:hover .bp-kf-go { color:var(--ink); }
 
 @media (max-width:720px) {
   .bp-governing { font-size:18px; }
+  .bp-figs.cols-3, .bp-figs.cols-4 { grid-template-columns:1fr; }
+  .bp-figs > div + div { border-left:0; padding-left:0; border-top:1px solid var(--rule); }
   .bp-kf { grid-template-columns:1fr; gap:4px; }
   .bp-kf-go { text-align:left; }
 }
