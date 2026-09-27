@@ -77,6 +77,15 @@ In January 2024 the import schedule merged 3304.99-011, -012 and -019 into 3304.
 - **輸入 / Imports.** 2023年2,242億円、2024年2,739億円（修正前1,671億円）、2025年2,759億円（同1,688億円）。経産省の皮膚用・仕上用・日やけ止めの出荷金額（HS 3304が対応する品目、2025年9,756億円）に対する比率は、2025年28.3%（修正前17.3%）、2022年22.8%。 / 2,242 億円 in 2023, 2,739 in 2024 (1,671 before), 2,759 in 2025 (1,688 before). Against METI's skincare, makeup and sunscreen shipped value, the lines HS 3304 covers (9,756 億円 in 2025), imports were 28.3% in 2025 (17.3% before) and 22.8% in 2022.
 - **改訂5・6の輸入の記述 / The import entries in Revisions 5 and 6.** 「輸入代替仮説の棄却」と「2023年のピーク」は、2024年に1,068億円、2025年に1,070億円少なかった系列による。輸入代替の問いは未検証であり、2022年1月の断層の内側で、HS 3304が対応する品目（皮膚用・仕上用・日やけ止め）について測り直す。 / "Import-substitution hypothesis rejected" and "peaked at 2,242 億円 in 2023" rest on a series that was short by 1,068 億円 in 2024 and 1,070 億円 in 2025. The substitution question is open. It is to be measured again inside one regime, from January 2022, against the METI lines HS 3304 covers: skincare, makeup and sunscreen.
 - **検査 / Test.** `tests/test_scheme_breaks.py`は、品目コードが変わった年にHS 6桁の合計が20%を超えて減るか50%を超えて増えると失敗する。 / `tests/test_scheme_breaks.py` fails when an HS 6-digit total falls more than 20% or rises more than 50% in a year its codes change.
+
+**改訂9 — Googleトレンドを1系列1リクエストで再取得（2026年9月27日）/ Revision 9 — Google Trends re-pulled, one request per series (27 September 2026)**  
+Googleトレンドはリクエストごとに最大値を100として正規化する。これまでの系列は、同じ系列を複数のリクエストから継ぎ合わせたもの、または異なるスケールのリクエストを並べたものだった。すべて2019年1月〜2026年8月を1回のリクエストで取得し直した。  
+Google Trends scales each request to its own maximum. Stored series had been joined from more than one request, or set side by side from requests on different scales. Every series was re-pulled over January 2019 – August 2026 in one request.
+- **block_A.** 各語は5月の取得（〜2026年3月）と6月の取得（2026年4月〜）の継ぎ合わせだった。一意キーと`INSERT OR IGNORE`により、6月の取得は既存の月を置き換えなかった。継ぎ目の段差はレチナール-67、アゼライン酸-30、グルタチオン-20（1回の取得では-7、-3、-6）。ナイアシンアミドの検索は2019→2025年で4→69（修正前5→81）。 / Each term was a May pull to March 2026 joined to a June pull from April 2026; the table's unique key and `INSERT OR IGNORE` kept the June pull from replacing months already stored. Steps at the join: レチナール -67, アゼライン酸 -30, グルタチオン -20 (-7, -3, -6 on one request). Niacinamide search 2019→2025: 4→69 (5→81 before).
+- **block_B.** 基礎化粧品をアンカーとする3つのリクエスト（各5語）を、リクエストごとのアンカーを保存せず、再スケールもせずに格納していた。スキンケアと化粧品は別のリクエストにあり、異なるスケールだった。block_Bはスキンケアと化粧品の2語を1回で取得した系列のみとなった。 / Three anchored requests (基礎化粧品 plus four terms each) were stored without a per-request anchor and never rescaled; スキンケア and 化粧品 sat in different requests, on different scales. block_B now holds only those two terms, pulled in one request.
+- **改訂1の比較 / The Revision 1 comparison.** 1回のリクエストで測ると、化粧品の検索は2019→2025年で-33%（修正前-32%）、化粧品とスキンケアの差は62.2→30.8ポイント（-50%）、スキンケア対化粧品の検索比は0.28→0.47（修正前0.31→0.53）。改訂1の記述はそのまま残す。 / Measured in one request, 化粧品 search 2019→2025 is -33% (-32% before), the 化粧品 − スキンケア gap is 62.2 → 30.8 points (-50%), and the skincare-to-cosmetics ratio is 0.28 → 0.47 (0.31 → 0.53 before). Revision 1 stays as written.
+- **市場層の検索 / Search in the market layer.** カテゴリ別の検索変化（美容液・化粧水・乳液・ファンデーション・口紅・アイシャドウ）は、各語の自身の年との比較のみであるため、block_Aから取る。 / Per-category search changes are each term against its own earlier years, so they now come from block_A.
+- **公開DB / Public DB.** 企業別のブロック（block_D_kao・block_E_loreal・block_F_shiseido）は公開DBに含めない。`trends_weekly`は2,024行。 / The per-company blocks no longer ship in the public DB; `trends_weekly` has 2,024 rows.
 ---
 
 ## 方法論的注意点 / Methodological Caveats
@@ -85,9 +94,9 @@ In January 2024 the import schedule merged 3304.99-011, -012 and -019 into 3304.
    プールされたコーパス間のコサイン類似度は、語彙被覆率がサンプル数とともに増えるため機械的に上昇する。期間横断の収束比較は、必ずサンプル数を揃えて行う必要がある（発見2参照）。  
    Cosine similarity between pooled corpora rises mechanically with sample size as vocabulary coverage grows. Any cross-period convergence comparison must be size-matched (see Finding 2).
 
-2. **Googleトレンドのアンカー / Google Trends anchoring**  
-   非アンカーのクエリ（block_A）は各語を独自のピークに正規化するため、語間比較に使えない。スキンケア対化粧品の比較はアンカー付きのblock_Bのみを用いる。  
-   Unanchored queries (block_A) normalise each term to its own peak and cannot be compared across terms. The skincare-vs-cosmetics comparison uses only the anchored block_B.
+2. **Googleトレンドの正規化 / Google Trends normalisation**  
+   Googleトレンドはリクエストごとに、その期間内の最大値を100として正規化する。block_Aは1語1リクエストで、各語の自身の年との比較にのみ用いる。スキンケア対化粧品の比較（block_B）は、両語を1回のリクエストで取得した系列のみを用いる。いずれの系列も1回のリクエストで全期間を取得し、末尾の継ぎ足しはしない。同じ月でも取得のたびに5〜20ポイント異なる。テーブル名`trends_weekly`と列名`week_start`は週次を示すが、格納値は月初日付の月次データである。  
+   Google Trends scales each request to its own maximum over the window. block_A is one request per term and is used only for a term against its own earlier years. The skincare-vs-cosmetics comparison (block_B) uses only the two terms pulled in one request. Every series is pulled over its full span in one request, never extended by appending a tail. The same month differs by 5–20 points from one pull to the next. The table `trends_weekly` and column `week_start` are named for weeks; they hold monthly data dated to the first of the month.
 
 3. **@cosmeレビュー本文の打ち切り / @cosme review-text truncation**  
    レビュー本文は一覧ページのプレビュー（約76字、約67%が末尾省略）。全文取得は計算資源・サーバ負荷の観点から見送った。打ち切りは両カテゴリに等しく作用するため比較は妨げないが、語彙的な深さは制限される。  
@@ -122,8 +131,8 @@ In January 2024 the import schedule merged 3304.99-011, -012 and -019 into 3304.
     Rakuten cross-border and inbound demand from China is not quantified.
 
 11. **一般語の検索ドリフト / Generic-term search drift**  
-    「化粧品」のような一般語の検索低下は、需要低下だけでなく、消費者がより具体的な語（ブランド名・成分名）を検索するようになった効果も含みうる —— 本プロジェクトの発見4自体がその学習を示している。マスク検証（自身の2019年基準でのカテゴリ語追跡）はこの交絡の影響を受けにくいが、アンカー付き比較の約32%という規模は上限値として読むべきである。Googleトレンドの「トピック」エンティティでの再取得が今後の頑健性チェックとして残る。  
-    The decline of a generic term like 化粧品 can partly reflect consumers migrating to more specific queries (brands, ingredients) rather than reduced demand — Finding 4 itself documents that learning. The mask test (category terms vs their own 2019 baselines) is less exposed to this confound, but the ~32% anchored-comparison figure should be read as an upper bound. Re-pulling with Google Trends *topic* entities remains a future robustness check.
+    「化粧品」のような一般語の検索低下は、需要低下だけでなく、消費者がより具体的な語（ブランド名・成分名）を検索するようになった効果も含みうる —— 本プロジェクトの発見4自体がその学習を示している。マスク検証（自身の2019年基準でのカテゴリ語追跡）はこの交絡の影響を受けにくいが、block_Bによる約<!--f:cosm_decline-->33<!--/f-->%という規模は上限値として読むべきである。Googleトレンドの「トピック」エンティティでの再取得が今後の頑健性チェックとして残る。  
+    The decline of a generic term like 化粧品 can partly reflect consumers migrating to more specific queries (brands, ingredients) rather than reduced demand — Finding 4 itself documents that learning. The mask test (category terms vs their own 2019 baselines) is less exposed to this confound, but the ~<!--f:cosm_decline-->33<!--/f-->% block_B figure should be read as an upper bound. Re-pulling with Google Trends *topic* entities remains a future robustness check.
 
 12. **検索シグナル ≠ 支出 / Search signal ≠ spending**  
     関心層の全シグナルは注目（検索・コメント）と供給（SKU）であり、円ベースの需要ではない。経産省・生産動態統計と財務省・貿易統計による検証は改訂5で実施済みであり、メイクについては金額で裏づけられ、スキンケアについては2022年1月の断層により測定できないという結論に至った。残るのは総務省・家計調査であるが、**美容液と日焼け止めの品目を持たない** —— 最も動いたカテゴリはこの系列では検証できず、化粧水・乳液・化粧クリーム・ファンデーション・口紅に限られる。  

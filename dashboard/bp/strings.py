@@ -16,13 +16,13 @@ STRINGS = {
         # ── TAB 1: The Shift ──────────────────────────────────────────────
         "t1_intro":  "",
 
-        "t1_m1": "Cosmetics search",  "t1_m1d": "化粧品 search interest, full years 2019→2025 (anchored Google Trends)",
+        "t1_m1": "Cosmetics search",  "t1_m1d": "化粧品 search interest, full years 2019→2025 (Google Trends, one request with スキンケア)",
         "t1_m2": "Niacinamide search",   "t1_m2d": "",
         "t1_m3": "Rakuten SKU ratio",
         "t1_m4": "Makeup shipped value",  "t1_m4d": "",
 
         "t1_c1h": "Cosmetics search fell by about a third and stayed above skincare search in every year",
-        "t1_c1e": "Monthly Google search interest, {tr_years} ({tr_part}). Both terms come from one anchored query and share one scale. 化粧品 search fell steadily; スキンケア search held roughly flat. 化粧品 is the Japanese umbrella term and includes skincare.",
+        "t1_c1e": "Monthly Google search interest, {tr_years} ({tr_part}). Both terms come from one request and share one scale. 化粧品 search fell steadily; スキンケア search held roughly flat. 化粧品 is the Japanese umbrella term and includes skincare.",
         "t1_c2h": "",
         "t1_c2e": "Search interest for individual skincare ingredients. Each line is indexed to its own peak.",
         "t1_c2cap": "Dotted = ingredients with steady search before 2020  ·  solid = ingredients whose search rose after 2020  ·  {tr_part}",
@@ -159,13 +159,13 @@ STRINGS = {
 
         "t1_intro":  "",
 
-        "t1_m1":     "化粧品の検索",  "t1_m1d": "化粧品の検索関心度、暦年ベース2019→2025年（アンカー付きトレンド）",
+        "t1_m1":     "化粧品の検索",  "t1_m1d": "化粧品の検索関心度、暦年ベース2019→2025年（Googleトレンド、スキンケアと同一リクエスト）",
         "t1_m2":     "ナイアシンアミドの検索",  "t1_m2d": "",
         "t1_m3":     "楽天SKU比率",
         "t1_m4":     "メイク出荷金額",  "t1_m4d": "",
 
         "t1_c1h":    "化粧品の検索は約3分の1低下し、全ての年でスキンケアの検索を上回った",
-        "t1_c1e":    "{tr_years}年の月次Google検索関心度（{tr_part}）。両語は同一のアンカー付きクエリから取得しており、共通のスケールを持つ。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。「化粧品」はスキンケアを含む上位語である。",
+        "t1_c1e":    "{tr_years}年の月次Google検索関心度（{tr_part}）。両語は同一のリクエストで取得しており、共通のスケールを持つ。化粧品の検索は着実に低下し、スキンケアはほぼ横ばい。「化粧品」はスキンケアを含む上位語である。",
         "t1_c2h": "",
         "t1_c2e":    "スキンケア成分ごとの検索関心度。各線は自身のピークを基準に指数化している。",
         "t1_c2cap":  "点線 = 2020年以前から検索が安定していた成分  ·  実線 = 2020年以降に検索が上昇した成分  ·  {tr_part}",

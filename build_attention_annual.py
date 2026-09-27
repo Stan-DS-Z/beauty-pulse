@@ -1,12 +1,15 @@
 """Regenerate dashboard/assets/nb04b_attention_annual.csv.
 
 The dashboard reads pre-computed CSV assets, never the database. The market
-layer needs per-category *attention* alongside METI's per-category money, and
-the only cross-comparable attention scale is the anchored block_B query block
-(block_A terms are each normalised to their own peak and carry no cross-term
-levels). block_B lives in the database, so it is exported here.
+layer sets each category's search against METI's money for the same category,
+and every use is a term's change against its own earlier years, never one term's
+level against another's. That is block_A: one Google Trends request per term,
+one window, so each series has one scale. block_A lives in the database, so it
+is exported here. (Until 2026-09-27 this read block_B, which was three anchored
+payloads on three different scales; block_B now holds only the スキンケア/化粧品
+pair from one request.)
 
-block_B is monthly. The year is derived from week_start, not read from the
+block_A is monthly. The year is derived from week_start, not read from the
 trends_weekly.week_year column: that column labels January 2021, 2022 and 2023
 as the *previous* year, which leaves 2020 with thirteen months and shifts every
 annual mean that has a January in it. Derived from the date, all of 2019-2025
@@ -35,7 +38,7 @@ def main() -> int:
     con = get_connection()
     df = pd.read_sql(
         "SELECT term, week_start, interest "
-        "FROM trends_weekly WHERE term_group = 'block_B'", con,
+        "FROM trends_weekly WHERE term_group = 'block_A'", con,
         parse_dates=["week_start"])
     con.close()
     df["year"] = df["week_start"].dt.year

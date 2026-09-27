@@ -82,7 +82,7 @@ def test_public_db_still_carries_the_analysable_columns(public_db):
     conn = sqlite3.connect(f"file:{public_db}?mode=ro", uri=True)
     try:
         for table, n_min in (("products", 40_000), ("products_weekly", 500_000),
-                             ("reviews", 40_000), ("trends_weekly", 3_000)):
+                             ("reviews", 40_000), ("trends_weekly", 2_000)):
             n = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
             assert n >= n_min, f"{table} has only {n:,} rows"
         cols = {r[1] for r in conn.execute("PRAGMA table_info(reviews)")}

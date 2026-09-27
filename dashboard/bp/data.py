@@ -60,8 +60,8 @@ def _full_years(d):
 def compute_headline(ASSETS: Path):
     """Headline metrics — single source of truth, computed live from dashboard assets.
 
-    The Google Trends comparison uses the anchored block_B (cross-comparable
-    scale); convergence is the size-matched cosine."""
+    The Google Trends comparison uses block_B, スキンケア and 化粧品 from one
+    request (one scale); convergence is the size-matched cosine."""
     # Rakuten SKU counts — full in-scope (ALL_TIERS) from NB07's headline export.
     # The treemap CSV excludes beauty_all-categorised products, so summing it
     # undercounts the catalogue and lands on a different ratio; fall back to it
@@ -97,7 +97,7 @@ def compute_headline(ASSETS: Path):
         sku_measured = sku_lo = sku_hi = sku_ratio
         sku_span_lo = sku_span_hi = sku_ratio
 
-    # Google Trends — anchored block_B (the only cross-term-comparable block)
+    # Google Trends — block_B: スキンケア and 化粧品 from one request, one scale
     df_tr = pd.read_csv(ASSETS / "nb07_trends_crossover.csv", parse_dates=["week_start"])
     df_tr["year"] = df_tr["week_start"].dt.year
     # Compare full calendar years only — the latest year is partial,
@@ -216,7 +216,7 @@ def compute_headline(ASSETS: Path):
     skin_share_y1 = round(100 * _skin[mkt_y1] / mkt_total[mkt_y1], 1)
     make_share_y1 = round(100 * _make[mkt_y1] / mkt_total[mkt_y1], 1)
 
-    # Attention on the same categories, anchored block_B (cross-comparable).
+    # Attention on the same categories: block_A, each term against its own years.
     _att = (pd.read_csv(ASSETS / "nb04b_attention_annual.csv")
             .pivot(index="year", columns="term", values="interest"))
     serum_att_span = _pct(_att["美容液"], mkt_y0, mkt_y1)
