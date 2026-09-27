@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from bp import brief as bp_brief
 from bp import data as bp_data
-from bp import strings
+from bp import sources, strings
 
 ASSETS = Path(__file__).parent / "assets"
 LANGS = ("en", "jp")
@@ -27,6 +28,8 @@ class Data:
     assets: Path
     HEADLINE: dict
     LAUNCH: dict | None
+    BRIEF: dict | None             # brief.compute_brief, None without the launch export
+    REGISTRY: dict                 # sources.build_registry
     S: dict                        # lang -> string table
 
     def frame(self, name):
@@ -41,8 +44,11 @@ def build_data(assets: Path, launch: bool = True) -> Data:
     launch export would see it."""
     headline = bp_data.compute_headline(assets)
     lau = bp_data.compute_launch_headline(assets) if launch else None
-    return Data(assets=assets, HEADLINE=headline, LAUNCH=lau,
-                S={lang: strings.build_strings(lang, headline, lau, assets) for lang in LANGS})
+    brief = bp_brief.compute_brief(assets, headline, lau)
+    registry = sources.build_registry(assets)
+    return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, REGISTRY=registry,
+                S={lang: strings.build_strings(lang, headline, lau, assets, brief, registry)
+                   for lang in LANGS})
 
 
 @lru_cache(maxsize=1)

@@ -1,4 +1,5 @@
-"""Regenerate dashboard/assets/nb04b_attention_annual.csv.
+"""Regenerate dashboard/assets/nb04b_attention_annual.csv and
+nb04b_attention_monthly.csv.
 
 The dashboard reads pre-computed CSV assets, never the database. The market
 layer sets each category's search against METI's money for the same category,
@@ -17,7 +18,8 @@ carry exactly twelve. compute_headline() already derives the year this way for
 every other Trends figure; this keeps the market layer on the same arithmetic.
 
 Full calendar years only — the current year is partial and beauty search is
-seasonal, so a partial-year endpoint biases any delta.
+seasonal, so a partial-year endpoint biases any delta. The monthly file carries
+the same full years, month by month, for the seasonal profiles.
 
     python build_attention_annual.py
 """
@@ -32,6 +34,7 @@ sys.path.insert(0, str(ROOT))
 from src.schema import get_connection          # noqa: E402
 
 OUT = ROOT / "dashboard" / "assets" / "nb04b_attention_annual.csv"
+OUT_M = ROOT / "dashboard" / "assets" / "nb04b_attention_monthly.csv"
 
 
 def main() -> int:
@@ -54,6 +57,11 @@ def main() -> int:
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.to_csv(OUT, index=False)
+    monthly = (df[df["year"].isin(keep)]
+               .assign(month=df["week_start"].dt.month)
+               .groupby(["term", "year", "month"])["interest"].mean()
+               .round(2).reset_index())
+    monthly.to_csv(OUT_M, index=False)
     print(f"wrote {OUT.relative_to(ROOT)}  "
           f"{out['term'].nunique()} terms x {out['year'].nunique()} years "
           f"({out['year'].min()}-{out['year'].max()})")

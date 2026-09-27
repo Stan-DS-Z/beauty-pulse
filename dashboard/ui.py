@@ -13,7 +13,7 @@ from html.parser import HTMLParser
 
 from dash import dcc, html
 
-from bp.theme import TEMPLATE
+from bp.theme import TEMPLATE, finish
 
 # ── Language and routes ─────────────────────────────────────────────────────
 
@@ -27,10 +27,14 @@ def href(path, lang):
     return path + ("?lang=ja" if lang == "jp" else "")
 
 
-# The nav, in order: path, then the string-table key of its label. A static
-# list, because dash.page_registry is incomplete while pages import; a test
-# pins it to the registry.
-NAV = [("/shift", "tab1"), ("/language", "tab2"), ("/discovery", "tab3")]
+# The nav, in order: groups of (path, string-table key of its label), each
+# group under the label its key names. A static list, because
+# dash.page_registry is incomplete while pages import; a test pins it to the
+# registry. The Shift, Language and Discovery pages stay in the report group
+# until the report and monitor pages that replace them are built.
+NAV = [("nav_report", [("/brief", "nav_brief"), ("/shift", "tab1"),
+                       ("/language", "tab2"), ("/discovery", "tab3")])]
+NAV_PATHS = [path for _, items in NAV for path, _ in items]
 
 GRAPH_CONFIG = {"displaylogo": False, "displayModeBar": False, "responsive": True}
 
@@ -80,9 +84,14 @@ def rich(text):
 
 def header(S, lang, path):
     """Title, subtitle, page nav and the EN/JA link, in the page's language."""
-    nav = [dcc.Link(S[key], href=href(p, lang),
-                    className="bp-navlink" + (" active" if p == path else ""))
-           for p, key in NAV]
+    nav = []
+    for i, (group, items) in enumerate(NAV):
+        if i:
+            nav.append(html.Span(className="bp-navsep"))
+        nav.append(html.Span(S[group], className="bp-navgroup"))
+        nav += [dcc.Link(S[key], href=href(p, lang),
+                         className="bp-navlink" + (" active" if p == path else ""))
+                for p, key in items]
     switch = html.Div(className="bp-lang", children=[
         html.Span("EN", className="bp-lang-current") if lang == "en"
         else dcc.Link("EN", href=href(path, "en"), className="bp-lang-link"),
@@ -135,6 +144,55 @@ def kpi_card(label, value, subtitle, arrow="up"):
     ])
 
 
+# ── Report front matter and exhibits ───────────────────────────────────────
+
+def kicker(text):
+    return html.P(text, className="bp-kicker")
+
+
+def governing(text):
+    """The page's governing thought, the one sentence the page argues."""
+    return html.H2(rich(text), className="bp-governing")
+
+
+def key_findings(items):
+    """One line per finding: (label, text, link path or None, link label).
+    A finding whose page is not built yet carries no link."""
+    lines = []
+    for label, text, link, go in items:
+        kids = [html.Span(label, className="bp-kf-label"),
+                html.Span(rich(text), className="bp-kf-text"),
+                html.Span(go if link else "", className="bp-kf-go")]
+        lines.append(dcc.Link(kids, href=link, className="bp-kf") if link
+                     else html.Div(kids, className="bp-kf"))
+    return html.Div(lines, className="bp-kfs")
+
+
+def source(text):
+    """An exhibit's source line; it is also the exhibit's freshness stamp."""
+    return html.P(text, className="bp-source")
+
+
+def cell_bar(share, text):
+    """An in-cell bar on the column's shared scale: share of the column's
+    largest value, 0-1."""
+    return [html.Span(html.Span(className="cellbar-fill", style={"width": f"{100 * share:.0f}%"}),
+                      className="cellbar"),
+            html.Span(text, className="cellnum")]
+
+
+def div_bar(share, text):
+    """A diverging in-cell bar around a centre line: share is signed, -1-1, of
+    the column's largest absolute change. Direction is --pos or --neg."""
+    half = 50 * min(abs(share), 1)
+    style = ({"left": "50%", "width": f"{half:.0f}%"} if share >= 0
+             else {"left": f"{50 - half:.0f}%", "width": f"{half:.0f}%"})
+    return [html.Span([html.Span(className="divbar-mid"),
+                       html.Span(className="divbar-fill " + ("pos" if share >= 0 else "neg"),
+                                 style=style)], className="divbar"),
+            html.Span(text, className="cellnum")]
+
+
 def row(*children, cls="cols-2"):
     return html.Div(list(children), className=f"bp-row {cls}")
 
@@ -144,7 +202,7 @@ def caption(text):
 
 
 def info(text):
-    return html.Div(["ℹ️ ", text], className="bp-info")
+    return html.Div(text, className="bp-info")
 
 
 def finding(title, body, tone):
@@ -181,10 +239,10 @@ def legend(items, shape="square"):
 
 def themed(figure):
     """The figure with bp's chart template, replacing whatever template it was
-    built with. Every figure the Dash app shows passes through here: graph()
+    built with, and v3's finish over it (theme.finish). Every figure the Dash app shows passes through here: graph()
     for the page trees, and each callback that returns a figure."""
     figure.layout.template = TEMPLATE
-    return figure
+    return finish(figure)
 
 
 def graph(id_, figure):

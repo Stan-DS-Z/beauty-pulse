@@ -474,5 +474,10 @@ def load_attention_annual(ASSETS: Path):
             .pivot(index="year", columns="term", values="interest"))
 
 
+def load_attention_monthly(ASSETS: Path):
+    """block_A by month, full years only: term, year, month, interest."""
+    return pd.read_csv(ASSETS / "nb04b_attention_monthly.csv")
+
+
 def load_yt_tfidf(ASSETS: Path):
     return pd.read_csv(ASSETS / "nb07_yt_tfidf.csv")

@@ -6,6 +6,7 @@
   --bg:#FAFAF8; --card:#FFFFFF; --border:#E8E5E0; --text:#2D2D2D; --muted:#8E8E93;
   --grid:#F0EDE8; --skin:#4A90B8; --cosm:#C4627A; --ingr:#5B8C6E; --korean:#D4785C;
   --gold:#B8965A; --skin-lt:#D6E8F5; --cosm-lt:#F5DDE3;
+  --ink:#1F1F1F; --rule:#E2DFD9; --pos:#3E7CA6; --neg:#C4843A;
   --gutter:clamp(16px, 4vw, 48px);
   --font:system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
          "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
@@ -74,7 +75,6 @@ p { margin:0; }
 .kpi-value { font-size:28px; font-weight:700; line-height:1.1; margin-bottom:6px; }
 .kpi-sub { font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
            cursor:help; display:block; }
-.kpi-sub.up { color:#21a550; } .kpi-sub.down { color:#e05252; } .kpi-sub.flat { color:var(--muted); }
 #_kpi_tip { position:fixed; background:#1e1e1e; color:#fff; padding:7px 11px; border-radius:7px;
             font-size:12px; max-width:280px; line-height:1.5; z-index:99999;
             box-shadow:0 2px 10px rgba(0,0,0,.2); pointer-events:none; display:none;
@@ -150,3 +150,90 @@ p { margin:0; }
 .bp-seeds { font-size:13px; }
 .bp-detail-prompt { background:var(--grid); border-radius:8px; padding:12px 20px; margin-top:12px;
                     text-align:center; font-size:12px; color:var(--muted); font-style:italic; }
+
+
+/* ── v3: consulting exhibit language ───────────────────────────────────
+   The design of record is mockup v3 (27 Sep 2026). Hairlines and whitespace
+   separate sections; no card, rim or fill. Ink and greys carry structure; the
+   skincare/makeup pair is the only categorical colour; --pos and --neg mark
+   direction in in-cell bars and the funnel matrix only. */
+body { color:var(--ink); }
+.bp-header { border-bottom:1px solid var(--rule); }
+.bp-nav { align-items:center; gap:2px; flex-wrap:nowrap; margin-bottom:-1px; }
+.bp-navgroup { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+               padding:0 6px 0 4px; white-space:nowrap; }
+.bp-navsep { width:1px; height:18px; background:var(--rule); margin:0 10px; flex:none; }
+.bp-navlink { padding:8px 10px; border-radius:0; font-size:14px; margin-bottom:-1px; }
+.bp-navlink.active { background:none; color:var(--ink); border-bottom:2px solid var(--ink); font-weight:600; }
+
+/* report front matter: kicker, governing thought, key findings */
+.bp-kicker { font-size:11px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase;
+             margin:22px 0 8px; }
+.bp-governing { font-size:24px; line-height:1.4; font-weight:500; margin:0 0 24px; max-width:980px;
+                font-family:Georgia, "Hiragino Mincho ProN", serif; }
+.bp-kfs { border-top:1px solid var(--ink); margin:0 0 6px; max-width:1100px; }
+.bp-kf { display:grid; grid-template-columns:120px 1fr 110px; gap:18px; align-items:baseline;
+         padding:12px 0; border-bottom:1px solid var(--rule); color:inherit; text-decoration:none; }
+a.bp-kf:hover .bp-kf-go { color:var(--ink); }
+.bp-kf-label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+               font-weight:600; }
+.bp-kf-text { font-size:14px; line-height:1.55; }
+.bp-kf-text b { font-weight:700; }
+.bp-kf-go { font-size:12px; color:var(--muted); text-align:right; }
+
+/* exhibits: title, exhibit, at most three annotation lines, source line */
+.bp-chart-head { margin-top:40px; padding-top:14px; border-top:1px solid var(--rule); }
+.bp-h3 { font-size:17px; font-weight:650; line-height:1.35; max-width:1000px; }
+.expl { max-width:1000px; }
+.bp-source { font-size:11px; color:var(--muted); margin:6px 0 4px; }
+.bp-row { gap:40px; }
+.bp-row .bp-chart-head { margin-top:28px; }
+
+/* key figures: typography, no tiles */
+.kpi-card { background:none; border:0; border-radius:0; padding:0; }
+.kpi-label { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600; }
+.kpi-value { font-size:30px; font-weight:600; letter-spacing:-.5px; font-family:Georgia, serif; }
+.kpi-sub, .kpi-sub.up, .kpi-sub.down, .kpi-sub.flat { color:var(--muted); white-space:normal;
+                                                     overflow:visible; cursor:default; }
+
+/* findings and notes: no fills, no rims */
+.bp-finding, .bp-finding.tone-skin, .bp-finding.tone-cosm, .bp-finding.tone-korean {
+  background:none; border:0; border-top:1px solid var(--rule); border-radius:0; padding:12px 0 0;
+  margin:18px 0 8px; }
+.bp-finding-title { font-size:14px; }
+.bp-note, .bp-note.tone-korean, .bp-note.tone-skin, .bp-note.tone-muted {
+  background:none; border:0; border-radius:0; padding:6px 0 0; }
+.bp-info { background:none; color:var(--muted); border-radius:0; padding:8px 0; }
+.bp-panel-head { border-top:1px solid var(--rule); }
+.bp-footnote { border-top:1px solid var(--rule); margin-top:18px; }
+.bp-intro { color:#555; font-size:14px; max-width:1000px; }
+
+/* tables, with in-cell bars on a shared scale */
+.bp-tablewrap { overflow-x:auto; margin:6px 0 16px; }
+.bp-table { border-collapse:collapse; width:100%; font-size:12.5px; }
+.bp-table th { text-align:left; font-weight:600; font-size:11.5px; padding:8px 10px; min-width:64px;
+               border-bottom:1px solid var(--ink); vertical-align:bottom; white-space:normal; }
+.bp-table th span { display:block; font-weight:400; color:var(--muted); font-size:10.5px; margin-top:2px; }
+.bp-table td { padding:7px 8px; border-bottom:1px solid var(--grid); white-space:nowrap; }
+.bp-table td.num { text-align:right; font-variant-numeric:tabular-nums; }
+.bp-table .muted, .bp-jp { color:var(--muted); }
+.bp-table .bp-swatch { width:9px; height:9px; margin-right:6px; }
+.bp-tag { font-size:10px; border:1px solid var(--border); border-radius:4px; padding:0 4px;
+          color:var(--muted); margin-left:6px; }
+.barcell { min-width:130px; }
+.cellbar { display:inline-block; width:70px; height:8px; background:#F0EEEA; vertical-align:middle;
+           margin-right:8px; }
+.cellbar-fill { display:block; height:100%; background:#8C8C8C; }
+.divbar { display:inline-block; position:relative; width:70px; height:8px; vertical-align:middle;
+          margin-right:8px; }
+.divbar-mid { position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:#B5B1AA; }
+.divbar-fill { position:absolute; top:0; height:100%; }
+.divbar-fill.pos { background:var(--pos); } .divbar-fill.neg { background:var(--neg); }
+.cellnum { display:inline-block; min-width:44px; text-align:right; }
+
+@media (max-width:720px) {
+  .bp-governing { font-size:18px; }
+  .bp-kf { grid-template-columns:1fr; gap:4px; }
+  .bp-kf-go { text-align:left; }
+}
+

@@ -6,15 +6,17 @@ entry filled from the headline and launch dicts. Imports no UI framework.
 
 import pandas as pd
 
-from .data import (LAUNCH_GATE, load_ingredient_surge, load_makeup_rebound,
+from .brief import TRENDS_PULL_SPREAD
+from .data import (LAUNCH_GATE, LAUNCH_WINDOW_START, load_ingredient_surge, load_makeup_rebound,
                    load_sku_treemap, load_trends_crossover)
-from .sources import date_label
+from .sources import EDITION, date_label
 
 STRINGS = {
     "en": {
         "tagline":       "Japanese beauty market analytics",
-        "subtitle":      "@cosme · Rakuten Ichiba · Google Trends JP · YouTube · 2019–2026 · 45,510 reviews · 39,436 SKUs",
-        "tab1": "📈  The shift", "tab2": "🔤  The language", "tab3": "🔍  Discovery",
+        "subtitle":      "",   # rebuilt from the edition (sources.EDITION)
+        "nav_report": "Report", "nav_brief": "Brief",
+        "tab1": "The shift", "tab2": "The language", "tab3": "Discovery",
 
         # ── TAB 1: The Shift ──────────────────────────────────────────────
         "t1_intro":  "",
@@ -153,8 +155,9 @@ STRINGS = {
     },
     "jp": {
         "tagline":        "日本の美容市場分析",
-        "subtitle":       "@cosme · 楽天市場 · Google Trends JP · YouTube · 2019–2026 · 45,510件レビュー · 39,436 SKU",
-        "tab1": "📈  市場変化", "tab2": "🔤  消費者の言語", "tab3": "🔍  発見",
+        "subtitle":       "",  # rebuilt from the edition (sources.EDITION)
+        "nav_report": "レポート", "nav_brief": "要旨",
+        "tab1": "市場変化", "tab2": "消費者の言語", "tab3": "発見",
 
         "t1_intro":  "",
 
@@ -344,9 +347,13 @@ def _pair(h, lang):
             f"その{h['cosm_share']}%は化粧品の低下による。")
 
 
-def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
-    """STRINGS[lang] with the live figures written in."""
+def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None):
+    """STRINGS[lang] with the live figures written in, and the Brief's copy
+    when its figures (brief.compute_brief) and the source registry are given."""
     S = dict(STRINGS[lang])
+    _ed = pd.Timestamp(EDITION + "-01")
+    S["subtitle"] = (f"Report: {_MON_EN[_ed.month]} {_ed.year} edition" if lang == "en"
+                     else f"レポート：{_ed.year}年{_ed.month}月版")
     # The Trends pull runs into the current year; each caption names the months
     # its own chart's asset covers.
     _cr_years, _cr_part = _trends_span(load_trends_crossover(ASSETS), lang)
@@ -727,4 +734,162 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS):
                 f"現れない。その他の価格帯は{_G['other_n']}ブランド中{_G['other_unseen']}。"
                 f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
             S["t3_lwin_l12"] += _last
+    if BRIEF is not None and REGISTRY is not None:
+        S.update(brief_strings(lang, BRIEF, HEADLINE, REGISTRY))
     return S
+
+
+# ── The Brief ───────────────────────────────────────────────────────────────
+# Every figure comes from brief.compute_brief. The sentences carry directions
+# (rose, fell, below) that the data decides; tests/test_brief.py holds the data
+# to each direction the copy states, so a refresh that turns one fails there
+# and the sentence is rewritten for the new edition.
+
+_NUM_EN = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven",
+           8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen",
+           14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
+           19: "nineteen", 20: "twenty"}
+_MON_ABBR = [None, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+             "Nov", "Dec"]
+# Where each key finding's page lives until the report pages are built: the
+# page that carries that layer today, or None.
+BRIEF_LINKS = {"market": ("/shift", "tab1"), "demand": ("/shift", "tab1"),
+               "supply": ("/discovery", "tab3"), "consumer": ("/language", "tab2"),
+               "timing": None}
+
+
+def _and(items):
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _cat(key, cap=False):
+    name = LAUNCH_CAT[key][0]
+    return name if cap else name[0].lower() + name[1:]
+
+
+def _pct(x):
+    return f"{x:+.0f}%"
+
+
+def _ym_en(ym):
+    return f"{_MON_EN[int(ym[5:7])]} {ym[:4]}"
+
+
+def brief_strings(lang, B, H, REG):
+    """The Brief page's copy. English only until the Japanese pass (phase 5);
+    the Japanese table carries the same text meanwhile."""
+    from .sources import source_line
+    y0, y1 = B["window"]
+    M, Dm, Sp, P, T = B["market"], B["demand"], B["supply"], B["portfolio"], B["timing"]
+    A = B["actives"]
+    top3 = sorted(A.loc[Dm["top3"], "en"])                     # never ranked
+    ed = pd.Timestamp(EDITION + "-01")
+    out = {}
+
+    out["b_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year} · Japanese beauty market"
+    out["b_governing"] = (
+        f"After {y0}, launch share, search and shipped value rose in different categories: "
+        f"launch share rose most in {_and(_cat(k) for k in P['gainers'])}, whose shipped value "
+        f"moved {_pct(P['gain_ship_lo'])} to {_pct(P['gain_ship_hi'])}; search rose most for "
+        f"named actives that few launches carry; and shipped value rose most in "
+        f"{_and(_cat(k) for k in P['risers'])}.")
+
+    out["b_kf_market"] = (
+        f"Shipped value rose <b>{_pct(M['skin_d'])}</b> in skincare and <b>{_pct(M['make_d'])}</b> "
+        f"in makeup, {y0}→{y1}; makeup is still {abs(M['make_vs_base']):.0f}% below {M['base']}. "
+        f"Serum's {_pct(M['serum_d'])} came from value per unit ({_pct(M['serum_vpu'])}) on "
+        f"{abs(M['serum_units']):.0f}% fewer units.")
+    _within = _and(sorted(A.loc[Dm["within"], "en"].str.lower()))
+    _up = "; ".join(f"{_cat(k)} rose {v:.0f} points" for k, v in Dm["words_up"].items())
+    _wwords = _and(_cat(k) for k in Dm["words_within"])
+    out["b_kf_demand"] = (
+        f"Search rose <b>{Dm['rose_lo']:.0f}–{Dm['rose_hi']:.0f} points</b> for "
+        f"{_NUM_EN[Dm['n_rose']]} of {_NUM_EN[Dm['n_actives']]} tracked actives, {y0}→{y1}, most "
+        f"for {_and(t[0].lower() + t[1:] for t in top3)}; {_within} stayed within the "
+        f"{TRENDS_PULL_SPREAD}-point spread between repeat pulls. Of "
+        f"{_NUM_EN[Dm['n_words']]} category words, {_NUM_EN[Dm['words_down']]} fell, {_up}, and "
+        f"{_wwords} stayed within the spread.")
+    _g = (f"<b>{Sp['gain_lo']:.0f} points</b> of launch share each"
+          if round(Sp["gain_lo"]) == round(Sp["gain_hi"])
+          else f"<b>{Sp['gain_lo']:.0f}–{Sp['gain_hi']:.0f} points</b> of launch share")
+    (k0, n0), (k1, n1) = Sp["kr_first"], Sp["kr_last"]
+    out["b_kf_supply"] = (
+        f"{_and(_cat(k, True) if i == 0 else _cat(k) for i, k in enumerate(Sp['gainers']))} "
+        f"gained {_g}, {y0}→{y1}; {_cat(Sp['loser'])} lost {abs(Sp['loss']):.0f}. Korean issuers "
+        f"made <b>{100 * k1 / n1:.0f}%</b> ({k1} of {n1}) of core launch releases in "
+        f"{Sp['h_last']}, from {100 * k0 / n0:.0f}% ({k0} of {n0}) in {Sp['h_first']}.")
+    out["b_kf_consumer"] = (
+        f"At {H['matched_n']} reviews per period, skincare and makeup reviews share more "
+        f"vocabulary in {H['conv_p1']} than in {H['conv_p0']}: cosine "
+        f"<b>{H['conv_lo']} → {H['conv_hi']}</b> ({H['conv_ci']}).")
+    (a0, a1, lo, hi), (b0, b1, blo, bhi) = T["ship"], T["search"]
+    out["b_kf_timing"] = (
+        f"Sunscreen shipments peak <b>{_MON_EN[a0]}–{_MON_EN[a1]}</b> (index {lo:.0f}–{hi:.0f}, "
+        f"100 = the monthly mean); search peaks {_MON_EN[b0]}–{_MON_EN[b1]} ({blo:.0f}–{bhi:.0f}). "
+        f"Makeup launch releases peak in {_and(_MON_EN[m] for m in T['makeup_peaks'])}, "
+        f"{y0}–{y1}.")
+    out["b_kf_labels"] = {"market": "Market", "demand": "Demand", "supply": "Supply",
+                          "consumer": "Consumer", "timing": "Timing"}
+
+    # Exhibit 1: launch share against shipped value
+    out["b_p_h"] = (
+        f"Launch share rose most in {_and(_cat(k) for k in P['gainers'])}, whose shipped value "
+        f"moved {_pct(P['gain_ship_lo'])} to {_pct(P['gain_ship_hi'])}; it fell in "
+        f"{_and(_cat(k) for k in P['fell'])}, where value rose "
+        f"{P['fell_ship_lo']:.0f}–{P['fell_ship_hi']:.0f}%")
+    n_y0, n_y1 = P["den"]
+    out["b_p_e"] = (
+        f"Each bubble is a product category. Horizontal: METI shipped value, {y1} against {y0}. "
+        f"Vertical: the category's share of categorised core-panel launch releases, {y1} "
+        f"({n_y1} releases) minus {y0} ({n_y0}). Bubble area: {y1} shipped value. "
+        "Hover for counts.")
+    out["b_p_x"] = f"Shipped value, {y1} vs {y0} (%)"
+    out["b_p_y"] = f"Launch share, {y1} minus {y0} (points)"
+    out["b_p_q"] = ["Value and launch share rose", "Value rose, launch share fell",
+                    "Launch share rose, value fell", "Both fell"]
+    out["b_p_groups"] = {"skincare": "Skincare", "sunscreen": "Sunscreen", "makeup": "Makeup"}
+    out["b_p_src"] = source_line(["meti", "prtimes"], REG)
+
+    # Exhibit 2: the actives, search against launch share
+    out["b_a_h"] = (
+        f"Search for {_and(t[0].lower() + t[1:] for t in top3)} rose "
+        f"{Dm['top3_lo']:.0f}–{Dm['top3_hi']:.0f} points; together they appear in "
+        f"{Dm['top3_n']} of {Dm['launch_den']:,} launch releases")
+    out["b_a_e"] = (
+        f"{_NUM_EN[Dm['n_actives']].capitalize()} actives tracked in both Google Trends and PR TIMES. "
+        f"Horizontal: search interest, {y1} annual mean minus {y0}, each term scaled to its own "
+        f"peak. Vertical: share of core-panel launch releases naming the ingredient, "
+        f"{_ym_en(Dm['launch_from'])} – {_ym_en(Dm['launch_to'])}, editions left out; count in "
+        "brackets. Dotted lines: medians.")
+    out["b_a_x"] = f"Search interest, {y1} minus {y0} (points, own peak = 100)"
+    out["b_a_y"] = "Share of launch releases (%)"
+    out["b_a_q"] = "Search above median rise · launch share below median"
+    out["b_a_src"] = source_line(["trends", "prtimes"], REG)
+
+    # Exhibit 3: the category table
+    out["b_t_h"] = f"{_NUM_EN[B['n_rows']].capitalize()} categories measured the same way"
+    out["b_t_e"] = (
+        "Categories that PR TIMES launch releases and METI product lines both name. Search is "
+        "shown where the category word is tracked. Korean share: Korean-origin issuers' share of "
+        f"the category's {y1} core launch releases, count in brackets. Shipment peak: the two "
+        f"months with the highest seasonal index, {y0}–{y1}.")
+    out["b_t_cols"] = [("Category", ""), ("METI line", ""), (f"Value {y1}", "¥億"),
+                       ("Value", f"{y0}→{y1}"), ("Units", f"{y0}→{y1}"),
+                       ("Value / unit", f"{y0}→{y1}"), ("Value", f"{H['mkt_y0']}→{y1}"),
+                       ("Search", f"{y0}→{y1}, pts"), ("Launch share", f"{y0} → {y1}"),
+                       ("Korean issuers", f"share of {y1} launches"), ("Shipment peak", "months")]
+    out["b_t_partial"] = "partial"
+    out["b_t_months"] = _MON_ABBR
+    out["b_t_src"] = source_line(["meti", "trends", "prtimes"], REG)
+    _G = LAUNCH_GATE
+    out["b_fn_t"] = "How each measure is bounded"
+    out["b_fn_b"] = (
+        "Shipped value is what manufacturers in Japan report to METI; it leaves out imports. "
+        f"Launch share is measured on press releases from {B['n_core']} issuers whose PR TIMES "
+        f"history reaches {_ym_en(LAUNCH_WINDOW_START)}; {_G['prestige_unseen']} of the "
+        f"{_G['prestige_n']} prestige brands in the brand list appear in no stored release "
+        f"(measured {int(_G['asof'][8:])} {_MON_EN[int(_G['asof'][5:7])]} {_G['asof'][:4]}). "
+        "Search is an index per term, each scaled to its own peak; changes are measured within "
+        "a term.")
+    return out

@@ -7,8 +7,10 @@ Beauty Pulse — the Dash app, served at https://beautypulse.web.app.
 
 Deploy: Dockerfile and cloudbuild.yaml at the repo root; see DEPLOY.md.
 
-Three pages, one per Streamlit tab, in dash_pages/ (not pages/: a pages/ folder
-next to streamlit_app.py would switch the Streamlit app into multipage mode).
+The pages are in dash_pages/ (not pages/: a pages/ folder next to
+streamlit_app.py would switch the Streamlit app into multipage mode): the Brief,
+then the three pages carried over from the Streamlit tabs until the report and
+monitor pages replace them.
 The language is the URL's ?lang=ja; anything else is English. Each page builds
 its English and Japanese trees once at import and its layout() hands back the
 one the URL asks for. Numbers, copy, theme and figures come from bp/.
@@ -26,7 +28,7 @@ from bp import figures
 
 HERE = Path(__file__).parent
 ASSETS = HERE / "assets"          # the CSV data; Dash's own assets folder is static/
-HOME = "/shift"                   # until a funnel page takes "/"
+HOME = "/brief"
 
 app = Dash(
     __name__,

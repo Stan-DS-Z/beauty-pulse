@@ -33,18 +33,24 @@ REPORT_PAGES = ("brief", "market", "demand", "supply", "consumer", "timing", "me
 MONITOR_PAGES = ("funnel", "categories", "sources")
 PAGES = REPORT_PAGES + MONITOR_PAGES
 
+# The report's edition: the month it was issued, "YYYY-MM". Report pages carry
+# this one date; monitor exhibits carry each source's own. It is set when an
+# edition is issued, not derived, because issuing one is a decision about the
+# copy as well as the data (the cadence is open, brief §10).
+EDITION = "2026-09"
+
 # key: (English name, Japanese name, kind, pages that use it)
 DECLARED = {
     "meti":           ("METI 生産動態統計", "経済産業省 生産動態統計", "series",
-                       ("market", "timing", "funnel", "categories")),
+                       ("brief", "market", "timing", "funnel", "categories")),
     "trade":          ("財務省 貿易統計 HS 3304", "財務省 貿易統計 HS 3304", "series",
                        ("market",)),
     "trends":         ("Google Trends JP", "Googleトレンド（日本）", "series",
-                       ("demand", "timing", "funnel", "categories")),
+                       ("brief", "demand", "timing", "funnel", "categories")),
     "trends_related": ("Google Trends related searches", "Googleトレンド 関連キーワード",
                        "snapshot", ("demand",)),
     "prtimes":        ("PR TIMES", "PR TIMES", "series",
-                       ("supply", "timing", "funnel", "categories")),
+                       ("brief", "supply", "timing", "funnel", "categories")),
     "rakuten":        ("Rakuten Ichiba", "楽天市場", "series", ("supply",)),
     "cosme":          ("@cosme", "@cosme", "snapshot", ("consumer", "funnel")),
     "youtube":        ("YouTube", "YouTube", "snapshot", ("consumer",)),

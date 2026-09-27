@@ -17,6 +17,14 @@ C = {
     "gold":    "#B8965A",
     "skin_lt": "#D6E8F5",
     "cosm_lt": "#F5DDE3",
+    # The exhibit language (mockup v3): ink carries text and the one accent on
+    # an exhibit whose title is not about skincare against makeup; rule draws
+    # the hairlines; pos and neg mark direction in the funnel matrix and in-cell
+    # bars only.
+    "ink":     "#1F1F1F",
+    "rule":    "#E2DFD9",
+    "pos":     "#3E7CA6",
+    "neg":     "#C4843A",
 }
 
 
@@ -108,3 +116,24 @@ TEMPLATE = go.layout.Template(layout=dict(
     colorway=["#0068c9", "#83c9ff", "#ff2b2b", "#ffabab", "#29b09d",
               "#7defa1", "#ff8700", "#ffd16a", "#6d3fc0", "#d5dae5"],
 ))
+
+
+# ── Exhibit finish ──────────────────────────────────────────────────────────
+# Mockup v3 finished every chart the same way over the template: a clear
+# background, the page's ink for text, and quieter grid and axis lines. The
+# builders set their own axis colours, which a template cannot override, so
+# this is applied to the figure after them (ui.themed).
+_FINISH_TEXT = "#3A3A3A"
+_FINISH_GRID = "#ECEAE5"
+_FINISH_LINE = "#D9D6D0"
+
+
+def finish(figure):
+    """The figure with v3's finish on its background, text and every axis."""
+    figure.update_layout(paper_bgcolor=_CLEAR, plot_bgcolor=_CLEAR,
+                         font=dict(family=FONT, color=_FINISH_TEXT))
+    figure.update_xaxes(gridcolor=_FINISH_GRID, zerolinecolor=_FINISH_LINE,
+                        linecolor=_FINISH_LINE)
+    figure.update_yaxes(gridcolor=_FINISH_GRID, zerolinecolor=_FINISH_LINE,
+                        linecolor=_FINISH_LINE)
+    return figure

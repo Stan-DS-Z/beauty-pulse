@@ -928,3 +928,80 @@ def fig_umap(df_umap, year_filter, S):
                    linecolor="rgba(0,0,0,0)", zeroline=False),
     )
     return fig_umap
+
+
+# ── Brief ───────────────────────────────────────────────────────────────────
+# Colour: the skincare/makeup pair is the only categorical set; anything else
+# is grey, and the one accent on an exhibit whose title is not about skincare
+# against makeup is ink.
+_GREY = "#A9A59E"
+GROUP_COLOUR = {"skincare": C["skin"], "makeup": C["cosm"], "sunscreen": _GREY}
+# Label placement for the portfolio's bubbles, so no two labels overlap on the
+# September 2026 figures; an unlisted category takes "top center".
+_PORTFOLIO_TEXT = {"serum": "bottom center", "emulsion": "middle left", "mask": "top right",
+                   "foundation": "bottom center", "blush": "middle right"}
+
+
+def fig_brief_portfolio(BRIEF, S):
+    """Each category's launch-share change against its shipped-value change."""
+    rows = BRIEF["rows"]
+    y0, y1 = BRIEF["window"]
+    fig = go.Figure()
+    for group in ("skincare", "sunscreen", "makeup"):
+        g = rows[rows["group"] == group]
+        fig.add_trace(go.Scatter(
+            x=g["ship_d"], y=g["launch_d"], mode="markers+text", name=S["b_p_groups"][group],
+            text=[LAUNCH_CAT[k][0] for k in g.index],
+            textposition=[_PORTFOLIO_TEXT.get(k, "top center") for k in g.index],
+            textfont=dict(size=11, color=C["ink"]),
+            marker=dict(size=1.1 * np.sqrt(g["value_y1"]), color=GROUP_COLOUR[group],
+                        opacity=0.75, line=dict(color="#fff", width=2)),
+            customdata=np.stack([[LAUNCH_CAT[k][1] for k in g.index], g["value_y1"].round(),
+                                 g["launch_n0"], g["launch_n1"], g["launch_s0"].round(1),
+                                 g["launch_s1"].round(1)], axis=-1),
+            hovertemplate=(f"<b>%{{text}}</b> %{{customdata[0]}}<br>Shipped value {y0}→{y1}: "
+                           f"%{{x:+.0f}}% (¥%{{customdata[1]:,}}億 in {y1})<br>Launch share "
+                           "%{customdata[4]}% → %{customdata[5]}% (%{customdata[2]} → "
+                           "%{customdata[3]} releases)<extra></extra>")))
+    for text, x, y, xa, ya in zip(S["b_p_q"], (0.99, 0.99, 0.01, 0.01), (0.98, 0.02, 0.98, 0.02),
+                                  ("right", "right", "left", "left"),
+                                  ("top", "bottom", "top", "bottom")):
+        fig.add_annotation(text=text, x=x, y=y, xref="paper", yref="paper", xanchor=xa,
+                           yanchor=ya, showarrow=False, font=dict(size=11, color=C["muted"]))
+    fig.add_hline(y=0, line_width=1, line_color=C["border"])
+    fig.add_vline(x=0, line_width=1, line_color=C["border"])
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=True,
+                      legend=dict(orientation="h", y=1.06, x=0),
+                      margin=dict(l=10, r=10, t=40, b=40),
+                      xaxis=_xax(title=dict(text=S["b_p_x"], font=dict(size=11)),
+                                 ticksuffix="%", zeroline=False),
+                      yaxis=_yax(S["b_p_y"], zeroline=False))
+    return fig
+
+
+def fig_brief_actives(BRIEF, S):
+    """Each tracked active's search change against its share of launch releases."""
+    A = BRIEF["actives"]
+    named = set(BRIEF["demand"]["top3"])
+    colours = [C["ink"] if k in named else _GREY for k in A.index]
+    fig = go.Figure(go.Scatter(
+        x=A["d"], y=A["share"], mode="markers+text",
+        text=[f"{en} ({n})" for en, n in zip(A["en"], A["n"])], textposition="top center",
+        textfont=dict(size=11, color=C["ink"]),
+        marker=dict(size=14, color=colours, line=dict(color="#fff", width=2)),
+        customdata=np.stack([A["ja"], A["s0"].round(), A["s1"].round(), A["n"]], axis=-1),
+        hovertemplate=(f"<b>%{{customdata[0]}}</b><br>Search %{{customdata[1]}} → "
+                       f"%{{customdata[2]}} ({BRIEF['window'][0]}→{BRIEF['window'][1]})<br>"
+                       f"%{{customdata[3]}} of {BRIEF['demand']['launch_den']:,} launch "
+                       "releases<extra></extra>")))
+    fig.add_vline(x=float(A["d"].median()), line_width=1, line_dash="dot", line_color=C["border"])
+    fig.add_hline(y=float(A["share"].median()), line_width=1, line_dash="dot",
+                  line_color=C["border"])
+    fig.add_annotation(text=S["b_a_q"], x=0.99, y=0.02, xref="paper", yref="paper",
+                       xanchor="right", yanchor="bottom", showarrow=False,
+                       font=dict(size=11, color=C["muted"]))
+    fig.update_layout(**{**_base(460), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=20, b=40),
+                      xaxis=_xax(title=dict(text=S["b_a_x"], font=dict(size=11)), zeroline=False),
+                      yaxis=_yax(S["b_a_y"], suffix="%", rangemode="tozero"))
+    return fig

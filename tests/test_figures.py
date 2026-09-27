@@ -11,11 +11,12 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pytest
 
-from bp import data, figures, strings
+from bp import brief, data, figures, sources, strings
 
 A = data.ASSETS
 BUILDERS = sorted(n for n in vars(figures) if n.startswith("fig_"))
-LAUNCH_BUILDERS = {n for n in BUILDERS if n.startswith("fig_launch_")}
+# The Brief rests on the launch export as much as the launch panel does.
+LAUNCH_BUILDERS = {n for n in BUILDERS if n.startswith(("fig_launch_", "fig_brief_"))}
 
 
 @pytest.fixture(scope="module")
@@ -36,7 +37,7 @@ def frames():
         umap=data.load_umap(A))
 
 
-def cases(f, H, L, lang, S):
+def cases(f, H, L, lang, S, B=None):
     """Builder name -> the figures it draws with default controls."""
     return {
         "fig_trends_crossover": lambda: [figures.fig_trends_crossover(
@@ -62,6 +63,8 @@ def cases(f, H, L, lang, S):
         "fig_yt_channels": lambda: [figures.fig_yt_channels(f["ch"])],
         "fig_yt_tfidf": lambda: [figures.fig_yt_tfidf(f["tfidf"], S)],
         "fig_umap": lambda: [figures.fig_umap(f["umap"], figures.umap_year_options()[0], S)],
+        "fig_brief_portfolio": lambda: [figures.fig_brief_portfolio(B, S)],
+        "fig_brief_actives": lambda: [figures.fig_brief_actives(B, S)],
     }
 
 
@@ -70,8 +73,9 @@ def cases(f, H, L, lang, S):
 def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch, frames):
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
-    S = strings.build_strings(lang, headline, launch, A)
-    table = cases(frames, headline, launch, lang, S)
+    B = brief.compute_brief(A, headline, launch)
+    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A))
+    table = cases(frames, headline, launch, lang, S, B)
     assert name in table, f"{name} has no case in tests/test_figures.py"
     for fig in table[name]():
         assert isinstance(fig, go.Figure)
@@ -86,7 +90,8 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
     every figure itself (dashboard/ui.py), so it is set in one place."""
     if name in LAUNCH_BUILDERS and launch is None:
         pytest.skip("launch export not built")
-    S = strings.build_strings("en", headline, launch, A)
+    B = brief.compute_brief(A, headline, launch)
+    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A))
     default = pio.templates[pio.templates.default].to_plotly_json()
-    for fig in cases(frames, headline, launch, "en", S)[name]():
+    for fig in cases(frames, headline, launch, "en", S, B)[name]():
         assert fig.layout.template.to_plotly_json() == default

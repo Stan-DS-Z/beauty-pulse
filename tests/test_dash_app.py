@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = {"/shift": "shift", "/language": "language", "/discovery": "discovery"}
+PAGES = {"/brief": "brief", "/shift": "shift", "/language": "language", "/discovery": "discovery"}
 
 
 @pytest.fixture(scope="module")
@@ -70,12 +70,12 @@ def _tree(component):
 
 # ── Pages and routes ────────────────────────────────────────────────────────
 
-def test_registry_holds_the_three_pages_and_the_nav_matches_it(dash_app):
+def test_registry_holds_the_pages_and_the_nav_matches_it(dash_app):
     import dash
     import ui
     registered = sorted(dash.page_registry.values(), key=lambda p: p["order"])
     assert [p["path"] for p in registered] == list(PAGES)
-    assert [path for path, _ in ui.NAV] == [p["path"] for p in registered]
+    assert ui.NAV_PATHS == [p["path"] for p in registered]
 
 
 @pytest.mark.parametrize("path", list(PAGES))
@@ -86,9 +86,9 @@ def test_every_page_serves(client, path, query):
 
 def test_root_redirects_to_the_first_page_and_keeps_the_language(client):
     r = client.get("/")
-    assert r.status_code == 302 and r.headers["Location"] == "/shift"
+    assert r.status_code == 302 and r.headers["Location"] == "/brief"
     r = client.get("/?lang=ja")
-    assert r.status_code == 302 and r.headers["Location"] == "/shift?lang=ja"
+    assert r.status_code == 302 and r.headers["Location"] == "/brief?lang=ja"
 
 
 @pytest.mark.parametrize("path", list(PAGES))
