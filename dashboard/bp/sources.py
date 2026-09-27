@@ -43,6 +43,12 @@ PAGES = REPORT_PAGES + MONITOR_PAGES
 EDITION = "2026-09"
 CUTOFF = "2026-08"
 
+
+def edition_assets(ASSETS: Path) -> Path:
+    """The issued edition's frozen copy of the assets (issue_edition.py).
+    Report pages read only this folder; monitor pages read ASSETS itself."""
+    return ASSETS / "editions" / EDITION
+
 # key: (English name, Japanese name, kind, pages that use it)
 DECLARED = {
     "meti":           ("METI 生産動態統計", "経済産業省 生産動態統計", "series",

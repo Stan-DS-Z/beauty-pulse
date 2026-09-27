@@ -193,6 +193,10 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
     timing = dict(ship=s_ship, search=s_search,
                   makeup_peaks=sorted(moy.nlargest(PEAK_TOP).index))
 
-    return dict(cutoff=cutoff, window=(y0, y1), market=market, demand=demand, supply=supply,
+    # The few headline figures the Brief's copy uses, kept with its own
+    # figures so the copy never reads a headline built on other files.
+    H = {k: HEADLINE[k] for k in ("mkt_y0", "matched_n", "conv_lo", "conv_hi",
+                                   "conv_p0", "conv_p1", "conv_ci", "conv_ci_jp")}
+    return dict(cutoff=cutoff, H=H, window=(y0, y1), market=market, demand=demand, supply=supply,
                 portfolio=portfolio, timing=timing, rows=rows, actives=actives,
                 n_rows=len(rows), n_core=LAUNCH["n_core"])

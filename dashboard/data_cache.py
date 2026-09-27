@@ -30,7 +30,7 @@ class Data:
     LAUNCH: dict | None
     BRIEF: dict | None             # brief.compute_brief at the cut-off, None without the launch export
     REGISTRY: dict                 # sources.build_registry, the latest data (monitor)
-    REPORT_REGISTRY: dict          # the same, cut at the cut-off (report pages)
+    REPORT_REGISTRY: dict          # the same, on the frozen edition (report pages)
     S: dict                        # lang -> string table
 
     def frame(self, name):
@@ -40,15 +40,25 @@ class Data:
         return _frame(self.assets, name)
 
 
+def build_report(assets: Path, launch: bool = True):
+    """The report pages' data: computed only on the issued edition's frozen
+    files (sources.edition_assets), cut at sources.CUTOFF. The monitor reads
+    `assets` itself."""
+    frozen = sources.edition_assets(assets)
+    if not frozen.is_dir():
+        raise FileNotFoundError(f"{frozen} is missing: run issue_edition.py")
+    headline = bp_data.compute_headline(frozen)
+    brief = bp_brief.compute_brief(frozen, headline, sources.CUTOFF) if launch else None
+    return brief, sources.build_registry(frozen, sources.CUTOFF)
+
+
 def build_data(assets: Path, launch: bool = True) -> Data:
     """A Data over `assets`. launch=False builds it as a clone without the
     launch export would see it."""
     headline = bp_data.compute_headline(assets)
     lau = bp_data.compute_launch_headline(assets) if launch else None
-    # Report pages compute on data cut at sources.CUTOFF; the monitor on the latest.
-    brief = bp_brief.compute_brief(assets, headline, sources.CUTOFF) if launch else None
+    brief, report_registry = build_report(assets, launch)
     registry = sources.build_registry(assets)
-    report_registry = sources.build_registry(assets, sources.CUTOFF)
     return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, REGISTRY=registry,
                 REPORT_REGISTRY=report_registry,
                 S={lang: strings.build_strings(lang, headline, lau, assets, brief, report_registry)

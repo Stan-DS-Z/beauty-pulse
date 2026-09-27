@@ -735,7 +735,7 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None):
                 f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
             S["t3_lwin_l12"] += _last
     if BRIEF is not None and REGISTRY is not None:
-        S.update(brief_strings(lang, BRIEF, HEADLINE, REGISTRY))
+        S.update(brief_strings(lang, BRIEF, BRIEF["H"], REGISTRY))
     return S
 
 

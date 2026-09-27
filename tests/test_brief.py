@@ -8,6 +8,7 @@ edition instead of shipping wrong.
 
 import json
 import re
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -15,6 +16,7 @@ import pytest
 from bp import brief, data, sources, strings
 
 A = data.ASSETS
+E = sources.edition_assets(A)            # the issued edition: what the report reads
 
 
 @pytest.fixture(scope="module")
@@ -26,14 +28,14 @@ def launch():
 
 
 @pytest.fixture(scope="module")
-def B(headline, launch):
-    return brief.compute_brief(A, headline, sources.CUTOFF)
+def B(launch):
+    return brief.compute_brief(E, data.compute_headline(E), sources.CUTOFF)
 
 
 @pytest.fixture(scope="module")
 def S(headline, launch, B):
     return strings.build_strings("en", headline, launch, A, B,
-                                 sources.build_registry(A, sources.CUTOFF))
+                                 sources.build_registry(E, sources.CUTOFF))
 
 
 # ── The directions the copy states ──────────────────────────────────────────
@@ -72,7 +74,7 @@ def test_governing_thought_and_portfolio_title_hold(B):
 
 def test_korean_share_compares_complete_halves_inside_the_launch_window(B):
     s = B["supply"]
-    months = pd.Series(data.compute_launch_headline(A, sources.CUTOFF)["months"])
+    months = pd.Series(data.compute_launch_headline(E, sources.CUTOFF)["months"])
     for h in (s["h_first"], s["h_last"]):
         y, half = int(h[:4]), int(h[-1])
         want = [f"{y}-{m:02d}" for m in (range(1, 7) if half == 1 else range(7, 13))]
@@ -84,7 +86,7 @@ def test_the_top_actives_are_never_ranked(B, headline, launch, lang):
     """The three are named in alphabetical (EN) or 五十音 (JA) order, never by
     their rise."""
     S = strings.build_strings(lang, headline, launch, A, B,
-                              sources.build_registry(A, sources.CUTOFF))
+                              sources.build_registry(E, sources.CUTOFF))
     col = S["b_namecol"]
     names = [B["actives"].loc[k, col] for k in B["demand"]["top3"]]
     names = [n.lower() for n in names] if lang == "en" else names
@@ -96,7 +98,7 @@ def test_the_top_actives_are_never_ranked(B, headline, launch, lang):
 def test_the_japanese_brief_is_complete_and_carries_the_same_figures(B, headline, launch):
     """Every Brief string exists in Japanese, and every number in an English
     line appears in its Japanese line."""
-    reg = sources.build_registry(A, sources.CUTOFF)
+    reg = sources.build_registry(E, sources.CUTOFF)
     en = strings.build_strings("en", headline, launch, A, B, reg)
     ja = strings.build_strings("jp", headline, launch, A, B, reg)
     keys = [k for k in en if k.startswith("b_")]
@@ -190,11 +192,47 @@ def test_no_report_figure_uses_data_past_the_cut_off(tmp_path, headline):
     pd.testing.assert_frame_equal(base["rows"], fut["rows"])
     pd.testing.assert_frame_equal(base["actives"], fut["actives"])
     for lang in ("en", "jp"):
-        assert (strings.brief_strings(lang, base, headline, sources.build_registry(base_dir, cut))
-                == strings.brief_strings(lang, fut, headline, sources.build_registry(fut_dir, cut)))
+        assert (strings.brief_strings(lang, base, base["H"], sources.build_registry(base_dir, cut))
+                == strings.brief_strings(lang, fut, fut["H"], sources.build_registry(fut_dir, cut)))
     # and the added data is really there for the monitor to read
     assert (sources.build_registry(fut_dir)["meti"].data_to
             > sources.build_registry(base_dir)["meti"].data_to)
+
+
+# ── The frozen edition ──────────────────────────────────────────────────────
+
+def test_the_frozen_edition_matches_its_manifest():
+    """Every file issue_edition.py froze is unchanged, and nothing was added."""
+    import hashlib
+    import json
+    m = json.loads((E / "manifest.json").read_text(encoding="utf-8"))
+    assert (m["edition"], m["cutoff"]) == (sources.EDITION, sources.CUTOFF)
+    assert {f.name for f in E.iterdir()} == set(m["files"]) | {"manifest.json"}
+    for name, digest in m["files"].items():
+        assert hashlib.sha256((E / name).read_bytes()).hexdigest() == digest, name
+
+
+def test_the_report_opens_no_live_asset(monkeypatch):
+    """Building the report's data opens files under the frozen edition only."""
+    import builtins
+    import data_cache
+    opened, real_open = [], builtins.open
+    def spy(file, *a, **kw):
+        opened.append(Path(file).resolve() if isinstance(file, (str, Path)) else file)
+        return real_open(file, *a, **kw)
+    monkeypatch.setattr(builtins, "open", spy)
+    data_cache.build_report(A)
+    under = [p for p in opened if isinstance(p, Path) and A.resolve() in p.parents]
+    assert under, "the spy saw no asset read"
+    live = [p for p in under if E.resolve() not in p.parents]
+    assert not live, live
+
+
+def test_the_page_carries_the_frozen_edition():
+    import data_cache
+    d = data_cache.load()
+    assert d.BRIEF["rows"].equals(brief.compute_brief(E, data.compute_headline(E),
+                                                      sources.CUTOFF)["rows"])
 
 
 def test_the_edition_and_its_cut_off_are_months_in_order():
@@ -221,7 +259,7 @@ def page_json():
 
 
 def test_every_exhibit_carries_a_source_line_from_the_registry(S):
-    reg = sources.build_registry(A, sources.CUTOFF)
+    reg = sources.build_registry(E, sources.CUTOFF)
     for key, srcs in (("b_p_src", ["meti", "prtimes"]), ("b_a_src", ["trends", "prtimes"]),
                       ("b_t_src", ["meti", "trends", "prtimes"])):
         assert S[key] == sources.source_line(srcs, reg)
@@ -237,6 +275,6 @@ def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):
 def test_the_nav_has_no_emoji(headline, launch, B):
     for lang in ("en", "jp"):
         S = strings.build_strings(lang, headline, launch, A, B,
-                                  sources.build_registry(A, sources.CUTOFF))
+                                  sources.build_registry(E, sources.CUTOFF))
         for key in ("nav_report", "nav_brief", "tab1", "tab2", "tab3"):
             assert not EMOJI.search(S[key]), (lang, key)
