@@ -386,6 +386,12 @@ def ingest_amazon_review(conn: sqlite3.Connection, review_dict: dict,
 
     year, month = extract_year_month(norm_date)
     review_text = review_dict.get("review_text", "") or ""
+    # The 2026-06-13 pull parsed Amazon's renamed review markup with the old
+    # selectors and saved reviews with no text. Those files are still on disk.
+    if not review_text.strip():
+        log.warning("Amazon: skipping review — empty text: %s",
+                    review_dict.get("source_review_id"))
+        return False
     rating_raw  = review_dict.get("rating_raw")
     rating      = normalise_rating(rating_raw, "amazon_jp")
 
