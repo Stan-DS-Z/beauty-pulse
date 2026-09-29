@@ -241,6 +241,17 @@ def page_json():
             for lang, tree in mod.TREES.items()}
 
 
+def test_the_page_shows_no_multiplier_and_states_the_rakuten_frame(page_json, M):
+    """The pull keeps each genre's 3,000 most-reviewed items, so a ratio of its
+    counts measures the pull (METHODOLOGY Revision 11). The page shows no
+    multiplier, and the price note states the frame and its date."""
+    from bp.sources import date_label
+    for lang, js in page_json.items():
+        assert not re.search(r"\d+\.\d+\s*[x×倍]", js), lang
+        assert "3,000" in js, lang
+        assert date_label(M["prices"]["snapshot"], "day", "en" if lang == "en" else "ja") in js, lang
+
+
 def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):
     for lang, js in page_json.items():
         assert not EMOJI.search(js), lang

@@ -26,31 +26,15 @@ def launch():
 
 @pytest.fixture(scope="module")
 def frames():
-    df_grp, px_kg = data.load_meti_monthly(A)
-    val_all, _ = data.load_meti_annual(A)
-    return dict(
-        cross=data.load_trends_crossover(A), mk=data.load_makeup_rebound(A),
-        ing=data.load_ingredient_surge(A), sku=data.load_sku_treemap(A),
-        grp=df_grp, px_kg=px_kg, val_all=val_all,
-        att=data.load_attention_annual(A), curve=data.load_cosine_sizecurve(A),
-        ch=data.load_yt_channels(A),
-        umap=data.load_umap(A))
+    df_grp, _ = data.load_meti_monthly(A)
+    return dict(grp=df_grp, curve=data.load_cosine_sizecurve(A), ch=data.load_yt_channels(A),
+                umap=data.load_umap(A))
 
 
 def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None):
     """Builder name -> the figures it draws with default controls."""
     return {
-        "fig_trends_crossover": lambda: [figures.fig_trends_crossover(
-            f["cross"], figures.crossover_bounds(f["cross"]), lang)],
-        "fig_makeup_rebound": lambda: [figures.fig_makeup_rebound(f["mk"], lang)],
-        "fig_ingredient_surge": lambda: [figures.fig_ingredient_surge(
-            f["ing"], figures.ingredient_default())],
-        "fig_sku_treemap": lambda: [figures.fig_sku_treemap(
-            f["sku"], next(iter(figures.lens_options(S))))],
         "fig_meti_groups": lambda: [figures.fig_meti_groups(f["grp"], H, lang)],
-        "fig_meti_price_per_kg": lambda: [figures.fig_meti_price_per_kg(f["px_kg"], H, lang)],
-        "fig_search_vs_value": lambda: [figures.fig_search_vs_value(
-            f["val_all"], f["att"], H, period, lang, S) for period in ("pre", "post")],
         "fig_cosine_sizecurve": lambda: [figures.fig_cosine_sizecurve(f["curve"], H)],
         "fig_yt_channels": lambda: [figures.fig_yt_channels(f["ch"])],
         "fig_umap": lambda: [figures.fig_umap(f["umap"], figures.umap_year_options()[0], S)],

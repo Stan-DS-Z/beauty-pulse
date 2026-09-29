@@ -211,13 +211,12 @@ def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):
         assert "bp-figs" in js, lang
 
 
-def test_the_shift_break_note_reads_the_market_figures():
-    """The Shift page words the break note from compute_market on the latest
-    data, with the Market page's own builder: no break figure is typed."""
+def test_the_break_note_reads_the_market_figures():
+    """The Market page words the break note from compute_market on the frozen
+    edition, with one builder: no break figure is typed."""
     import data_cache
     d = data_cache.load()
-    live = market.compute_market(A, None)
-    assert d.S["en"]["t1_brkfn"] == strings._break_note_en(live)
-    assert d.S["jp"]["t1_brkfn"] == strings._break_note_ja(live)
+    assert d.S["en"]["mk_fn_b"] == strings._break_note_en(d.MARKET)
+    assert d.S["jp"]["mk_fn_b"] == strings._break_note_ja(d.MARKET)
     for li in market.BREAK_CONTROLS:                     # "rose" / "増加した"
-        assert live["brk"]["jan"][li][2] > 0, li
+        assert d.MARKET["brk"]["jan"][li][2] > 0, li

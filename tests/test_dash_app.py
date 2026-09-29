@@ -12,7 +12,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/supply": "supply",
-         "/shift": "shift", "/language": "language", "/discovery": "discovery"}
+         "/language": "language", "/discovery": "discovery"}
 
 
 @pytest.fixture(scope="module")
@@ -92,6 +92,15 @@ def test_root_redirects_to_the_first_page_and_keeps_the_language(client):
     assert r.status_code == 302 and r.headers["Location"] == "/brief?lang=ja"
 
 
+def test_a_retired_page_redirects_to_its_replacement_and_keeps_the_language(client, dash_app):
+    for old, new in dash_app.RETIRED.items():
+        r = client.get(old)
+        assert r.status_code == 302 and r.headers["Location"] == new
+        r = client.get(old + "?lang=ja")
+        assert r.status_code == 302 and r.headers["Location"] == new + "?lang=ja"
+        assert new in PAGES and old not in PAGES
+
+
 @pytest.mark.parametrize("path", list(PAGES))
 def test_layout_takes_the_language_from_the_query(pages, path):
     page = pages[path]
@@ -124,36 +133,6 @@ def test_version_reports_the_build_and_the_data_months(client):
     assert re.fullmatch(r"\d{4}-\d{2}", body["trends_to"])
 
 
-@pytest.mark.parametrize("lang", ["en", "jp"])
-def test_shift_page_publishes_no_rakuten_sku_ratio(pages, app, lang):
-    """The pull keeps each genre's 3,000 most-reviewed items, so a ratio of its
-    counts measures the pull, not Rakuten (METHODOLOGY Revision 11). The page
-    shows no multiplier, and the treemap caption states the frame and its date."""
-    import pandas as pd
-    from bp.sources import date_label
-    text = _text(_tree(pages["/shift"].TREES[lang]))
-    assert not re.search(r"\d+\.\d+\s*[x×倍]", text), re.findall(r"\d+\.\d+\s*[x×倍]", text)
-    snap = pd.Timestamp(pd.read_csv(app.ASSETS / "nb07_sku_treemap.csv")["snapshot_date"].max())
-    assert "3,000" in text
-    assert date_label(snap, "day", "en" if lang == "en" else "ja") in text
-
-
-@pytest.mark.parametrize("lang", ["en", "jp"])
-def test_shift_page_uses_no_retired_measure(pages, lang):
-    """No retired measure's phrasing on the Shift page, and the "after 2020 …
-    moved toward skincare" sentence cites neither Rakuten (no data before
-    2026) nor @cosme reviews (review-volume share retired, Revision 2)."""
-    from retired_phrases import NOT_SHIFT_EVIDENCE, RETIRED
-    text = _text(_tree(pages["/shift"].TREES[lang]))
-    hits = [(why, m.group(0)) for pat, why in RETIRED
-            for m in re.finditer(pat, text, re.I)]
-    assert not hits, hits
-    shift = re.findall(r"After 2020[^.]*moved toward skincare\.|2020年以降[^。]*比重を高めた。", text)
-    assert shift, "the intro's shift sentence was not found"
-    for s in shift:
-        assert not re.search(NOT_SHIFT_EVIDENCE, s), s
-
-
 @pytest.mark.parametrize("path", list(PAGES))
 @pytest.mark.parametrize("lang", ["en", "jp"])
 def test_no_page_uses_a_retired_phrase(pages, path, lang):
@@ -177,41 +156,6 @@ def test_discovery_lists_both_top_terms_with_the_shared_ones_marked(pages):
 
 # ── One callback per control, with a non-default value ─────────────────────
 
-def test_crossover_slider_sets_the_visible_range(client, pages):
-    fig = _post(client, "sh-fig1.figure", [_in("sh-crossover", "value", [24, 60])],
-                [_in("sh-lang", "data", "en")])
-    months = pages["/shift"]._months(pages["/shift"].D.frame("trends_crossover"))
-    assert fig["layout"]["xaxis"]["range"][0].startswith(months[24].strftime("%Y-%m-%d"))
-
-
-def test_ingredient_dropdown_draws_the_selected_terms(client):
-    fig = _post(client, "sh-fig2.figure", [_in("sh-ingr", "value", ["グルタチオン", "レチナール"])],
-                [_in("sh-lang", "data", "en")])
-    assert [t["name"] for t in fig["data"]] == ["グルタチオン", "レチナール"]
-
-
-def test_lens_radio_recolours_the_treemap(client):
-    fig = _post(client, "sh-fig3.figure", [_in("sh-lens", "value", "avg_rating")],
-                [_in("sh-lang", "data", "jp")])
-    assert fig["layout"]["coloraxis"]["colorbar"]["title"]["text"] == "Avg rating (rated SKUs)"
-
-
-def test_rakuten_tile_click_selects_then_clears(client):
-    click = {"points": [{"label": "All-in-one"}]}
-    sel = _post(client, "sh-rak-sel.data",
-                [_in("sh-fig3", "clickData", click), _in("sh-rak-clear", "n_clicks", 0)],
-                [_in("sh-rak-sel", "data", None)])
-    assert sel == "All-in-one"
-    again = _post(client, "sh-rak-sel.data",
-                  [_in("sh-fig3", "clickData", click), _in("sh-rak-clear", "n_clicks", 0)],
-                  [_in("sh-rak-sel", "data", "All-in-one")])
-    assert again is None
-    detail = _post(client, "sh-rak-detail.children", [_in("sh-rak-sel", "data", "All-in-one")],
-                   [_in("sh-lang", "data", "en")],
-                   outputs=["sh-rak-detail.children", "sh-rak-clear.className"])
-    assert "All-in-one" in _text(detail) and "Median price" in _text(detail)
-
-
 def test_wordcloud_pills_swap_the_image_and_note(client):
     img = _post(client, "lg-wc-img.children", [_in("lg-wc-year", "value", 2020)],
                 [_in("lg-lang", "data", "en")],
@@ -232,9 +176,6 @@ def test_umap_year_pills_filter_the_map_and_the_count(client):
 # Each callback that returns a figure: graph -> (control, a non-default value,
 # the page's language store).
 FIGURE_CALLBACKS = {
-    "sh-fig1": ("sh-crossover", [24, 60], "sh-lang"),
-    "sh-fig2": ("sh-ingr", ["グルタチオン", "レチナール"], "sh-lang"),
-    "sh-fig3": ("sh-lens", "med_price", "sh-lang"),
     "dc-fig-umap": ("dc-umap-year", 2023, "dc-lang"),
 }
 
@@ -271,20 +212,9 @@ def test_every_figure_callback_returns_the_template(client, pages, graph):
 
 
 def test_the_template_cases_cover_every_figure_callback(client, dash_app):
-    client.get("/shift")            # page callbacks register on the first request
+    client.get("/discovery")        # page callbacks register on the first request
     graphs = {k.split(".")[0] for k in dash_app.app.callback_map if k.endswith(".figure")}
     assert graphs == set(FIGURE_CALLBACKS)
-
-
-def test_a_malformed_click_changes_nothing(client):
-    r = client.post("/_dash-update-component", data=json.dumps({
-        "output": "sh-rak-sel.data", "outputs": {"id": "sh-rak-sel", "property": "data"},
-        "inputs": [_in("sh-fig3", "clickData", {"points": "junk"}),
-                   _in("sh-rak-clear", "n_clicks", 0)],
-        "state": [_in("sh-rak-sel", "data", "Emulsion")],
-        "changedPropIds": ["sh-fig3.clickData"]}), content_type="application/json")
-    # no_update: Dash 4 answers 200 with nothing in the response
-    assert r.status_code == 200 and json.loads(r.data)["response"] == {}
 
 
 # ── Word clouds ─────────────────────────────────────────────────────────────

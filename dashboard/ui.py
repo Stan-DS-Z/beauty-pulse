@@ -30,10 +30,11 @@ def href(path, lang):
 # The nav, in order: groups of (path, string-table key of its label), each
 # group under the label its key names. A static list, because
 # dash.page_registry is incomplete while pages import; a test pins it to the
-# registry. The Shift, Language and Discovery pages stay in the report group
-# until the report and monitor pages that replace them are built.
+# registry. The Language and Discovery pages stay in the report group until
+# the report and monitor pages that replace them are built; a replaced page's
+# path redirects (app.RETIRED).
 NAV = [("nav_report", [("/brief", "nav_brief"), ("/market", "nav_market"),
-                       ("/demand", "nav_demand"), ("/supply", "nav_supply"), ("/shift", "tab1"),
+                       ("/demand", "nav_demand"), ("/supply", "nav_supply"),
                        ("/language", "tab2"), ("/discovery", "tab3")])]
 NAV_PATHS = [path for _, items in NAV for path, _ in items]
 
@@ -274,39 +275,7 @@ def pills(id_, options, value, label=None):
     return html.Div(kids, className="bp-control")
 
 
-# ── Treemap clicks ──────────────────────────────────────────────────────────
-
-def clicked_label(click):
-    """The label of a clicked treemap tile, or None. A treemap point always
-    carries one; a hand-built request need not, so anything else is None."""
-    points = click.get("points") if isinstance(click, dict) else None
-    if not points or not isinstance(points, list) or not isinstance(points[0], dict):
-        return None
-    return points[0].get("label") or None
-
-
 # ── Detail panels ───────────────────────────────────────────────────────────
-
-def _stat(label, value, colour):
-    return html.Div(className="bp-stat", children=[
-        html.P(label, className="bp-stat-label"),
-        html.P(value, className="bp-stat-value", style={"color": colour}),
-    ])
-
-
-def sku_panel(row_, colour):
-    """The Rakuten tile detail, from bp.figures.sku_detail()."""
-    return html.Div(className="bp-detail", style={"borderLeftColor": colour}, children=[
-        html.Div(className="bp-detail-name", children=[
-            html.P(row_["label"], className="bp-detail-title"),
-            html.P(row_["tier_group"].capitalize(), className="bp-detail-sub"),
-        ]),
-        _stat("Items in pull", f"{int(row_['sku_count']):,}", colour),
-        _stat("Median price", f"¥{int(row_['med_price']):,}", colour),
-        _stat("Avg rating (rated SKUs)",
-              f"{row_['avg_rating']:.2f} ★ · {row_['rated_share']:.0%} rated", colour),
-    ])
-
 
 def detail_prompt(text):
     return html.Div(html.Span(text), className="bp-detail-prompt")

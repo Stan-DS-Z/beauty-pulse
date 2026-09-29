@@ -36,9 +36,3 @@ RETIRED = [
      "Discovery's register note on NB06 §6's term lists, whose tokeniser kept verbs "
      "(Revision 15)"),
 ]
-
-# The sources a "moved toward skincare after 2020" sentence may not cite: the
-# within-side instruments (METHODOLOGY Source roles). Rakuten has no data
-# before March 2026; @cosme review share and YouTube comment counts follow the
-# collection's mix.
-NOT_SHIFT_EVIDENCE = r"Rakuten|楽天|@cosme|review|YouTube"

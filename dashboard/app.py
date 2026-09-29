@@ -29,6 +29,8 @@ from bp import figures
 HERE = Path(__file__).parent
 ASSETS = HERE / "assets"          # the CSV data; Dash's own assets folder is static/
 HOME = "/brief"
+# Pages the report replaced -> the page that carries their exhibits now.
+RETIRED = {"/shift": "/demand"}
 
 app = Dash(
     __name__,
@@ -46,13 +48,15 @@ Compress(server)
 
 @server.before_request
 def _home():
-    """"/" goes to the first page and keeps the query, so /?lang=ja lands in
-    Japanese. Dash's redirect_from cannot do this: it drops the query, answers
-    301 (which browsers cache, and "/" is due to become its own page), and
+    """"/" goes to the first page, and a retired page's path to the page that
+    replaced it, each keeping the query, so /?lang=ja lands in Japanese.
+    Dash's redirect_from cannot do this: it drops the query, answers 301
+    (which browsers cache, and "/" is due to become its own page), and
     collides with Dash's own "/" route."""
-    if request.path == "/":
+    target = HOME if request.path == "/" else RETIRED.get(request.path.rstrip("/"))
+    if target:
         qs = request.query_string.decode()
-        return redirect(HOME + (f"?{qs}" if qs else ""), code=302)
+        return redirect(target + (f"?{qs}" if qs else ""), code=302)
     return None
 
 
