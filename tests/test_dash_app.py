@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/shift": "shift",
-         "/language": "language", "/discovery": "discovery"}
+PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/supply": "supply",
+         "/shift": "shift", "/language": "language", "/discovery": "discovery"}
 
 
 @pytest.fixture(scope="module")
@@ -219,18 +219,6 @@ def test_wordcloud_pills_swap_the_image_and_note(client):
     assert img["props"]["src"] == "/wordcloud/2020.png"
 
 
-def test_launch_ingredient_dropdown_redraws_the_pair(client, pages):
-    from bp import figures
-    D = pages["/discovery"].D
-    if D.LAUNCH is None:
-        pytest.skip("launch export not built")
-    first, second = figures.launch_ingredient_options(D.LAUNCH)[:2]
-    fig = _post(client, "dc-fig-l5.figure", [_in("dc-launch-ing", "value", second)],
-                [_in("dc-lang", "data", "en")])
-    default = figures.fig_launch_vs_search(D.LAUNCH, D.frame("ingredient_surge"), first, D.S["en"])
-    assert fig["data"][0]["y"] != _tree(default)["data"][0]["y"]
-
-
 def test_umap_year_pills_filter_the_map_and_the_count(client):
     fig = _post(client, "dc-fig-umap.figure", [_in("dc-umap-year", "value", 2023)],
                 [_in("dc-lang", "data", "en")])
@@ -242,12 +230,11 @@ def test_umap_year_pills_filter_the_map_and_the_count(client):
 # ── Chart template ──────────────────────────────────────────────────────────
 
 # Each callback that returns a figure: graph -> (control, a non-default value,
-# the page's language store). None stands for the second launch ingredient.
+# the page's language store).
 FIGURE_CALLBACKS = {
     "sh-fig1": ("sh-crossover", [24, 60], "sh-lang"),
     "sh-fig2": ("sh-ingr", ["グルタチオン", "レチナール"], "sh-lang"),
     "sh-fig3": ("sh-lens", "med_price", "sh-lang"),
-    "dc-fig-l5": ("dc-launch-ing", None, "dc-lang"),
     "dc-fig-umap": ("dc-umap-year", 2023, "dc-lang"),
 }
 
@@ -276,14 +263,8 @@ def test_every_chart_on_a_page_carries_the_template(pages, path, lang):
 
 @pytest.mark.parametrize("graph", list(FIGURE_CALLBACKS))
 def test_every_figure_callback_returns_the_template(client, pages, graph):
-    from bp import figures
     from bp.theme import TEMPLATE
     control, value, lang_store = FIGURE_CALLBACKS[graph]
-    if value is None:
-        launch = pages["/discovery"].D.LAUNCH
-        if launch is None:
-            pytest.skip("launch export not built")
-        value = figures.launch_ingredient_options(launch)[1]
     fig = _post(client, f"{graph}.figure", [_in(control, "value", value)],
                 [_in(lang_store, "data", "jp")])
     assert fig["layout"]["template"] == _tree(TEMPLATE)
@@ -320,12 +301,12 @@ def test_wordcloud_route_serves_listed_years_only(client):
 
 # ── Empty state, stylesheet, text ───────────────────────────────────────────
 
-def test_discovery_renders_its_empty_state_without_the_launch_export(pages):
+def test_supply_renders_its_empty_state_without_the_launch_export(pages):
     import data_cache
     d = data_cache.build_data(data_cache.ASSETS, launch=False)
     for lang in data_cache.LANGS:
-        text = _text(_tree(pages["/discovery"].build(lang, d)))
-        assert d.S[lang]["t3_lempty"] in text
+        text = _text(_tree(pages["/supply"].build(lang, d)))
+        assert d.S[lang]["launch_empty"] in text
 
 
 def test_stylesheet_tokens_mirror_the_theme():

@@ -33,7 +33,7 @@ def href(path, lang):
 # registry. The Shift, Language and Discovery pages stay in the report group
 # until the report and monitor pages that replace them are built.
 NAV = [("nav_report", [("/brief", "nav_brief"), ("/market", "nav_market"),
-                       ("/demand", "nav_demand"), ("/shift", "tab1"),
+                       ("/demand", "nav_demand"), ("/supply", "nav_supply"), ("/shift", "tab1"),
                        ("/language", "tab2"), ("/discovery", "tab3")])]
 NAV_PATHS = [path for _, items in NAV for path, _ in items]
 

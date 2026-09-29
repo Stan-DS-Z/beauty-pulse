@@ -72,7 +72,7 @@ def build(lang, d):
     kids = [ui.header(S, lang, PATH)]
     if B is None:
         return html.Div(className="bp-page", lang="ja" if lang == "jp" else "en",
-                        children=kids + [ui.info(S["t3_lempty"])])
+                        children=kids + [ui.info(S["launch_empty"])])
     kids += [
         ui.kicker(S["b_kicker"]),
         ui.governing(S["b_governing"]),

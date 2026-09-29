@@ -406,7 +406,7 @@ def compute_launch_headline(ASSETS: Path, cutoff=None):
         "cats": cats.sort_values("n_l12", ascending=False),
         "ing": ing[(ing["n_l12"] + ing["n_p12"]) > 0], "ing_roll": ing_share_roll,
         "den_l12": den_l12, "den_p12": den_p12,
-        "any_ing_share": round(100 * any_ing_l12 / den_l12, 1),
+        "any_ing_share": round(100 * any_ing_l12 / den_l12, 1), "any_ing_n": any_ing_l12,
         "top_ing": top.name, "top_n_l12": int(top["n_l12"]), "top_n_p12": int(top["n_p12"]),
         "top_s_l12": round(float(top["s_l12"]), 1), "top_s_p12": round(float(top["s_p12"]), 1),
         "full_grp": full_grp, "full_tot": int(full_grp.values.sum()),

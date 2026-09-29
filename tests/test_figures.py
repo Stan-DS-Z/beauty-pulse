@@ -11,12 +11,12 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pytest
 
-from bp import brief, data, demand, figures, market, sources, strings
+from bp import brief, data, demand, figures, market, sources, strings, supply
 
 A = data.ASSETS
 BUILDERS = sorted(n for n in vars(figures) if n.startswith("fig_"))
-# The Brief rests on the launch export as much as the launch panel does.
-LAUNCH_BUILDERS = {n for n in BUILDERS if n.startswith(("fig_launch_", "fig_brief_"))}
+# The Brief rests on the launch export as much as the Supply page does.
+LAUNCH_BUILDERS = {n for n in BUILDERS if n.startswith(("fig_supply_", "fig_brief_"))}
 
 
 @pytest.fixture(scope="module")
@@ -37,7 +37,7 @@ def frames():
         umap=data.load_umap(A))
 
 
-def cases(f, H, L, lang, S, B=None, M=None, DM=None):
+def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None):
     """Builder name -> the figures it draws with default controls."""
     return {
         "fig_trends_crossover": lambda: [figures.fig_trends_crossover(
@@ -52,12 +52,6 @@ def cases(f, H, L, lang, S, B=None, M=None, DM=None):
         "fig_search_vs_value": lambda: [figures.fig_search_vs_value(
             f["val_all"], f["att"], H, period, lang, S) for period in ("pre", "post")],
         "fig_cosine_sizecurve": lambda: [figures.fig_cosine_sizecurve(f["curve"], H)],
-        "fig_launch_groups": lambda: [figures.fig_launch_groups(L, S)],
-        "fig_launch_categories": lambda: [figures.fig_launch_categories(L, lang, S)],
-        "fig_launch_roster": lambda: [figures.fig_launch_roster(L, S)],
-        "fig_launch_ingredients": lambda: [figures.fig_launch_ingredients(L, lang, S)],
-        "fig_launch_vs_search": lambda: [figures.fig_launch_vs_search(
-            L, f["ing"], figures.launch_ingredient_options(L)[0], S)],
         "fig_yt_channels": lambda: [figures.fig_yt_channels(f["ch"])],
         "fig_umap": lambda: [figures.fig_umap(f["umap"], figures.umap_year_options()[0], S)],
         "fig_brief_portfolio": lambda: [figures.fig_brief_portfolio(B, S)],
@@ -69,7 +63,11 @@ def cases(f, H, L, lang, S, B=None, M=None, DM=None):
         "fig_demand_pair": lambda: [figures.fig_demand_pair(DM, S)],
         "fig_demand_ingredients": lambda: [figures.fig_demand_ingredients(DM, S)],
         "fig_demand_makeup": lambda: [figures.fig_demand_makeup(DM, S)],
-        "fig_demand_related": lambda: [figures.fig_demand_related(DM, S)],
+        "fig_supply_share": lambda: [figures.fig_supply_share(SP, S)],
+        "fig_supply_origin": lambda: [figures.fig_supply_origin(SP, S)],
+        "fig_supply_groups": lambda: [figures.fig_supply_groups(SP, S)],
+        "fig_supply_ingredients": lambda: [figures.fig_supply_ingredients(SP, S)],
+        "fig_supply_prices": lambda: [figures.fig_supply_prices(SP, S)],
     }
 
 
@@ -81,8 +79,9 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
     B = brief.compute_brief(A, headline, sources.CUTOFF)
     M = market.compute_market(A, sources.CUTOFF)
     DM = demand.compute_demand(A, sources.CUTOFF)
-    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M, DM)
-    table = cases(frames, headline, launch, lang, S, B, M, DM)
+    SP = supply.compute_supply(A, sources.CUTOFF)
+    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M, DM, SP)
+    table = cases(frames, headline, launch, lang, S, B, M, DM, SP)
     assert name in table, f"{name} has no case in tests/test_figures.py"
     for fig in table[name]():
         assert isinstance(fig, go.Figure)
@@ -100,7 +99,8 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
     B = brief.compute_brief(A, headline, sources.CUTOFF)
     M = market.compute_market(A, sources.CUTOFF)
     DM = demand.compute_demand(A, sources.CUTOFF)
-    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M, DM)
+    SP = supply.compute_supply(A, sources.CUTOFF)
+    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M, DM, SP)
     default = pio.templates[pio.templates.default].to_plotly_json()
-    for fig in cases(frames, headline, launch, "en", S, B, M, DM)[name]():
+    for fig in cases(frames, headline, launch, "en", S, B, M, DM, SP)[name]():
         assert fig.layout.template.to_plotly_json() == default

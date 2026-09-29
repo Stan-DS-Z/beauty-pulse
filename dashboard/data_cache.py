@@ -15,6 +15,7 @@ from bp import data as bp_data
 from bp import demand as bp_demand
 from bp import market as bp_market
 from bp import sources, strings
+from bp import supply as bp_supply
 
 ASSETS = Path(__file__).parent / "assets"
 LANGS = ("en", "jp")
@@ -33,6 +34,7 @@ class Data:
     BRIEF: dict | None             # brief.compute_brief at the cut-off, None without the launch export
     MARKET: dict                   # market.compute_market at the cut-off
     DEMAND: dict                   # demand.compute_demand at the cut-off
+    SUPPLY: dict | None            # supply.compute_supply at the cut-off, None without the launch export
     REGISTRY: dict                 # sources.build_registry, the latest data (monitor)
     REPORT_REGISTRY: dict          # the same, on the frozen edition (report pages)
     S: dict                        # lang -> string table
@@ -55,7 +57,8 @@ def build_report(assets: Path, launch: bool = True):
     brief = bp_brief.compute_brief(frozen, headline, sources.CUTOFF) if launch else None
     market = bp_market.compute_market(frozen, sources.CUTOFF)
     demand = bp_demand.compute_demand(frozen, sources.CUTOFF)
-    return brief, market, demand, sources.build_registry(frozen, sources.CUTOFF)
+    supply = bp_supply.compute_supply(frozen, sources.CUTOFF) if launch else None
+    return brief, market, demand, supply, sources.build_registry(frozen, sources.CUTOFF)
 
 
 def build_data(assets: Path, launch: bool = True) -> Data:
@@ -63,12 +66,13 @@ def build_data(assets: Path, launch: bool = True) -> Data:
     launch export would see it."""
     headline = bp_data.compute_headline(assets)
     lau = bp_data.compute_launch_headline(assets) if launch else None
-    brief, market, demand, report_registry = build_report(assets, launch)
+    brief, market, demand, supply, report_registry = build_report(assets, launch)
     registry = sources.build_registry(assets)
     return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, MARKET=market,
-                DEMAND=demand, REGISTRY=registry, REPORT_REGISTRY=report_registry,
+                DEMAND=demand, SUPPLY=supply, REGISTRY=registry,
+                REPORT_REGISTRY=report_registry,
                 S={lang: strings.build_strings(lang, headline, lau, assets, brief,
-                                               report_registry, market, demand)
+                                               report_registry, market, demand, supply)
                    for lang in LANGS})
 
 

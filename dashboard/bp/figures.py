@@ -12,9 +12,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
-from . import strings
 from .data import LAUNCH_GROUPS
 from .strings import LAUNCH_CAT
 from .theme import C, _base, _xax, _yax
@@ -384,147 +382,6 @@ def wordcloud_note(year):
     if year == 2023:
         return "t2_wc_2023", "grid", "gold"
     return "t2_wc_late", "skin_lt", "skin"
-
-
-# ── Tab 3 · launches ──────────────────────────────────────────────────────
-
-# Colours passed the dataviz validator as a set (blue, rose, ochre); the
-# no-category line is gray and dashed, and every line is labelled at its end.
-LG_COLOR = {"skincare": "#3F86B5", "makeup": "#C4627A", "other": "#A8861A",
-            "none": C["muted"]}
-
-
-def fig_launch_groups(LAUNCH, S):
-    """12-month rolling launch releases by category group."""
-    _gname = {g: S[f"t3_lg_{g}"] for g in LAUNCH_GROUPS}
-    _roll = LAUNCH["roll"]
-    _x = pd.to_datetime(_roll.index + "-01")
-    fig_l1 = go.Figure()
-    for g in LAUNCH_GROUPS:
-        fig_l1.add_trace(go.Scatter(
-            x=_x, y=_roll[g], name=_gname[g], mode="lines",
-            line=dict(color=LG_COLOR[g], width=2, dash="dash" if g == "none" else "solid"),
-            hovertemplate="%{y:.0f}<extra>" + _gname[g] + "</extra>"))
-        fig_l1.add_annotation(x=_x[-1], y=_roll[g].iloc[-1], text=_gname[g],
-                              showarrow=False, xanchor="left", xshift=6,
-                              font=dict(size=10, color=C["text"]))
-    fig_l1.update_layout(**_base(height=360))
-    fig_l1.update_layout(margin=dict(l=20, r=150, t=10, b=40), showlegend=True,
-                         legend=dict(orientation="h", yanchor="top", y=-0.12,
-                                     xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
-                         xaxis=_xax(range=[_x[0], _x[-1] + pd.Timedelta(days=20)]),
-                         yaxis=_yax(title=S["t3_l1ax"], rangemode="tozero", automargin=True))
-    return fig_l1
-
-
-def fig_launch_categories(LAUNCH, lang, S):
-    """Launch releases per category, latest 12 months against the 12 before."""
-    _li = strings._li(lang)
-    _c = LAUNCH["cats"].head(12).iloc[::-1]
-    _cl = [LAUNCH_CAT[k][_li] for k in _c.index]
-    _cc = [LG_COLOR.get(g, C["muted"]) for g in _c["group"]]
-    fig_l2 = go.Figure()
-    fig_l2.add_trace(go.Bar(y=_cl, x=_c["n_p12"], orientation="h", name=S["t3_lwin_p12"],
-                            marker=dict(color=_cc, opacity=0.35),
-                            hovertemplate="%{x}<extra>" + S["t3_lwin_p12"] + "</extra>"))
-    fig_l2.add_trace(go.Bar(y=_cl, x=_c["n_l12"], orientation="h", name=S["t3_lwin_l12"],
-                            marker=dict(color=_cc),
-                            hovertemplate="%{x}<extra>" + S["t3_lwin_l12"] + "</extra>"))
-    fig_l2.update_layout(**_base(height=420))
-    # Bars take their category group's colour, so a legend swatch would show one
-    # group's hue for every bar; the expl line names dark and light instead.
-    fig_l2.update_layout(barmode="group", bargap=0.25, bargroupgap=0.08,
-                         hovermode="y unified", showlegend=False,
-                         margin=dict(l=10, r=10, t=10, b=30),
-                         xaxis=_xax(), yaxis=_yax(automargin=True))
-    return fig_l2
-
-
-def fig_launch_roster(LAUNCH, S):
-    """Every issuer, latest 12 months, present-forward feeds stacked on the core."""
-    _gname = {g: S[f"t3_lg_{g}"] for g in LAUNCH_GROUPS}
-    _f = LAUNCH["full_grp"].iloc[::-1]
-    fig_l3 = go.Figure()
-    for pan, col, lab in [("core", "#5A6B7B", S["t3_lpan_core"]),
-                          ("present_forward", "#B9C2CC", S["t3_lpan_pf"])]:
-        fig_l3.add_trace(go.Bar(y=[_gname[g] for g in _f.index], x=_f[pan], name=lab,
-                                orientation="h", marker=dict(color=col, line=dict(color=C["bg"], width=2)),
-                                texttemplate="%{x}", textposition="inside",
-                                insidetextfont=dict(size=10),
-                                hovertemplate="%{x}<extra>" + lab + "</extra>"))
-    fig_l3.update_layout(**_base(height=230))
-    fig_l3.update_layout(barmode="stack", hovermode="y unified",
-                         margin=dict(l=10, r=10, t=10, b=30),
-                         legend=dict(orientation="h", yanchor="top", y=-0.15,
-                                     xanchor="left", x=0, bgcolor="rgba(0,0,0,0)",
-                                     traceorder="normal"),
-                         xaxis=_xax(), yaxis=_yax(automargin=True))
-    return fig_l3
-
-
-def fig_launch_ingredients(LAUNCH, lang, S):
-    """Share of launch releases naming each ingredient, both windows."""
-    def _ing_label(canon):
-        return strings._ing_label(canon, lang, LAUNCH)
-
-    _i = LAUNCH["ing"].iloc[::-1]
-    _il = [_ing_label(k) for k in _i.index]
-    fig_l4 = go.Figure()
-    for yv, a, b in zip(_il, _i["s_p12"], _i["s_l12"]):
-        fig_l4.add_shape(type="line", x0=a, x1=b, y0=yv, y1=yv,
-                         line=dict(color=C["border"], width=2), layer="below")
-    fig_l4.add_trace(go.Scatter(
-        x=_i["s_p12"], y=_il, mode="markers", name=S["t3_lwin_p12"],
-        marker=dict(size=9, color=C["card"], line=dict(color=C["ingr"], width=2)),
-        customdata=_i["n_p12"],
-        hovertemplate="%{x:.1f}% (%{customdata})<extra>" + S["t3_lwin_p12"] + "</extra>"))
-    fig_l4.add_trace(go.Scatter(
-        x=_i["s_l12"], y=_il, mode="markers", name=S["t3_lwin_l12"],
-        marker=dict(size=10, color=C["ingr"]),
-        customdata=_i["n_l12"],
-        hovertemplate="%{x:.1f}% (%{customdata})<extra>" + S["t3_lwin_l12"] + "</extra>"))
-    fig_l4.update_layout(**_base(height=460))
-    fig_l4.update_layout(hovermode="y unified", margin=dict(l=10, r=10, t=10, b=40),
-                         legend=dict(orientation="h", yanchor="top", y=-0.08,
-                                     xanchor="left", x=0, bgcolor="rgba(0,0,0,0)"),
-                         xaxis=_xax(ticksuffix="%", rangemode="tozero"),
-                         yaxis=_yax(automargin=True))
-    return fig_l4
-
-
-def launch_ingredient_options(LAUNCH):
-    """Canonical keys of the ingredients that have a Trends term, in chart order."""
-    _paired = LAUNCH["ing"][LAUNCH["ing"]["trends_term"] != ""]
-    return list(_paired.index)
-
-
-def fig_launch_vs_search(LAUNCH, df_ing, canon, S):
-    """One ingredient: launch share over its search interest, one axis each."""
-    _paired = LAUNCH["ing"][LAUNCH["ing"]["trends_term"] != ""]
-    _canon = canon
-    _sr = LAUNCH["ing_roll"].get(_canon)
-    _tr = df_ing
-    _tr = (_tr[_tr["term"] == _paired.loc[_canon, "trends_term"]]
-           .set_index("week_start")["interest"].sort_index().rolling(12).mean().dropna())
-    _x0 = pd.Timestamp(LAUNCH["roll"].index[0] + "-01")
-    _tr = _tr[_tr.index >= _x0]
-    fig_l5 = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.08)
-    fig_l5.add_trace(go.Scatter(
-        x=pd.to_datetime(_sr.index + "-01"), y=_sr, mode="lines", name=S["t3_l5ax1"],
-        line=dict(color=C["ingr"], width=2),
-        hovertemplate="%{y:.1f}%<extra>" + S["t3_l5ax1"] + "</extra>"), row=1, col=1)
-    fig_l5.add_trace(go.Scatter(
-        x=_tr.index, y=_tr, mode="lines", name=S["t3_l5ax2"],
-        line=dict(color=C["text"], width=2),
-        hovertemplate="%{y:.0f}<extra>" + S["t3_l5ax2"] + "</extra>"), row=2, col=1)
-    fig_l5.update_layout(**_base(height=420))
-    fig_l5.update_layout(showlegend=False, margin=dict(l=20, r=10, t=10, b=30))
-    fig_l5.update_xaxes(**_xax())
-    fig_l5.update_yaxes(**_yax(title=S["t3_l5y1"], suffix="%", rangemode="tozero",
-                               automargin=True), row=1, col=1)
-    fig_l5.update_yaxes(**_yax(title=S["t3_l5y2"], rangemode="tozero", automargin=True),
-                        row=2, col=1)
-    return fig_l5
 
 
 # ── Tab 3 · search, video and reviews ────────────────────────────────────
@@ -957,15 +814,17 @@ def fig_market_imports(M, S):
 def _end_labels(fig, series, names, accent, top, gap_frac=0.045):
     """A label at the end of each line, moved apart where lines end close
     together; `series` maps key -> (x, y) of the line's last point, and `top`
-    is the highest value drawn, so the gap is a share of the axis. Labels sit
-    in the right margin; a data-placed annotation widens Plotly's autorange,
-    so each chart that uses these fixes its x range."""
+    is the highest value drawn, so the gap is a share of the axis. `accent` is
+    the key whose label is set in ink, or a tuple of them. Labels sit in the
+    right margin; a data-placed annotation widens Plotly's autorange, so each
+    chart that uses these fixes its x range."""
+    inks = accent if isinstance(accent, tuple) else (accent,)
     gap, placed = gap_frac * top, {}
     for k, (_, y) in sorted(series.items(), key=lambda kv: kv[1][1]):
         placed[k] = max(y, max(placed.values(), default=-gap) + gap)
     for k, (x, _) in series.items():
         fig.add_annotation(x=x, y=placed[k], text=names[k], showarrow=False, xanchor="left",
-                           xshift=8, font=dict(size=11, color=C["ink"] if k == accent
+                           xshift=8, font=dict(size=11, color=C["ink"] if k in inks
                                                else C["muted"]))
 
 
@@ -1081,4 +940,167 @@ def fig_demand_makeup(M, S):
                       xaxis=_xax(tickformat="%Y", tickangle=0,
                                  range=[x0 - pd.Timedelta(days=20), x1 + pd.Timedelta(days=20)]),
                       yaxis=_yax(S["dm_m_y"], rangemode="tozero"))
+    return fig
+
+
+# ── Supply ──────────────────────────────────────────────────────────────────
+# The launch-total chart sets skincare against makeup, in the pair's colours;
+# every other exhibit is grey with its accent in ink on what its title names.
+# Hollow marks are the earlier year or window, filled marks the later one.
+# Ingredients are never ranked: they are listed alphabetically (五十音 in
+# Japanese), top to bottom.
+_GREY_LIGHT = "#CFCBC4"
+_ORIGIN_COLOUR = {"KR": C["ink"], "JP": _GREY, "global": _GREY_LIGHT, "CN": _GREY_DARK}
+
+
+def _dumbbell(fig, names, x0, x1, n0, n1, inked, hover0, hover1):
+    """One row per name: a rule from x0 to x1, a hollow mark at x0 and a filled
+    mark at x1, in ink where `inked` is true and grey otherwise."""
+    colour = [C["ink"] if i else _GREY for i in inked]
+    for name, a, b, i in zip(names, x0, x1, inked):
+        fig.add_shape(type="line", x0=a, x1=b, y0=name, y1=name, layer="below",
+                      line=dict(color=C["ink"] if i else C["border"], width=2))
+    fig.add_trace(go.Scatter(x=list(x0), y=names, mode="markers", customdata=list(n0),
+                             marker=dict(size=9, color=C["card"], line=dict(color=colour, width=2)),
+                             cliponaxis=False, hovertemplate=hover0))
+    fig.add_trace(go.Scatter(x=list(x1), y=names, mode="markers", customdata=list(n1),
+                             marker=dict(size=10, color=colour, line=dict(color=colour, width=1)),
+                             cliponaxis=False, hovertemplate=hover1))
+
+
+def fig_supply_share(M, S):
+    """Each category's share of categorised core launch releases in the first
+    and last year of the window, largest last-year share at the top; the
+    categories the title names in ink."""
+    SH = M["share"]
+    y0, y1 = M["window"]
+    n0, n1 = SH["den"]
+    rows = SH["rows"].sort_values(["launch_s1", "launch_s0"])
+    named = set(SH["gainers"]) | {SH["loser"]}
+    en = S["sp_en"]
+    hover = ((lambda y, n: f"<b>%{{y}}</b> {y}: %{{x:.1f}}% (%{{customdata}} of {n})<extra></extra>")
+             if en else
+             (lambda y, n: f"<b>%{{y}}</b> {y}年：%{{x:.1f}}%（{n}件中%{{customdata}}件）<extra></extra>"))
+    fig = go.Figure()
+    _dumbbell(fig, [S["sp_cat"][k] for k in rows.index], rows["launch_s0"], rows["launch_s1"],
+              rows["launch_n0"], rows["launch_n1"], [k in named for k in rows.index],
+              hover(y0, n0), hover(y1, n1))
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=10, b=40),
+                      xaxis=_xax(title=dict(text=S["sp_s_x"], font=dict(size=11)),
+                                 ticksuffix="%", rangemode="tozero"),
+                      yaxis=_yax(automargin=True))
+    return fig
+
+
+def fig_supply_origin(M, S):
+    """Share of core launch releases by issuer origin, each complete half-year;
+    Korea in ink at the base, each origin labelled beside the last bar. A
+    year's two halves stand side by side over one year label, which fits at
+    phone width where nine half-year labels do not; hover names the half."""
+    O = M["origin"]
+    sh, ct, tot = O["shares"], O["counts"], O["total"]
+    x = [int(h[:4]) + (0.28 if h.endswith("1") else 0.72) for h in sh.index]
+    label = [S["sp_half"][h] for h in sh.index]
+    years = sorted({int(h[:4]) for h in sh.index})
+    ticks = [y + 0.5 for y in years]
+    fig = go.Figure()
+    for o in O["counts"].columns:
+        name = S["sp_origin"][o]
+        fig.add_trace(go.Bar(
+            x=x, y=sh[o], name=name, width=0.4,
+            marker=dict(color=_ORIGIN_COLOUR[o], line=dict(width=0)),
+            customdata=list(zip(ct[o], tot, label)),
+            hovertemplate=(f"{name} %{{customdata[2]}}: %{{y:.0f}}% (%{{customdata[0]}} of "
+                           "%{customdata[1]})<extra></extra>" if S["sp_en"] else
+                           f"{name} %{{customdata[2]}}：%{{y:.0f}}%（%{{customdata[1]}}件中"
+                           "%{customdata[0]}件）<extra></extra>")))
+    last, base = sh.iloc[-1], 0.0
+    for o in O["counts"].columns:
+        fig.add_annotation(x=1, xref="paper", y=base + last[o] / 2, text=S["sp_origin"][o],
+                           showarrow=False, xanchor="left", xshift=6,
+                           font=dict(size=11, color=C["ink"] if o == "KR" else C["muted"]))
+        base += last[o]
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, barmode="stack",
+                      showlegend=False, margin=dict(l=10, r=100, t=10, b=40),
+                      xaxis=_xax(tickangle=0, tickvals=ticks, showgrid=False,
+                                 ticktext=[str(y) if S["sp_en"] else f"{y}年" for y in years],
+                                 range=[min(x) - 0.3, max(ticks) + 0.3]),
+                      yaxis=_yax(S["sp_o_y"], suffix="%", range=[0, 100]))
+    return fig
+
+
+def fig_supply_groups(M, S):
+    """12-month launch-release totals by category group; skincare and makeup in
+    the pair's colours, the rest grey, each line labelled at its end."""
+    roll = M["groups"]["roll"]
+    x = pd.to_datetime(roll.index + "-01")
+    colour = {"skincare": C["skin"], "makeup": C["cosm"], "other": _GREY, "none": _GREY}
+    fig = go.Figure()
+    ends = {}
+    for g in LAUNCH_GROUPS:
+        name = S["sp_group"][g]
+        fig.add_trace(go.Scatter(
+            x=x, y=roll[g], mode="lines", name=name,
+            line=dict(color=colour[g], width=2.5 if g in ("skincare", "makeup") else 1.5,
+                      dash="dash" if g == "none" else "solid"),
+            hovertemplate=f"{name} %{{x|%Y-%m}}: %{{y:.0f}}<extra></extra>"))
+        ends[g] = (x[-1], float(roll[g].iloc[-1]))
+    _end_labels(fig, ends, S["sp_group"], ("skincare", "makeup"), float(roll.values.max()))
+    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=150, t=20, b=40),
+                      xaxis=_xax(tickformat="%Y", tickangle=0,
+                                 range=[x[0] - pd.Timedelta(days=20), x[-1] + pd.Timedelta(days=20)]),
+                      yaxis=_yax(S["sp_g_y"], rangemode="tozero"))
+    return fig
+
+
+def fig_supply_ingredients(M, S):
+    """Share of launch releases naming each tracked ingredient, the 12 months
+    before and the latest 12, alphabetical top to bottom; the ingredient the
+    title names in ink."""
+    I = M["ingredients"]
+    f = I["frame"]
+    order = S["sp_ing_order"][::-1]               # Plotly draws the first category at the bottom
+    en = S["sp_en"]
+    hover = ((lambda w: f"<b>%{{y}}</b> {w}: %{{x:.1f}}% (%{{customdata}})<extra></extra>") if en
+             else (lambda w: f"<b>%{{y}}</b> {w}：%{{x:.1f}}%（%{{customdata}}件）<extra></extra>"))
+    fig = go.Figure()
+    _dumbbell(fig, [S["sp_ing"][k] for k in order], f.loc[order, "s_p12"], f.loc[order, "s_l12"],
+              f.loc[order, "n_p12"], f.loc[order, "n_l12"], [k == I["top"] for k in order],
+              hover(S["sp_win_p12"]), hover(S["sp_win_l12"]))
+    fig.update_layout(**{**_base(460), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=10, b=40),
+                      xaxis=_xax(title=dict(text=S["sp_i_x"], font=dict(size=11)),
+                                 ticksuffix="%", rangemode="tozero"),
+                      yaxis=_yax(automargin=True))
+    return fig
+
+
+def fig_supply_prices(M, S):
+    """Median price among each Rakuten genre's most-reviewed items, highest at
+    the top; the two genres the title names in ink."""
+    P = M["prices"]
+    f = P["frame"].sort_values("med_price")
+    names = [S["sp_genre"][k] for k in f.index]
+    en = S["sp_en"]
+    fig = go.Figure(go.Bar(
+        x=f["med_price"], y=names, orientation="h",
+        marker=dict(color=[C["ink"] if k in (P["hi"], P["lo"]) else _GREY for k in f.index]),
+        text=[f"¥{v:,.0f}" if en else f"{v:,.0f}円" for v in f["med_price"]],
+        textposition="outside", cliponaxis=False, textfont=dict(size=11, color=C["muted"]),
+        customdata=np.stack([f["avg_rating"], f["rated_share"], f["sku_count"]], axis=-1),
+        hovertemplate=("<b>%{y}</b><br>Median price ¥%{x:,.0f}<br>Average rating "
+                       "%{customdata[0]:.2f} (the %{customdata[1]:.0%} of items rated)<br>"
+                       "Items: %{customdata[2]:,}<extra></extra>" if en else
+                       "<b>%{y}</b><br>価格中央値 %{x:,.0f}円<br>平均評価 %{customdata[0]:.2f}"
+                       "（評価のある%{customdata[1]:.0%}の商品）<br>商品数 %{customdata[2]:,}"
+                       "<extra></extra>")))
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=10, b=40),
+                      xaxis=_xax(title=dict(text=S["sp_r_x"], font=dict(size=11)),
+                                 tickformat=",", tickprefix="¥" if en else "",
+                                 ticksuffix="" if en else "円",
+                                 range=[0, 1.3 * f["med_price"].max()]),
+                      yaxis=_yax(automargin=True))
     return fig

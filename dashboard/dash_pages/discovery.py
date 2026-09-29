@@ -1,15 +1,15 @@
-"""Discovery: product launches, YouTube, and the review map."""
+"""Discovery: YouTube channels and comments, and the review map."""
 
 import dash
 from dash import Input, Output, State, callback, dcc, html
 
 import data_cache
 import ui
-from bp import figures, strings
+from bp import figures
 from bp.theme import C
 
 PATH = "/discovery"
-dash.register_page(__name__, path=PATH, name="Discovery", order=5,
+dash.register_page(__name__, path=PATH, name="Discovery", order=6,
                    title="Beauty Pulse · Japanese Beauty Market")
 
 D = data_cache.load()
@@ -17,37 +17,6 @@ D = data_cache.load()
 
 def umap_count_caption(df_umap, year_filter):
     return ui.caption(f"{figures.umap_count(df_umap, year_filter):,} reviews")
-
-
-def _launch_panel(lang, d):
-    S, L = d.S[lang], d.LAUNCH
-    if L is None:
-        return [html.P(S["t3_lempty"], className="expl")]
-    opts = figures.launch_ingredient_options(L)
-    df_ing = d.frame("ingredient_surge")
-    return [
-        ui.chart_head(S["t3_l1h"], S["t3_l1e"]),
-        ui.row(
-            html.Div(ui.graph("dc-fig-l1", figures.fig_launch_groups(L, S))),
-            html.Div([ui.chart_head(S["t3_l2h"], S["t3_l2e"]),
-                      ui.graph("dc-fig-l2", figures.fig_launch_categories(L, lang, S))]),
-            cls="cols-3-2"),
-        ui.chart_head(S["t3_l3h"], S["t3_l3e"]),
-        ui.graph("dc-fig-l3", figures.fig_launch_roster(L, S)),
-        ui.row(
-            html.Div([ui.chart_head(S["t3_l4h"], S["t3_l4e"]),
-                      ui.graph("dc-fig-l4", figures.fig_launch_ingredients(L, lang, S))]),
-            html.Div([
-                ui.chart_head(S["t3_l5h"], S["t3_l5e"]),
-                html.Div(className="bp-control", children=dcc.Dropdown(
-                    id="dc-launch-ing", value=opts[0], clearable=False,
-                    options=[{"label": strings._ing_label(k, lang, L), "value": k}
-                             for k in opts])),
-                ui.graph("dc-fig-l5", figures.fig_launch_vs_search(L, df_ing, opts[0], S)),
-            ]),
-        ),
-        ui.caption(S["t3_lcap"]),
-    ]
 
 
 def _youtube_channels(S, d):
@@ -91,9 +60,6 @@ def build(lang, d):
             ui.kpi_card(S["t3_m3"], f"{len(df_umap):,} reviews", S["t3_m3d"]),
             cls="cols-3 bp-kpis"),
 
-        ui.panel_header(S["t3_lp"], S["t3_lpd"]),
-        *_launch_panel(lang, d),
-
         ui.panel_header(S["t3_p2"], S["t3_p2d"]),
         ui.chart_head(S["t3_ytch"], S["t3_ytche"]),
         *_youtube_channels(S, d),
@@ -125,13 +91,6 @@ TREES = {lang: build(lang, D) for lang in data_cache.LANGS}
 
 def layout(lang="en", **_):
     return TREES[ui.lang_of(lang)]
-
-
-@callback(Output("dc-fig-l5", "figure"), Input("dc-launch-ing", "value"),
-          State("dc-lang", "data"), prevent_initial_call=True)
-def _launch_ingredient(canon, lang):
-    return ui.themed(figures.fig_launch_vs_search(D.LAUNCH, D.frame("ingredient_surge"), canon,
-                                                  D.S[lang]))
 
 
 @callback(Output("dc-fig-umap", "figure"), Input("dc-umap-year", "value"),

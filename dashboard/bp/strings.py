@@ -8,6 +8,7 @@ import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
 from .demand import MASK_YEARS
+from .supply import HELD_PCT, KEY_CATEGORY
 from .market import compute_market
 from .data import (LAUNCH_GATE, LAUNCH_WINDOW_START, load_ingredient_surge, load_makeup_rebound,
                    load_sku_treemap, load_trends_crossover)
@@ -18,7 +19,8 @@ STRINGS = {
         "tagline":       "Japanese beauty market analytics",
         "subtitle":      "",   # rebuilt from the edition (sources.EDITION)
         "nav_report": "Report", "nav_brief": "Brief", "nav_market": "Market",
-        "nav_demand": "Demand",
+        "nav_demand": "Demand", "nav_supply": "Supply",
+        "launch_empty": "Launch export not found: dashboard/assets/prtimes_launches.csv.",
         "tab1": "The shift", "tab2": "The language", "tab3": "Discovery",
 
         # ── TAB 1: The Shift ──────────────────────────────────────────────
@@ -101,22 +103,7 @@ STRINGS = {
         "f2_body": "",
 
         # ── TAB 3: Discovery ──────────────────────────────────────────────
-        "t3_intro": "Product-launch releases on PR TIMES, the largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
-        # Launch panel. Figure-bearing strings are empty here and rebuilt from LAUNCH.
-        "t3_lp": "Product launches", "t3_lpd": "",
-        "t3_l1h": "", "t3_l1e": "", "t3_l1ax": "Launch releases, 12-month total",
-        "t3_l2h": "", "t3_l2e": "",
-        "t3_l3h": "", "t3_l3e": "",
-        "t3_l4h": "", "t3_l4e": "",
-        "t3_l5h": "Launch share and search interest, by ingredient", "t3_l5e": "",
-        "t3_l5ax1": "Share of launch releases", "t3_l5ax2": "Search interest (0–100)",
-        "t3_l5y1": "Launch share", "t3_l5y2": "Search (0–100)",
-        "t3_lcap": "",
-        "t3_lempty": "Launch export not found: dashboard/assets/prtimes_launches.csv.",
-        "t3_lg_skincare": "Skincare", "t3_lg_makeup": "Makeup",
-        "t3_lg_other": "Hair, body and fragrance", "t3_lg_none": "No category word",
-        "t3_lpan_core": "Core issuers", "t3_lpan_pf": "Issuers with history from after Sep 2021",
-        "t3_lwin_l12": "12 months to ", "t3_lwin_p12": "12 months before",
+        "t3_intro": "The largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
         "t3_p2": "Video and reviews",
         "t3_p2d": "YouTube beauty channels and their comments, and @cosme reviews.",
 
@@ -147,7 +134,8 @@ STRINGS = {
     "jp": {
         "tagline":        "日本の美容市場分析",
         "subtitle":       "",  # rebuilt from the edition (sources.EDITION)
-        "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要",
+        "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要", "nav_supply": "供給",
+        "launch_empty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
         "tab1": "市場変化", "tab2": "消費者の言語", "tab3": "発見",
 
         "t1_intro":  "",
@@ -224,21 +212,7 @@ STRINGS = {
         "f2_title":  "発見2 — レビュー語彙はわずかに収束した",
         "f2_body": "",
 
-        "t3_intro":  "PR TIMESの新商品リリース、美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
-        "t3_lp": "新商品リリース", "t3_lpd": "",
-        "t3_l1h": "", "t3_l1e": "", "t3_l1ax": "新商品リリース件数、12カ月合計",
-        "t3_l2h": "", "t3_l2e": "",
-        "t3_l3h": "", "t3_l3e": "",
-        "t3_l4h": "", "t3_l4e": "",
-        "t3_l5h": "成分別の新商品リリース比率と検索関心", "t3_l5e": "",
-        "t3_l5ax1": "新商品リリースに占める比率", "t3_l5ax2": "検索関心（0–100）",
-        "t3_l5y1": "リリース比率", "t3_l5y2": "検索（0–100）",
-        "t3_lcap": "",
-        "t3_lempty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
-        "t3_lg_skincare": "スキンケア", "t3_lg_makeup": "メイク",
-        "t3_lg_other": "ヘア・ボディ・フレグランス", "t3_lg_none": "カテゴリ語なし",
-        "t3_lpan_core": "コア発行元", "t3_lpan_pf": "履歴が2021年9月より後に始まる発行元",
-        "t3_lwin_l12": "直近12カ月 〜", "t3_lwin_p12": "前年同期12カ月",
+        "t3_intro":  "美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
         "t3_p2": "動画・レビュー",
         "t3_p2d": "美容YouTubeのチャンネルとコメント、@cosmeレビュー。",
 
@@ -300,11 +274,6 @@ def _ym(ym, lang):
     return f"{_MON_EN[m]} {y}" if lang == "en" else f"{y}年{m}月"
 
 
-def _ing_label(canon, lang, _L):
-    t = _L["terms"].set_index("canonical")
-    return t.loc[canon, "label_short_en" if lang == "en" else "label_ja"]
-
-
 def _trends_span(df, lang):
     """A Trends asset's span of years, and the months its last year covers."""
     y0, last = df["week_start"].min().year, df["week_start"].max()
@@ -327,7 +296,7 @@ def _pair(h, lang):
 
 
 def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MARKET=None,
-                  DEMAND=None):
+                  DEMAND=None, SUPPLY=None):
     """STRINGS[lang] with the live figures written in, and each report page's
     copy when its figures (brief.compute_brief, market.compute_market) and the
     source registry are given."""
@@ -577,127 +546,14 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
             f"{_h['conv_lo']}（{_h['conv_p0']}年）から{_h['conv_hi']}（{_h['conv_p1']}年）へ上昇した。"
             f"Δ +{_h['conv_delta']}（{_h['conv_ci_jp']}）。")
 
-    _L = LAUNCH
-
-    if _L:
-        _last = _ym(_L["last"], lang)
-        _pct = lambda a, b: round(100 * (a - b) / b)
-        _gl, _gp = _L["grp_l12"], _L["grp_p12"]
-        _cats = _L["cats"]
-        _top_cat = _cats.index[0]
-        _fall = (_cats["n_l12"] - _cats["n_p12"]).idxmin()
-        _fell = (_cats.loc[_fall, "n_l12"] - _cats.loc[_fall, "n_p12"]) < 0
-        _pf_share = round(100 * _L["full_pf"] / _L["full_tot"])
-        _top_ing = _ing_label(_L["top_ing"], lang, _L)
-        _trends_last = _ym(str(load_ingredient_surge(ASSETS)["week_start"].max())[:7], lang)
-        _G = LAUNCH_GATE
-        if lang == "en":
-            def _move(a, b):
-                p = _pct(a, b)
-                return f"held at {a}" if abs(p) < 3 else f"{'rose' if p > 0 else 'fell'} {abs(p)}% to {a}"
-            S["t3_lpd"] = (
-                f"Product-launch releases on PR TIMES from {_L['n_core']} issuers since September 2021 "
-                f"and {_L['n_all']} issuers over the latest 12 months, by month of release. "
-                "One release is one count.")
-            S["t3_l1h"] = (
-                f"Skincare launch releases {_move(_gl['skincare'], _gp['skincare'])} in the 12 months "
-                f"to {_last}; makeup {_move(_gl['makeup'], _gp['makeup'])}")
-            S["t3_l1e"] = (
-                f"{_L['n_core']} issuers whose PR TIMES history reaches back to September 2021. "
-                "12-month totals by the product category named in the title or excerpt; releases "
-                "that name no category word form their own line.")
-            S["t3_l2h"] = (
-                f"{LAUNCH_CAT[_top_cat][0]} had the most launch releases, {_cats.loc[_top_cat, 'n_l12']}, "
-                f"against {_cats.loc[_top_cat, 'n_p12']} a year earlier"
-                + (f"; {LAUNCH_CAT[_fall][0].lower()} fell to {_cats.loc[_fall, 'n_l12']} "
-                   f"from {_cats.loc[_fall, 'n_p12']}" if _fell else ""))
-            S["t3_l2e"] = (
-                "Core issuers. The first category named in the title, otherwise in the excerpt. "
-                f"Dark bars: the 12 months to {_last}; light bars: the 12 months before.")
-            S["t3_l3h"] = (
-                f"All {_L['n_all']} issuers, 12 months to {_last}: {_L['full_tot']:,} launch releases, "
-                f"{_L['full_pf']} of them ({_pf_share}%) from the {_L['n_pf_feeds']} feeds whose history "
-                "starts after September 2021")
-            S["t3_l3e"] = (
-                f"{_L['n_all_feeds']} feeds whose PR TIMES history covers all 12 months. Feeds whose "
-                "history starts after September 2021 appear here and are left out of the series above.")
-            S["t3_l4h"] = (
-                f"{_top_ing} appeared in {_L['top_s_l12']}% of launch releases in the 12 months to "
-                f"{_last} ({_L['top_n_l12']} of {_L['den_l12']}), from {_L['top_s_p12']}% a year earlier")
-            S["t3_l4e"] = (
-                "Core issuers. Share of launch releases whose title or excerpt names the ingredient: "
-                f"{_L['den_l12']} releases in the 12 months to {_last}, {_L['den_p12']} in the 12 months "
-                f"before. {_L['any_ing_share']}% name at least one of the {len(_L['terms'])} tracked "
-                "ingredients. Releases whose title names a re-release, refill or limited packaging "
-                "are excluded.")
-            S["t3_l5e"] = (
-                "Upper: share of core launch releases naming the ingredient, 12-month rolling, to "
-                f"{_last}. Lower: Google Trends interest, 12-month rolling mean, to {_trends_last}.")
-            S["t3_lcap"] = (
-                f"Measured {_G['asof']}. Launch gate: precision {_G['precision']} (95% CI "
-                f"{_G['p_lo']}–{_G['p_hi']}) and recall {_G['recall']} ({_G['r_lo']}–{_G['r_hi']}) "
-                f"on {_G['n_holdout']} hand-labelled releases held out from the gate's design, "
-                f"weighted to {_G['n_store']:,} stored releases. PR TIMES coverage: "
-                f"{_G['prestige_unseen']} of {_G['prestige_n']} prestige (デパコス) brands in the brand "
-                f"list appear in no stored release, against {_G['other_unseen']} of {_G['other_n']} "
-                f"brands in other tiers. The edition filter finds {_G['edition_found']} of "
-                f"{_G['edition_n']} hand-labelled editions.")
-            S["t3_lwin_l12"] += _last
-        else:
-            def _move(a, b):
-                p = _pct(a, b)
-                return "で横ばい" if abs(p) < 3 else f"、前年同期比{abs(p)}%{'増' if p > 0 else '減'}"
-            S["t3_lpd"] = (
-                f"PR TIMES上の新商品リリース。2021年9月以降は{_L['n_core']}社、直近12カ月は"
-                f"{_L['n_all']}社。配信月別、1リリースを1件と数える。")
-            S["t3_l1h"] = (
-                f"直近12カ月（{_last}まで）のスキンケア新商品リリースは{_gl['skincare']}件"
-                f"{_move(_gl['skincare'], _gp['skincare'])}。メイクは{_gl['makeup']}件"
-                f"{_move(_gl['makeup'], _gp['makeup'])}")
-            S["t3_l1e"] = (
-                f"PR TIMES上の履歴が2021年9月まで遡る{_L['n_core']}社。タイトルまたは抜粋に記載された"
-                "商品カテゴリ別の12カ月合計。カテゴリ語を含まないリリースは別系列とした。")
-            S["t3_l2h"] = (
-                f"直近12カ月の新商品リリースは{LAUNCH_CAT[_top_cat][1]}が{_cats.loc[_top_cat, 'n_l12']}件で"
-                f"最多（前年同期{_cats.loc[_top_cat, 'n_p12']}件）"
-                + (f"。{LAUNCH_CAT[_fall][1]}は{_cats.loc[_fall, 'n_l12']}件"
-                   f"（同{_cats.loc[_fall, 'n_p12']}件）" if _fell else ""))
-            S["t3_l2e"] = (
-                "コア発行元。タイトル、なければ抜粋で最初に記載されたカテゴリ。"
-                f"濃い棒：{_last}までの12カ月、淡い棒：その前の12カ月。")
-            S["t3_l3h"] = (
-                f"直近12カ月（{_last}まで）の全{_L['n_all']}社の新商品リリースは{_L['full_tot']:,}件。"
-                f"うち{_L['full_pf']}件（{_pf_share}%）は履歴が2021年9月より後に始まる"
-                f"{_L['n_pf_feeds']}フィードから")
-            S["t3_l3e"] = (
-                f"PR TIMES上の履歴が12カ月すべてを含む{_L['n_all_feeds']}フィード。履歴が2021年9月より後に"
-                "始まるフィードはここにのみ含め、上の系列には加えない。")
-            S["t3_l4h"] = (
-                f"{_top_ing}を含む新商品リリースは直近12カ月で{_L['top_s_l12']}%"
-                f"（{_L['den_l12']}件中{_L['top_n_l12']}件）、前年同期は{_L['top_s_p12']}%")
-            S["t3_l4e"] = (
-                "コア発行元。タイトルまたは抜粋に成分名を含む新商品リリースの比率。"
-                f"{_last}までの12カ月は{_L['den_l12']}件、その前の12カ月は{_L['den_p12']}件。"
-                f"追跡する{len(_L['terms'])}成分のいずれかを含むのは{_L['any_ing_share']}%。"
-                "タイトルに再発売・詰め替え・限定パッケージを含むリリースは除いた。")
-            S["t3_l5e"] = (
-                f"上：成分名を含むコア新商品リリースの比率、12カ月移動、{_last}まで。"
-                f"下：Googleトレンドの検索関心、12カ月移動平均、{_trends_last}まで。")
-            S["t3_lcap"] = (
-                f"{_G['asof']}測定。新商品判定の精度：適合率{_G['precision']}（95%信頼区間"
-                f"{_G['p_lo']}〜{_G['p_hi']}）、再現率{_G['recall']}（同{_G['r_lo']}〜{_G['r_hi']}）。"
-                f"判定語彙の設計に用いていない手作業ラベル{_G['n_holdout']}件で測り、保存済み"
-                f"{_G['n_store']:,}件に加重した。PR TIMESの収録：ブランドリストのデパコス"
-                f"{_G['prestige_n']}ブランドのうち{_G['prestige_unseen']}ブランドは保存済みリリースに一度も"
-                f"現れない。その他の価格帯は{_G['other_n']}ブランド中{_G['other_unseen']}。"
-                f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
-            S["t3_lwin_l12"] += _last
     if BRIEF is not None and REGISTRY is not None:
         S.update(brief_strings(lang, BRIEF, BRIEF["H"], REGISTRY))
     if MARKET is not None and REGISTRY is not None:
         S.update(market_strings(lang, MARKET, REGISTRY))
     if DEMAND is not None and REGISTRY is not None:
         S.update(demand_strings(lang, DEMAND, REGISTRY))
+    if SUPPLY is not None and REGISTRY is not None:
+        S.update(supply_strings(lang, SUPPLY, REGISTRY))
     return S
 
 
@@ -716,7 +572,7 @@ _MON_ABBR = [None, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"
 # Where each key finding's page lives until the report pages are built: the
 # page that carries that layer today, or None.
 BRIEF_LINKS = {"market": ("/market", "nav_market"), "demand": ("/demand", "nav_demand"),
-               "supply": ("/discovery", "tab3"), "consumer": ("/language", "tab2"),
+               "supply": ("/supply", "nav_supply"), "consumer": ("/language", "tab2"),
                "timing": None}
 
 
@@ -1332,7 +1188,8 @@ SEARCH_TERM = {
 }
 # Readings for the kanji terms, so Japanese lists follow 五十音 order.
 _READING = {"美容液": "びようえき", "化粧水": "けしょうすい", "洗顔": "せんがん", "乳液": "にゅうえき",
-            "日焼け止め": "ひやけどめ", "口紅": "くちべに", "化粧品": "けしょうひん"}
+            "日焼け止め": "ひやけどめ", "口紅": "くちべに", "化粧品": "けしょうひん",
+            "DNA-Na": "ぴーでぃーあーるえぬ"}
 DEMAND_GROUPS = ("active", "category", "umbrella")
 
 
@@ -1533,3 +1390,279 @@ def _MASK_LOW(a):
     """The mask year in which lipstick search was lowest."""
     return int(a.loc[list(MASK_YEARS), "口紅"].idxmin())
 
+
+# ── Supply ──────────────────────────────────────────────────────────────────
+# Every figure comes from supply.compute_supply; tests/test_supply.py holds the
+# data to each direction the copy states.
+
+SUPPLY_ORIGIN = {"KR": ("Korea", "韓国"), "JP": ("Japan", "日本"),
+                 "global": ("Global majors", "グローバル大手"), "CN": ("China", "中国")}
+SUPPLY_GROUP = {"skincare": ("Skincare", "スキンケア"), "makeup": ("Makeup", "メイク"),
+                "other": ("Hair, body and fragrance", "ヘア・ボディ・フレグランス"),
+                "none": ("No category word", "カテゴリ語なし")}
+# Rakuten Ichiba's genres in the pull, in English and in Rakuten's own names.
+RAKUTEN_GENRE = {
+    "korean_cosmetics": ("Korean cosmetics", "韓国コスメ"),
+    "cosmetics": ("Base makeup and makeup", "ベースメイク・メイクアップ"),
+    "sun_protection": ("Sunscreen and UV care", "日焼け止め・UVケア"),
+    "face_cream": ("Face cream", "フェイスクリーム"), "all_in_one": ("All-in-one", "オールインワン化粧品"),
+    "face_wash": ("Face wash", "洗顔料"), "emulsion": ("Emulsion and milk", "乳液・ミルク"),
+    "toner_lotion": ("Toner and lotion", "化粧水・ローション"), "serum_essence": ("Serum", "美容液"),
+    "skincare": ("Skincare (parent genre)", "スキンケア（上位ジャンル）"),
+}
+
+
+def _supply_ing(M, lang):
+    """Each ingredient named in either window -> its name, and their order:
+    alphabetical in English, 五十音 in Japanese."""
+    t = M["terms"].set_index("canonical")
+    col = "label_short_en" if lang == "en" else "label_ja"
+    names = {k: t.loc[k, col] for k in M["ingredients"]["frame"].index}
+    if lang == "en":
+        order = sorted(names, key=lambda k: names[k].lower())
+    else:
+        order = sorted(names, key=lambda k: _kana_key(k, names[k]))
+    return names, order
+
+
+def supply_strings(lang, M, REG):
+    """The Supply page's copy in one language, and the lookups its figures
+    use: the language (sp_en), the names of categories, origins, half-years,
+    groups, ingredients and Rakuten genres, and the ingredients' order."""
+    li = _li(lang)
+    out = _supply_en(M, REG) if lang == "en" else _supply_ja(M, REG)
+    out["sp_en"] = lang == "en"
+    out["sp_cat"] = {k: LAUNCH_CAT[k][li] for k in M["share"]["rows"].index}
+    out["sp_origin"] = {k: v[li] for k, v in SUPPLY_ORIGIN.items()}
+    out["sp_half"] = {h: (h if lang == "en" else _half_ja(h)) for h in M["origin"]["shares"].index}
+    out["sp_group"] = {k: v[li] for k, v in SUPPLY_GROUP.items()}
+    out["sp_ing"], out["sp_ing_order"] = _supply_ing(M, lang)
+    out["sp_genre"] = {k: RAKUTEN_GENRE[k][li] for k in M["prices"]["frame"].index}
+    return out
+
+
+def _held(a, b):
+    """True when a 12-month total is within HELD_PCT percent of the one before."""
+    return abs(100 * (a / b - 1)) < HELD_PCT
+
+
+def _supply_en(M, REG):
+    from .sources import source_line
+    y0, y1 = M["window"]
+    SH, O, G, I, P = M["share"], M["origin"], M["groups"], M["ingredients"], M["prices"]
+    rows, (n0, n1) = SH["rows"], SH["den"]
+    ed = pd.Timestamp(EDITION + "-01")
+    last = _ym(M["last"], "en")
+    last_short = f"{_MON_ABBR[int(M['last'][5:7])]} {M['last'][:4]}"
+    (k0, t0), (k1, t1) = O["kr_first"], O["kr_last"]
+    gl, gp = G["l12"], G["p12"]
+    f = I["frame"]
+    top = f.loc[I["top"]]
+    ing_name = _supply_ing(M, "en")[0]
+    sku = P["frame"]
+    genre = lambda k: RAKUTEN_GENRE[k][0][0].lower() + RAKUTEN_GENRE[k][0][1:]  # noqa: E731
+    key = rows.loc[KEY_CATEGORY]
+    out = {}
+
+    out["sp_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["sp_intro"] = (
+        f"Product-launch releases from the {M['n_core']} issuers whose PR TIMES history reaches "
+        "back to September 2021, by month of release; one release is one count. Prices come from "
+        "each Rakuten Ichiba genre's most-reviewed items.")
+    out["sp_figs"] = [
+        (f"Launch releases, 12 months to {last_short}", f"{M['tot_l12']:,}",
+         f"core issuers · {M['tot_p12']:,} in the 12 months before"),
+        (f"{_cat(KEY_CATEGORY, True)} share of launch releases, {y1}",
+         f"{key['launch_s1']:.0f}%", f"{key['launch_n1']} of {n1} categorised releases"),
+        (f"Korean issuers, {O['last']}", f"{100 * k1 / t1:.0f}%",
+         f"{k1} of {t1} core launch releases · {100 * k0 / t0:.0f}% in {O['first']}"),
+        ("Releases naming a tracked ingredient", f"{I['any_share']}%",
+         f"{I['any_n']} of {I['den_l12']}, 12 months to {last_short}, editions left out"),
+    ]
+
+    g_lo, g_hi = SH["gain_lo"], SH["gain_hi"]
+    a, b = SH["gainers"]
+    each = (f"each gained {g_lo:.0f} points" if round(g_lo) == round(g_hi)
+            else f"gained {SH['rows'].loc[a, 'launch_d']:.0f} and {SH['rows'].loc[b, 'launch_d']:.0f} points")
+    out["sp_s_h"] = (
+        f"{_cat(a, True)} and {_cat(b)} {each} of launch share, {y0}→{y1} "
+        f"({rows.loc[a, 'launch_n1']} and {rows.loc[b, 'launch_n1']} of {n1} releases in {y1}); "
+        f"{_cat(SH['loser'])} lost {abs(SH['loss']):.0f} ({rows.loc[SH['loser'], 'launch_n1']} of {n1})")
+    out["sp_s_e"] = (
+        f"Share of the categorised core launch releases that name each category: {y0} ({n0} "
+        f"releases, hollow) and {y1} ({n1}, filled). A release naming two categories counts in "
+        f"each. Ink: {_cat(a)}, {_cat(b)} and {_cat(SH['loser'])}.")
+    out["sp_s_x"] = "Share of categorised core launch releases (%)"
+
+    iss = O["issuers"]
+    out["sp_o_h"] = (
+        f"Korean issuers made {100 * k1 / t1:.0f}% ({k1} of {t1}) of core launch releases in "
+        f"{O['last']}, from {100 * k0 / t0:.0f}% ({k0} of {t0}) in {O['first']}")
+    out["sp_o_e"] = (
+        f"The {M['n_core']} core issuers by brand origin: {iss['KR']} Korean, {iss['JP']} Japanese, "
+        f"{iss['global']} global majors and {iss['CN']} Chinese. Each complete half-year from "
+        f"{O['first']} to {O['last']}; releases per half-year on hover.")
+    out["sp_o_y"] = "Share of core launch releases"
+
+    def _move(g):
+        if _held(gl[g], gp[g]):
+            return f"held at {gl[g]}"
+        d = G["change"][g]
+        return f"{'rose' if d > 0 else 'fell'} {abs(d):.0f}% to {gl[g]}"
+    out["sp_g_h"] = (f"Skincare launch releases {_move('skincare')} in the 12 months to {last}; "
+                     f"makeup {_move('makeup')}")
+    out["sp_g_e"] = (
+        f"The {M['n_core']} core issuers. 12-month totals by the product category named in the "
+        "title or excerpt; releases that name no category word form their own line. The 12 "
+        f"months before: skincare {gp['skincare']}, makeup {gp['makeup']}.")
+    out["sp_g_y"] = "Launch releases, 12-month total"
+
+    out["sp_i_h"] = (
+        f"{ing_name[I['top']]} appeared in {top['s_l12']:.1f}% of launch releases in the 12 months "
+        f"to {last} ({top['n_l12']} of {I['den_l12']}), from {top['s_p12']:.1f}% a year earlier "
+        f"({top['n_p12']} of {I['den_p12']})")
+    out["sp_i_e"] = (
+        f"The {M['n_core']} core issuers. Share of launch releases whose title or excerpt names the "
+        f"ingredient; hollow: the 12 months before, filled: the 12 months to {last}. "
+        f"{I['any_share']}% ({I['any_n']}) name at least one of the {I['n_terms']} tracked "
+        f"ingredients; the {len(f)} named at least once are listed alphabetically. Releases whose "
+        "title names a re-release, refill or limited packaging are left out.")
+    out["sp_i_x"] = "Share of launch releases (%)"
+    out["sp_win_l12"] = f"12 months to {last}"
+    out["sp_win_p12"] = "12 months before"
+
+    out["sp_r_h"] = (
+        f"Median price ran from ¥{sku.loc[P['lo'], 'med_price']:,.0f} for {genre(P['lo'])} to "
+        f"¥{sku.loc[P['hi'], 'med_price']:,.0f} for {genre(P['hi'])} among each Rakuten genre's "
+        "most-reviewed items")
+    out["sp_r_e"] = (
+        f"From the pull of each genre's 3,000 most-reviewed items on "
+        f"{date_label(P['snapshot'], 'day', 'en')}; each item is counted in one genre, "
+        f"{sku['sku_count'].min():,}–{sku['sku_count'].max():,} per genre. Average ratings over "
+        f"rated items run from {sku['avg_rating'].min():.2f} to {sku['avg_rating'].max():.2f}; each "
+        "genre's rating is on hover.")
+    out["sp_r_x"] = "Median price (¥)"
+
+    _G = LAUNCH_GATE
+    out["sp_cap"] = (
+        f"Measured {_G['asof']}. Launch gate: precision {_G['precision']} (95% CI "
+        f"{_G['p_lo']}–{_G['p_hi']}) and recall {_G['recall']} ({_G['r_lo']}–{_G['r_hi']}) "
+        f"on {_G['n_holdout']} hand-labelled releases held out from the gate's design, "
+        f"weighted to {_G['n_store']:,} stored releases. PR TIMES coverage: "
+        f"{_G['prestige_unseen']} of {_G['prestige_n']} prestige (デパコス) brands in the brand "
+        f"list appear in no stored release, against {_G['other_unseen']} of {_G['other_n']} "
+        f"brands in other tiers. The edition filter finds {_G['edition_found']} of "
+        f"{_G['edition_n']} hand-labelled editions.")
+    out["sp_src_prtimes"] = source_line(["prtimes"], REG)
+    out["sp_src_rakuten"] = source_line(["rakuten"], REG)
+    return out
+
+
+def _supply_ja(M, REG):
+    """The Supply page in Japanese: 産業調査体, である調, titles without a closing
+    。, the site's terms (リリース構成比, コア発行元の新商品リリース, 韓国系発行元)."""
+    from .sources import source_line
+    y0, y1 = M["window"]
+    SH, O, G, I, P = M["share"], M["origin"], M["groups"], M["ingredients"], M["prices"]
+    rows, (n0, n1) = SH["rows"], SH["den"]
+    ed = pd.Timestamp(EDITION + "-01")
+    last = _ym(M["last"], "jp")
+    (k0, t0), (k1, t1) = O["kr_first"], O["kr_last"]
+    gl, gp = G["l12"], G["p12"]
+    f = I["frame"]
+    top = f.loc[I["top"]]
+    ing_name = _supply_ing(M, "jp")[0]
+    sku = P["frame"]
+    cj = lambda k: LAUNCH_CAT[k][1]  # noqa: E731
+    key = rows.loc[KEY_CATEGORY]
+    out = {}
+
+    out["sp_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["sp_intro"] = (
+        f"PR TIMES上の新商品リリース。同サイト上の履歴が2021年9月まで遡る{M['n_core']}社を配信月別に"
+        "数え、1リリースを1件とする。価格は楽天市場の各ジャンルでレビュー数が上位の商品による。")
+    out["sp_figs"] = [
+        (f"新商品リリース、{last}までの12カ月", f"{M['tot_l12']:,}件",
+         f"コア発行元 · 前年同期{M['tot_p12']:,}件"),
+        (f"{cj(KEY_CATEGORY)}のリリース構成比、{y1}年", f"{key['launch_s1']:.0f}%",
+         f"カテゴリ付きリリース{n1}件中{key['launch_n1']}件"),
+        (f"韓国系発行元、{_half_ja(O['last'])}", f"{100 * k1 / t1:.0f}%",
+         f"コア発行元の新商品リリース{t1}件中{k1}件 · {_half_ja(O['first'])}は{100 * k0 / t0:.0f}%"),
+        ("追跡成分を含むリリース", f"{I['any_share']}%",
+         f"{I['den_l12']}件中{I['any_n']}件、{last}までの12カ月、限定・再発売を除く"),
+    ]
+
+    g_lo, g_hi = SH["gain_lo"], SH["gain_hi"]
+    a, b = SH["gainers"]
+    each = (f"それぞれ{g_lo:.0f}ポイント" if round(g_lo) == round(g_hi)
+            else f"{rows.loc[a, 'launch_d']:.0f}ポイントと{rows.loc[b, 'launch_d']:.0f}ポイント")
+    out["sp_s_h"] = (
+        f"{y0}→{y1}年に、リリース構成比は{cj(a)}と{cj(b)}が{each}上昇し（{y1}年は{n1}件中"
+        f"{rows.loc[a, 'launch_n1']}件と{rows.loc[b, 'launch_n1']}件）、{cj(SH['loser'])}は"
+        f"{abs(SH['loss']):.0f}ポイント低下した（同{rows.loc[SH['loser'], 'launch_n1']}件）")
+    out["sp_s_e"] = (
+        f"カテゴリ付きのコア新商品リリースのうち、各カテゴリを記載したものの比率。{y0}年（{n0}件、"
+        f"白抜き）と{y1}年（{n1}件、塗り）。2つのカテゴリを記載したリリースはそれぞれに数える。"
+        f"濃色は{cj(a)}・{cj(b)}・{cj(SH['loser'])}。")
+    out["sp_s_x"] = "カテゴリ付きコア新商品リリースに占める比率（%）"
+
+    iss = O["issuers"]
+    out["sp_o_h"] = (
+        f"コア発行元の新商品リリースに占める韓国系発行元の比率は{_half_ja(O['last'])}に"
+        f"{100 * k1 / t1:.0f}%（{t1}件中{k1}件）となり、{_half_ja(O['first'])}の"
+        f"{100 * k0 / t0:.0f}%（{t0}件中{k0}件）から上昇")
+    out["sp_o_e"] = (
+        f"コア発行元{M['n_core']}社をブランドの出自で分けた（韓国系{iss['KR']}社、日系{iss['JP']}社、"
+        f"グローバル大手{iss['global']}社、中国系{iss['CN']}社）。{_half_ja(O['first'])}から"
+        f"{_half_ja(O['last'])}まで、6カ月そろった半期ごと。半期ごとの件数はカーソルを合わせると表示される。")
+    out["sp_o_y"] = "コア新商品リリースに占める比率"
+
+    def _move(g):
+        if _held(gl[g], gp[g]):
+            return f"{gl[g]}件で横ばい"
+        d = G["change"][g]
+        return f"{gl[g]}件で前年同期比{abs(d):.0f}%{'増' if d > 0 else '減'}"
+    out["sp_g_h"] = (f"直近12カ月（{last}まで）のスキンケア新商品リリースは{_move('skincare')}、"
+                     f"メイクは{_move('makeup')}")
+    out["sp_g_e"] = (
+        f"コア発行元{M['n_core']}社。タイトルまたは抜粋に記載された商品カテゴリ別の12カ月合計。"
+        "カテゴリ語を含まないリリースは別系列とした。前年同期12カ月はスキンケア"
+        f"{gp['skincare']}件、メイク{gp['makeup']}件。")
+    out["sp_g_y"] = "新商品リリース件数、12カ月合計"
+
+    out["sp_i_h"] = (
+        f"{ing_name[I['top']]}を含む新商品リリースは直近12カ月（{last}まで）で{top['s_l12']:.1f}%"
+        f"（{I['den_l12']}件中{top['n_l12']}件）、前年同期は{top['s_p12']:.1f}%"
+        f"（{I['den_p12']}件中{top['n_p12']}件）")
+    out["sp_i_e"] = (
+        f"コア発行元{M['n_core']}社。タイトルまたは抜粋に成分名を含む新商品リリースの比率。白抜きは"
+        f"前年同期12カ月、塗りは{last}までの12カ月。追跡する{I['n_terms']}成分のいずれかを含むのは"
+        f"{I['any_share']}%（{I['any_n']}件）。1件以上に記載された{len(f)}成分を五十音順に示す。"
+        "タイトルに再発売・詰め替え・限定パッケージを含むリリースは除いた。")
+    out["sp_i_x"] = "新商品リリースに占める比率（%）"
+    out["sp_win_l12"] = f"直近12カ月（{last}まで）"
+    out["sp_win_p12"] = "前年同期12カ月"
+
+    out["sp_r_h"] = (
+        f"楽天市場の各ジャンルでレビュー数が上位の商品の価格中央値は、{RAKUTEN_GENRE[P['lo']][1]}の"
+        f"{sku.loc[P['lo'], 'med_price']:,.0f}円から{RAKUTEN_GENRE[P['hi']][1]}の"
+        f"{sku.loc[P['hi'], 'med_price']:,.0f}円まで")
+    out["sp_r_e"] = (
+        f"{date_label(P['snapshot'], 'day', 'ja')}時点で各ジャンルのレビュー数上位3,000商品を取得し、"
+        f"各商品は1つのジャンルに数えた（1ジャンル{sku['sku_count'].min():,}〜"
+        f"{sku['sku_count'].max():,}商品）。評価のある商品の平均評価は{sku['avg_rating'].min():.2f}〜"
+        f"{sku['avg_rating'].max():.2f}。各ジャンルの評価はカーソルを合わせると表示される。")
+    out["sp_r_x"] = "価格中央値（円）"
+
+    _G = LAUNCH_GATE
+    out["sp_cap"] = (
+        f"{_G['asof']}測定。新商品判定の精度：適合率{_G['precision']}（95%信頼区間"
+        f"{_G['p_lo']}〜{_G['p_hi']}）、再現率{_G['recall']}（同{_G['r_lo']}〜{_G['r_hi']}）。"
+        f"判定語彙の設計に用いていない手作業ラベル{_G['n_holdout']}件で測り、保存済み"
+        f"{_G['n_store']:,}件に加重した。PR TIMESの収録：ブランドリストのデパコス"
+        f"{_G['prestige_n']}ブランドのうち{_G['prestige_unseen']}ブランドは保存済みリリースに一度も"
+        f"現れない。その他の価格帯は{_G['other_n']}ブランド中{_G['other_unseen']}。"
+        f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
+    out["sp_src_prtimes"] = source_line(["prtimes"], REG, "ja")
+    out["sp_src_rakuten"] = source_line(["rakuten"], REG, "ja")
+    return out
