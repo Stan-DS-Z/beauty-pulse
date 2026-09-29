@@ -7,6 +7,7 @@ entry filled from the headline and launch dicts. Imports no UI framework.
 import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
+from .demand import MASK_YEARS
 from .market import compute_market
 from .data import (LAUNCH_GATE, LAUNCH_WINDOW_START, load_ingredient_surge, load_makeup_rebound,
                    load_sku_treemap, load_trends_crossover)
@@ -17,6 +18,7 @@ STRINGS = {
         "tagline":       "Japanese beauty market analytics",
         "subtitle":      "",   # rebuilt from the edition (sources.EDITION)
         "nav_report": "Report", "nav_brief": "Brief", "nav_market": "Market",
+        "nav_demand": "Demand",
         "tab1": "The shift", "tab2": "The language", "tab3": "Discovery",
 
         # ── TAB 1: The Shift ──────────────────────────────────────────────
@@ -157,7 +159,7 @@ STRINGS = {
     "jp": {
         "tagline":        "日本の美容市場分析",
         "subtitle":       "",  # rebuilt from the edition (sources.EDITION)
-        "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場",
+        "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要",
         "tab1": "市場変化", "tab2": "消費者の言語", "tab3": "発見",
 
         "t1_intro":  "",
@@ -348,7 +350,8 @@ def _pair(h, lang):
             f"その{h['cosm_share']}%は化粧品の低下による。")
 
 
-def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MARKET=None):
+def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MARKET=None,
+                  DEMAND=None):
     """STRINGS[lang] with the live figures written in, and each report page's
     copy when its figures (brief.compute_brief, market.compute_market) and the
     source registry are given."""
@@ -717,6 +720,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
         S.update(brief_strings(lang, BRIEF, BRIEF["H"], REGISTRY))
     if MARKET is not None and REGISTRY is not None:
         S.update(market_strings(lang, MARKET, REGISTRY))
+    if DEMAND is not None and REGISTRY is not None:
+        S.update(demand_strings(lang, DEMAND, REGISTRY))
     return S
 
 
@@ -734,7 +739,7 @@ _MON_ABBR = [None, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"
              "Nov", "Dec"]
 # Where each key finding's page lives until the report pages are built: the
 # page that carries that layer today, or None.
-BRIEF_LINKS = {"market": ("/market", "nav_market"), "demand": ("/shift", "tab1"),
+BRIEF_LINKS = {"market": ("/market", "nav_market"), "demand": ("/demand", "nav_demand"),
                "supply": ("/discovery", "tab3"), "consumer": ("/language", "tab2"),
                "timing": None}
 
@@ -1334,3 +1339,261 @@ def _break_note_ja(M):
         f"この下落が含まれるため、皮膚用の金額変化は{base}〜{y0 - 1}年または{y0}〜{y1}年の内側で"
         "測る。"
         + (f"{Y['year']}年の数値は経産省の月次確報による。" if Y else ""))
+
+
+# ── Demand ──────────────────────────────────────────────────────────────────
+# Every figure comes from demand.compute_demand; tests/test_demand.py holds the
+# data to each direction the copy states.
+
+# block_A's category words and umbrella terms -> (English, Japanese). The
+# actives take their names from prtimes_ingredient_terms.csv.
+SEARCH_TERM = {
+    "美容液": ("Serum", "美容液"), "化粧水": ("Toner", "化粧水"), "洗顔": ("Face wash", "洗顔"),
+    "乳液": ("Emulsion", "乳液"), "日焼け止め": ("Sunscreen", "日焼け止め"),
+    "ファンデーション": ("Foundation", "ファンデーション"), "口紅": ("Lipstick", "口紅"),
+    "アイシャドウ": ("Eyeshadow", "アイシャドウ"),
+    "スキンケア": ("Skincare (スキンケア)", "スキンケア"), "化粧品": ("Cosmetics (化粧品)", "化粧品"),
+}
+# Readings for the kanji terms, so Japanese lists follow 五十音 order.
+_READING = {"美容液": "びようえき", "化粧水": "けしょうすい", "洗顔": "せんがん", "乳液": "にゅうえき",
+            "日焼け止め": "ひやけどめ", "口紅": "くちべに", "化粧品": "けしょうひん"}
+# Rising-search roots named in the copy that are not an active.
+ROOT_EN = {"アヌア": "Anua"}
+DEMAND_GROUPS = ("active", "category", "umbrella")
+
+
+def _kana_key(term, name):
+    """五十音 sort key: the reading for a kanji term, katakana folded to hiragana."""
+    s = _READING.get(term, name)
+    return "".join(chr(ord(c) - 0x60) if "ァ" <= c <= "ヶ" else c for c in s)
+
+
+def _term_name(term, M, lang, cap=True):
+    t = M["terms"]
+    if term in t.index:
+        name = t.loc[term, "label_short_en" if lang == "en" else "label_ja"]
+    else:
+        name = SEARCH_TERM[term][0 if lang == "en" else 1]
+    return name if (cap or lang != "en" or "(" in name) else name[0].lower() + name[1:]
+
+
+def _root_name(root, M, lang):
+    t = M["terms"]
+    by_ja = dict(zip(t["label_ja"], t["label_short_en"]))
+    if lang != "en":
+        return root
+    return ROOT_EN.get(root) or by_ja.get(root, root)
+
+
+def _sorted_terms(terms, M, lang):
+    if lang == "en":
+        return sorted(terms, key=lambda x: _term_name(x, M, "en").lower())
+    return sorted(terms, key=lambda x: _kana_key(x, _term_name(x, M, "jp")))
+
+
+def demand_strings(lang, M, REG):
+    """The Demand page's copy in one language, and the lookups its figures use:
+    the language (dm_en), each term's name (dm_term), the change chart's order
+    by group (dm_order) and each root's name (dm_root)."""
+    out = _demand_en(M, REG) if lang == "en" else _demand_ja(M, REG)
+    out["dm_en"] = lang == "en"
+    out["dm_term"] = {t: _term_name(t, M, lang) for t in M["change"].index}
+    ch = M["change"]
+    out["dm_order"] = [t for g in DEMAND_GROUPS
+                       for t in _sorted_terms(list(ch.index[ch["kind"] == g]), M, lang)]
+    out["dm_root"] = {r: _root_name(r, M, lang) for r in M["related"]["tiles"]["root"]}
+    return out
+
+
+def _demand_en(M, REG):
+    from .sources import source_line
+    y0, y1 = M["window"]
+    C, P, K, MK, R = M["changes"], M["pair"], M["keys"], M["makeup"], M["related"]
+    ed = pd.Timestamp(EDITION + "-01")
+    last = M["cross"]["week_start"].max()
+    nm = lambda t, cap=False: _term_name(t, M, "en", cap)  # noqa: E731
+    out = {}
+
+    out["dm_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["dm_intro"] = (
+        "Google Trends, Japan. Each term is requested on its own and scaled to its own peak "
+        "(= 100), so a change reads in points of that term's peak and levels are not compared "
+        "across terms. スキンケア and 化粧品 are also requested together, on one scale.")
+    (lt, la, lb, lv0, lv1), (wt, wa, wb, wv0, wv1) = K["long"], K["window"]
+    out["dm_figs"] = [
+        ("Cosmetics search", f"{P['cosm_d']:+.0f}%",
+         f"化粧品, full years {P['y0']}→{P['y1']}, one request with スキンケア"),
+        (f"{nm(lt, True)} search", f"{lv0:.0f} → {lv1:.0f}",
+         f"annual mean, {la}→{lb}, own peak = 100"),
+        (f"{nm(wt, True)} search", f"{wv0:.0f} → {wv1:.0f}",
+         f"annual mean, {wa}→{wb}, own peak = 100"),
+    ]
+
+    within = _and(nm(t) for t in _sorted_terms(C["within"], M, "en"))
+    up = "; ".join(f"{nm(t, True)} rose {M['change'].loc[t, 'd']:.0f} points" for t in C["words_up"])
+    out["dm_c_h"] = (
+        f"Search rose {C['rose_lo']:.0f}–{C['rose_hi']:.0f} points for {_NUM_EN[C['n_rose']]} of "
+        f"{_NUM_EN[C['n_actives']]} tracked actives, {y0}→{y1}; {_NUM_EN[len(C['words_down'])]} "
+        f"of {_NUM_EN[C['n_words']]} category words fell")
+    out["dm_c_e"] = (
+        f"Annual mean, {y1} minus {y0}, in points of each term's own peak. Ink: the "
+        f"{_NUM_EN[C['n_rose']]} actives that rose. The shaded band is ±{TRENDS_PULL_SPREAD} "
+        f"points, the spread between two downloads of the same series; {within} moved less than "
+        f"that. {up}. Terms are alphabetical within each group.")
+    out["dm_c_x"] = f"Change, {y1} minus {y0} (points)"
+    out["dm_c_groups"] = {"active": "Actives", "category": "Category words",
+                          "umbrella": "Umbrella terms"}
+    out["dm_c_hover"] = "%{customdata[1]:.0f} → %{customdata[2]:.0f} (annual mean)"
+
+    out["dm_p_h"] = (
+        f"Cosmetics (化粧品) search fell {abs(P['cosm_d']):.0f}%, {P['y0']}→{P['y1']}, and stayed "
+        "above skincare (スキンケア) search in every year")
+    out["dm_p_e"] = (
+        f"Monthly, January {P['years'][0]} – {_MON_EN[last.month]} {last.year}, both terms from "
+        "one request on one scale. 化粧品 is the umbrella term and includes skincare. Full years "
+        f"{P['y0']}→{P['y1']}: スキンケア search {'rose' if P['skin_d'] >= 0 else 'fell'} "
+        f"{abs(P['skin_d']):.0f}%, and the gap between the two narrowed {abs(P['gap_d']):.0f}%, "
+        f"{P['cosm_share']:.0f}% of it from the fall in 化粧品; the skincare-to-cosmetics ratio "
+        f"went from {P['ratio_0']:.2f} to {P['ratio_1']:.2f}.")
+    out["dm_p_names"] = {"化粧品": "Cosmetics", "スキンケア": "Skincare"}
+    out["dm_p_y"] = "Search interest (one scale)"
+
+    out["dm_i_h"] = (f"{nm(lt, True)} search rose from {lv0:.0f} to {lv1:.0f} on the Trends "
+                     f"index, {la}→{lb}")
+    out["dm_i_e"] = (f"Annual mean search interest, full years {la}–{lb}, each term scaled to "
+                     "its own peak (= 100).")
+    out["dm_i_y"] = "Annual mean (own peak = 100)"
+
+    a = MK["annual"]
+    gap = MK["last"] - MK["relaxed"].year
+    out["dm_m_h"] = (f"In {MK['last']}, {_NUM_EN[gap]} years after mask guidance was relaxed, "
+                     f"lipstick search was {a.loc[MK['last'], '口紅']:.0f}% of its 2019 level")
+    my0, my1 = min(MASK_YEARS), max(MASK_YEARS)
+    out["dm_m_e"] = (
+        "Monthly search for three makeup terms, each term's 2019 mean = 100, three-month centred "
+        f"average. The dashed line marks {MK['relaxed'].day} {_MON_EN[MK['relaxed'].month]} "
+        f"{MK['relaxed'].year}, when Japan left mask wearing to individual judgment. Lipstick and "
+        f"foundation search rose in {MK['relaxed'].year} and fell in {MK['last'] - 1} and "
+        f"{MK['last']}; lipstick's {MK['last']} mean was below its {_MASK_LOW(a)} mean, the lowest "
+        f"of the mask years {my0}–{my1}. Eyeshadow search was above its 2019 level in {my0}–{my1} "
+        f"and below it in {MK['last'] - 1}–{MK['last']}.")
+    out["dm_m_names"] = {"口紅": "Lipstick (口紅)", "ファンデーション": "Foundation (ファンデーション)",
+                         "アイシャドウ": "Eyeshadow (アイシャドウ)"}
+    out["dm_m_mask"] = "Mask guidance relaxed"
+    out["dm_m_base"] = "2019 = 100"
+    out["dm_m_y"] = "Search interest, own 2019 = 100"
+
+    kind = "a Korean brand, " if R["brand_type"] == "korean_brand" else ""
+    (c1, n1), (c2, n2) = R["covid"]
+    out["dm_r_h"] = (
+        f"{_root_name(R['brand'], M, 'en')}, {kind}surfaced in rising searches from "
+        f"{_NUM_EN[R['brand_seeds']]} of the {_NUM_EN[R['n_seeds']]} seed terms, more than any "
+        "other brand")
+    out["dm_r_e"] = (
+        f"Google Trends rising related searches for {_NUM_EN[R['n_seeds']]} seed terms, from "
+        f"{_RELATED_EN['recent']}: the {len(R['tiles'])} with the highest score. Tile size: mean "
+        "normalised rising score × the number of seed terms a search surfaced from. In "
+        f"{_RELATED_EN['covid']}, {_root_name(c1, M, 'en').lower()} surfaced from "
+        f"{_NUM_EN[n1]} seed terms and {_root_name(c2, M, 'en').lower()} from {_NUM_EN[n2]}.")
+
+    out["dm_src_trends"] = source_line(["trends"], REG)
+    out["dm_src_related"] = source_line(["trends_related"], REG)
+    return out
+
+
+def _demand_ja(M, REG):
+    """The Demand page in Japanese: 産業調査体, である調, titles without a closing
+    。, the site's terms (検索関心度, カテゴリ語)."""
+    from .sources import source_line
+    y0, y1 = M["window"]
+    C, P, K, MK, R = M["changes"], M["pair"], M["keys"], M["makeup"], M["related"]
+    ed = pd.Timestamp(EDITION + "-01")
+    last = M["cross"]["week_start"].max()
+    nm = lambda t: _term_name(t, M, "jp")  # noqa: E731
+    out = {}
+
+    out["dm_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["dm_intro"] = (
+        "Googleトレンド（日本）。各語は単独で取得し、その語のピークを100とする指数である。変化はその語"
+        "自身のピークに対するポイントで読み、語どうしの水準は比べない。スキンケアと化粧品は2語を1回で"
+        "取得した系列もあり、同じ尺度にある。")
+    (lt, la, lb, lv0, lv1), (wt, wa, wb, wv0, wv1) = K["long"], K["window"]
+    out["dm_figs"] = [
+        ("化粧品の検索", f"{P['cosm_d']:+.0f}%",
+         f"暦年{P['y0']}→{P['y1']}年、スキンケアと同一リクエスト"),
+        (f"{nm(lt)}の検索", f"{lv0:.0f} → {lv1:.0f}", f"年平均、{la}→{lb}年、自身のピーク＝100"),
+        (f"{nm(wt)}の検索", f"{wv0:.0f} → {wv1:.0f}", f"年平均、{wa}→{wb}年、自身のピーク＝100"),
+    ]
+
+    within = "、".join(nm(t) for t in _sorted_terms(C["within"], M, "jp"))
+    up = "、".join(f"{nm(t)}は{M['change'].loc[t, 'd']:.0f}ポイント上昇した" for t in C["words_up"])
+    out["dm_c_h"] = (
+        f"{y0}→{y1}年に、追跡する成分{C['n_actives']}語のうち{C['n_rose']}語の検索が"
+        f"{C['rose_lo']:.0f}〜{C['rose_hi']:.0f}ポイント上昇し、カテゴリ語は{C['n_words']}語中"
+        f"{len(C['words_down'])}語が低下した")
+    out["dm_c_e"] = (
+        f"年平均の差（{y1}年−{y0}年）、各語のピーク＝100に対するポイント。濃色は上昇した"
+        f"{C['n_rose']}成分。網掛けは±{TRENDS_PULL_SPREAD}ポイントで、同じ系列を2回取得したときの差の"
+        f"幅である。{within}の変化はこの幅に収まる。{up}。各グループ内は五十音順。")
+    out["dm_c_x"] = f"変化、{y1}年−{y0}年（ポイント）"
+    out["dm_c_groups"] = {"active": "成分", "category": "カテゴリ語", "umbrella": "総称"}
+    out["dm_c_hover"] = "%{customdata[1]:.0f} → %{customdata[2]:.0f}（年平均）"
+
+    out["dm_p_h"] = (f"化粧品の検索は{P['y0']}→{P['y1']}年に{abs(P['cosm_d']):.0f}%低下し、"
+                     "どの年もスキンケアの検索を上回った")
+    out["dm_p_e"] = (
+        f"月次、{P['years'][0]}年1月〜{last.year}年{last.month}月。2語を1回で取得し、同じ尺度にある。"
+        f"化粧品は総称で、スキンケアを含む。暦年{P['y0']}→{P['y1']}年でスキンケアの検索は"
+        f"{abs(P['skin_d']):.0f}%{'上昇' if P['skin_d'] >= 0 else '低下'}し、両語の差は"
+        f"{abs(P['gap_d']):.0f}%縮小した。その{P['cosm_share']:.0f}%は化粧品の低下による。"
+        f"スキンケア対化粧品の検索比は{P['ratio_0']:.2f}→{P['ratio_1']:.2f}。")
+    out["dm_p_names"] = {"化粧品": "化粧品", "スキンケア": "スキンケア"}
+    out["dm_p_y"] = "検索関心度（同一尺度）"
+
+    out["dm_i_h"] = (f"{nm(lt)}の検索は{la}→{lb}年にGoogleトレンドの指数で{lv0:.0f}から"
+                     f"{lv1:.0f}へ上昇")
+    out["dm_i_e"] = f"年平均の検索関心度、暦年{la}〜{lb}年、各語のピーク＝100。"
+    out["dm_i_y"] = "年平均（自身のピーク＝100）"
+
+    a = MK["annual"]
+    gap = MK["last"] - MK["relaxed"].year
+    out["dm_m_h"] = (f"マスク着用ルール緩和から{gap}年後の{MK['last']}年、口紅の検索は2019年の"
+                     f"{a.loc[MK['last'], '口紅']:.0f}%")
+    my0, my1 = min(MASK_YEARS), max(MASK_YEARS)
+    rl = MK["relaxed"]
+    out["dm_m_e"] = (
+        "メイク3語の月次検索、各語の2019年平均＝100、3カ月中心移動平均。破線は"
+        f"{rl.year}年{rl.month}月{rl.day}日で、この日からマスクの着用は個人の判断となった。"
+        f"口紅とファンデーションの検索は{rl.year}年に上昇し、{MK['last'] - 1}年と{MK['last']}年に"
+        f"低下した。口紅の{MK['last']}年平均は、マスク着用期（{my0}〜{my1}年）で最も低い"
+        f"{_MASK_LOW(a)}年を下回った。アイシャドウの検索は{my0}〜{my1}年に2019年を上回り、"
+        f"{MK['last'] - 1}〜{MK['last']}年に下回った。")
+    out["dm_m_names"] = {"口紅": "口紅", "ファンデーション": "ファンデーション",
+                         "アイシャドウ": "アイシャドウ"}
+    out["dm_m_mask"] = "マスク着用ルール緩和"
+    out["dm_m_base"] = "2019年＝100"
+    out["dm_m_y"] = "検索関心度（各語の2019年＝100）"
+
+    kind = "韓国ブランドの" if R["brand_type"] == "korean_brand" else ""
+    (c1, n1), (c2, n2) = R["covid"]
+    out["dm_r_h"] = (f"{kind}{R['brand']}は、起点語{R['n_seeds']}語のうち{R['brand_seeds']}語の"
+                     "急上昇関連検索に現れ、ブランドで最多")
+    out["dm_r_e"] = (
+        f"Googleトレンドの急上昇関連検索、起点語{R['n_seeds']}語、{_RELATED_JA['recent']}以降。"
+        f"スコア上位{len(R['tiles'])}件。タイルの大きさ：正規化した急上昇スコアの平均×その検索が"
+        f"現れた起点語の数。{_RELATED_JA['covid']}では、{c1}が{n1}語、{c2}が{n2}語から現れた。")
+
+    out["dm_src_trends"] = source_line(["trends"], REG, "ja")
+    out["dm_src_related"] = source_line(["trends_related"], REG, "ja")
+    return out
+
+
+def _MASK_LOW(a):
+    """The mask year in which lipstick search was lowest."""
+    return int(a.loc[list(MASK_YEARS), "口紅"].idxmin())
+
+
+# The related-search windows as NB01d requests them (TIMEFRAME_RISE and
+# TIMEFRAME_RISE2). The stored file carries neither window's dates.
+_RELATED_EN = {"recent": "January 2022", "covid": "January 2020 – December 2022"}
+_RELATED_JA = {"recent": "2022年1月", "covid": "2020年1月〜2022年12月"}

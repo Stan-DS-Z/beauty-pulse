@@ -9,7 +9,7 @@ from bp import figures
 from bp.theme import C
 
 PATH = "/language"
-dash.register_page(__name__, path=PATH, name="The language", order=3,
+dash.register_page(__name__, path=PATH, name="The language", order=4,
                    title="Beauty Pulse · Japanese Beauty Market")
 
 D = data_cache.load()

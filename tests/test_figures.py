@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pytest
 
-from bp import brief, data, figures, market, sources, strings
+from bp import brief, data, demand, figures, market, sources, strings
 
 A = data.ASSETS
 BUILDERS = sorted(n for n in vars(figures) if n.startswith("fig_"))
@@ -37,7 +37,7 @@ def frames():
         umap=data.load_umap(A))
 
 
-def cases(f, H, L, lang, S, B=None, M=None):
+def cases(f, H, L, lang, S, B=None, M=None, DM=None):
     """Builder name -> the figures it draws with default controls."""
     return {
         "fig_trends_crossover": lambda: [figures.fig_trends_crossover(
@@ -67,6 +67,11 @@ def cases(f, H, L, lang, S, B=None, M=None):
         "fig_market_lines": lambda: [figures.fig_market_lines(M, S)],
         "fig_market_bridge": lambda: [figures.fig_market_bridge(M, S)],
         "fig_market_imports": lambda: [figures.fig_market_imports(M, S)],
+        "fig_demand_change": lambda: [figures.fig_demand_change(DM, S)],
+        "fig_demand_pair": lambda: [figures.fig_demand_pair(DM, S)],
+        "fig_demand_ingredients": lambda: [figures.fig_demand_ingredients(DM, S)],
+        "fig_demand_makeup": lambda: [figures.fig_demand_makeup(DM, S)],
+        "fig_demand_related": lambda: [figures.fig_demand_related(DM, S)],
     }
 
 
@@ -77,8 +82,9 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
         pytest.skip("launch export not built")
     B = brief.compute_brief(A, headline, sources.CUTOFF)
     M = market.compute_market(A, sources.CUTOFF)
-    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M)
-    table = cases(frames, headline, launch, lang, S, B, M)
+    DM = demand.compute_demand(A, sources.CUTOFF)
+    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M, DM)
+    table = cases(frames, headline, launch, lang, S, B, M, DM)
     assert name in table, f"{name} has no case in tests/test_figures.py"
     for fig in table[name]():
         assert isinstance(fig, go.Figure)
@@ -95,7 +101,8 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
         pytest.skip("launch export not built")
     B = brief.compute_brief(A, headline, sources.CUTOFF)
     M = market.compute_market(A, sources.CUTOFF)
-    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M)
+    DM = demand.compute_demand(A, sources.CUTOFF)
+    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M, DM)
     default = pio.templates[pio.templates.default].to_plotly_json()
-    for fig in cases(frames, headline, launch, "en", S, B, M)[name]():
+    for fig in cases(frames, headline, launch, "en", S, B, M, DM)[name]():
         assert fig.layout.template.to_plotly_json() == default

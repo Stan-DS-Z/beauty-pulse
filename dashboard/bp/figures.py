@@ -1039,3 +1039,159 @@ def fig_market_imports(M, S):
                                  range=[f.columns[0] - 0.4, f.columns[-1] + 0.4]),
                       yaxis=_yax(S["mk_i_y"], rangemode="tozero"))
     return fig
+
+
+# ── Demand ──────────────────────────────────────────────────────────────────
+# Grey, with the one accent in ink on what each title names. Actives are
+# never ranked against each other: the change chart lists each group of terms
+# alphabetically (五十音 in Japanese), top to bottom.
+
+def _end_labels(fig, series, names, accent, top, gap_frac=0.045):
+    """A label at the end of each line, moved apart where lines end close
+    together; `series` maps key -> (x, y) of the line's last point, and `top`
+    is the highest value drawn, so the gap is a share of the axis. Labels sit
+    in the right margin; a data-placed annotation widens Plotly's autorange,
+    so each chart that uses these fixes its x range."""
+    gap, placed = gap_frac * top, {}
+    for k, (_, y) in sorted(series.items(), key=lambda kv: kv[1][1]):
+        placed[k] = max(y, max(placed.values(), default=-gap) + gap)
+    for k, (x, _) in series.items():
+        fig.add_annotation(x=x, y=placed[k], text=names[k], showarrow=False, xanchor="left",
+                           xshift=8, font=dict(size=11, color=C["ink"] if k == accent
+                                               else C["muted"]))
+
+
+def fig_demand_change(M, S):
+    """Each term's change in search over the aligned window, by group."""
+    from .brief import TRENDS_PULL_SPREAD
+    ch = M["change"]
+    order = S["dm_order"][::-1]                   # Plotly draws the first category at the bottom
+    rose = set(M["changes"]["rose"])
+    names = [S["dm_term"][t] for t in order]
+    fig = go.Figure(go.Bar(
+        x=ch.loc[order, "d"], y=names, orientation="h",
+        marker=dict(color=[C["ink"] if t in rose else _GREY for t in order]),
+        customdata=np.stack([order, ch.loc[order, "s0"], ch.loc[order, "s1"]], axis=-1),
+        hovertemplate=f"<b>%{{y}}</b> %{{customdata[0]}}<br>{S['dm_c_hover']}<extra></extra>"))
+    fig.add_vrect(x0=-TRENDS_PULL_SPREAD, x1=TRENDS_PULL_SPREAD, fillcolor=C["grid"], opacity=0.8,
+                  layer="below", line_width=0)
+    fig.add_vline(x=0, line_width=1, line_color=C["border"])
+    # Group labels at the right edge, on each group's first row, and a rule
+    # between groups. Row i of the drawn order sits at y = i.
+    for g, label in S["dm_c_groups"].items():
+        first = next(t for t in S["dm_order"] if ch.loc[t, "kind"] == g)
+        fig.add_annotation(x=1, xref="paper", y=S["dm_term"][first], text=label, showarrow=False,
+                           xanchor="right", font=dict(size=10, color=C["muted"]))
+    kinds = [ch.loc[t, "kind"] for t in order]
+    for i in range(1, len(order)):
+        if kinds[i] != kinds[i - 1]:
+            fig.add_hline(y=i - 0.5, line_width=1, line_color=C["rule"])
+    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=10, b=40),
+                      xaxis=_xax(title=dict(text=S["dm_c_x"], font=dict(size=11)),
+                                 zeroline=False,
+                                 range=[1.1 * min(ch["d"].min(), -TRENDS_PULL_SPREAD),
+                                        1.35 * ch["d"].max()]),
+                      yaxis=_yax(automargin=True))
+    return fig
+
+
+def fig_demand_pair(M, S):
+    """化粧品 and スキンケア by month, from one request on one scale."""
+    cross = M["cross"]
+    fig = go.Figure()
+    ends = {}
+    for term in ("スキンケア", "化粧品"):
+        d = cross[cross["term"] == term].sort_values("week_start")
+        accent = term == "化粧品"
+        fig.add_trace(go.Scatter(
+            x=d["week_start"], y=d["interest"], mode="lines", name=S["dm_p_names"][term],
+            line=dict(color=C["ink"] if accent else _GREY, width=2.5 if accent else 2),
+            hovertemplate=f"{S['dm_p_names'][term]} %{{x|%Y-%m}}: %{{y:.0f}}<extra></extra>"))
+        ends[term] = (d["week_start"].iloc[-1], d["interest"].iloc[-1])
+    _end_labels(fig, ends, S["dm_p_names"], "化粧品", cross["interest"].max())
+    x0, x1 = cross["week_start"].min(), cross["week_start"].max()
+    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=110, t=20, b=40),
+                      xaxis=_xax(tickformat="%Y", tickangle=0,
+                                 range=[x0 - pd.Timedelta(days=20), x1 + pd.Timedelta(days=20)]),
+                      yaxis=_yax(S["dm_p_y"], rangemode="tozero"))
+    return fig
+
+
+def fig_demand_ingredients(M, S):
+    """Annual mean search for the ingredient lines, full years; the line the
+    title names in ink."""
+    from .demand import LONG_ACTIVE
+    ing = M["ing"]
+    fig = go.Figure()
+    ends = {}
+    for term in ing.columns:
+        accent = term == LONG_ACTIVE
+        name = S["dm_term"][term]
+        fig.add_trace(go.Scatter(
+            x=list(ing.index), y=ing[term].round(1), mode="lines+markers", name=name,
+            line=dict(color=C["ink"] if accent else _GREY, width=2.5 if accent else 1.5),
+            marker=dict(size=5),
+            hovertemplate=f"{name} %{{x}}: %{{y:.1f}}<extra></extra>"))
+        ends[term] = (ing.index[-1], ing[term].iloc[-1])
+    _end_labels(fig, ends, S["dm_term"], LONG_ACTIVE, float(ing.max().max()))
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=120, t=20, b=40),
+                      xaxis=_xax(tickformat="d", range=[ing.index[0] - 0.3, ing.index[-1] + 0.3]),
+                      yaxis=_yax(S["dm_i_y"], rangemode="tozero"))
+    return fig
+
+
+def fig_demand_makeup(M, S):
+    """Three makeup terms by month against each term's own 2019 mean; the
+    term the title names in ink."""
+    MK = M["makeup"]
+    mk = MK["frame"]
+    fig = go.Figure()
+    fig.add_hline(y=100, line_dash="dot", line_color=C["border"], line_width=1.5)
+    fig.add_vline(x=MK["relaxed"], line_dash="dash", line_color=C["muted"], line_width=1.5)
+    fig.add_annotation(x=MK["relaxed"], y=0.98, yref="paper", text=S["dm_m_mask"],
+                       showarrow=False, xanchor="left", xshift=4,
+                       font=dict(size=10, color=C["muted"]))
+    fig.add_annotation(x=1, xref="paper", y=100, text=S["dm_m_base"], showarrow=False,
+                       xanchor="right", yanchor="bottom", font=dict(size=10, color=C["muted"]))
+    ends = {}
+    for term in ("ファンデーション", "アイシャドウ", "口紅"):
+        d = mk[mk["term"] == term]
+        accent = term == "口紅"
+        name = S["dm_m_names"][term]
+        fig.add_trace(go.Scatter(
+            x=d["week_start"], y=d["smooth"], mode="lines", name=name,
+            line=dict(color=C["ink"] if accent else _GREY, width=2.5 if accent else 1.5),
+            hovertemplate=f"{name} %{{x|%Y-%m}}: %{{y:.0f}}<extra></extra>"))
+        ends[term] = (d["week_start"].iloc[-1], d["smooth"].iloc[-1])
+    _end_labels(fig, ends, {t: S["dm_term"].get(t, t) for t in ends}, "口紅", mk["smooth"].max())
+    x0, x1 = mk["week_start"].min(), mk["week_start"].max()
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=110, t=20, b=40),
+                      xaxis=_xax(tickformat="%Y", tickangle=0,
+                                 range=[x0 - pd.Timedelta(days=20), x1 + pd.Timedelta(days=20)]),
+                      yaxis=_yax(S["dm_m_y"], rangemode="tozero"))
+    return fig
+
+
+def fig_demand_related(M, S):
+    """The recent window's rising related searches; the brand the title names
+    in ink."""
+    R = M["related"]
+    t = R["tiles"]
+    accent = t["root"] == R["brand"]
+    seeds = [f"{n} seed" + ("" if n == 1 else "s") if S["dm_en"] else f"起点語{n}"
+             for n in t["seed_count"]]
+    fig = go.Figure(go.Treemap(
+        labels=[S["dm_root"][r] for r in t["root"]], parents=[""] * len(t),
+        values=t["metric"], branchvalues="total", sort=True,
+        marker=dict(colors=[C["ink"] if a else "#E4E1DB" for a in accent],
+                    line=dict(color=C["bg"], width=2)),
+        textfont=dict(size=11, color=["#FFFFFF" if a else C["ink"] for a in accent]),
+        customdata=np.stack([seeds, t["seeds"]], axis=-1),
+        texttemplate="<b>%{label}</b><br>%{customdata[0]}",
+        hovertemplate="<b>%{label}</b><br>%{customdata[0]}: %{customdata[1]}<extra></extra>"))
+    fig.update_layout(**{**_base(400), "hovermode": "closest"}, margin=dict(l=0, r=0, t=10, b=0))
+    return fig

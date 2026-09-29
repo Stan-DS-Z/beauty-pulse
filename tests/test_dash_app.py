@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = {"/brief": "brief", "/market": "market", "/shift": "shift", "/language": "language",
-         "/discovery": "discovery"}
+PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/shift": "shift",
+         "/language": "language", "/discovery": "discovery"}
 
 
 @pytest.fixture(scope="module")

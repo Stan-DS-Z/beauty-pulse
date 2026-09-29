@@ -17,6 +17,8 @@ from bp.data import METI_BREAK, METI_SKIN
 from bp.funnel import CATEGORIES
 from bp.strings import LAUNCH_CAT, METI_LINE
 
+# The report pages that draw METI. Demand draws search, which has no break, and
+# its skincare search terms share names with METI lines.
 REPORT_PATHS = ("/brief", "/market")
 YEAR = re.compile(r"(?<!\d)(20[12]\d)(?!\d)")
 # A change between two years: 2019→2025, 2019〜2025, 2019–2025, 2019-2025.
