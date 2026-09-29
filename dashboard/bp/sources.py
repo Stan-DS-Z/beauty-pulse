@@ -64,7 +64,9 @@ DECLARED = {
                        "snapshot", ()),
     "prtimes":        ("PR TIMES", "PR TIMES", "series",
                        ("brief", "supply", "timing", "funnel", "categories")),
-    "rakuten":        ("Rakuten Ichiba", "楽天市場", "series", ("supply",)),
+    # Collected, and used by no page in this edition: its snapshot postdates the
+    # cut-off and its genres mix levels. It returns on the monitor (Phase 4).
+    "rakuten":        ("Rakuten Ichiba", "楽天市場", "series", ()),
     "cosme":          ("@cosme", "@cosme", "snapshot", ("consumer", "funnel")),
     "youtube":        ("YouTube", "YouTube", "snapshot", ("consumer",)),
     # Collected, and used by no finding or chart: its products carry no category.

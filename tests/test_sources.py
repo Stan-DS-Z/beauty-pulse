@@ -54,8 +54,8 @@ def test_used_on_names_real_pages(src, registry):
     for key, s in registry.items():
         assert set(s.used_on) <= set(src.PAGES), key
     # Collected, and used by no finding or chart (README, METHODOLOGY caveats 6
-    # and 7; Revision 17).
-    unused = ("amazon", "trends_related")
+    # and 7; Revisions 17 and 18).
+    unused = ("amazon", "trends_related", "rakuten")
     assert all(registry[k].used_on == () for k in unused)
     assert all(s.used_on for k, s in registry.items() if k not in unused)
 

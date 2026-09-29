@@ -1,7 +1,6 @@
 """Supply: PR TIMES product-launch releases from the core issuers, by
-category, issuer origin, category group and ingredient, and median prices
-among each Rakuten genre's most-reviewed items. A report page: no controls,
-one edition date, every exhibit a result with its source line."""
+category, issuer origin, category group and ingredient. A report page: no
+controls, one edition date, every exhibit a result with its source line."""
 
 import dash
 from dash import html
@@ -17,9 +16,9 @@ dash.register_page(__name__, path=PATH, name="Supply", order=3,
 D = data_cache.load()
 
 
-def _exhibit(S, key, graph_id, figure, src="sp_src_prtimes"):
+def _exhibit(S, key, graph_id, figure):
     return html.Div([ui.chart_head(S[f"sp_{key}_h"], S[f"sp_{key}_e"]),
-                     ui.graph(graph_id, figure), ui.source(S[src])])
+                     ui.graph(graph_id, figure), ui.source(S["sp_src_prtimes"])])
 
 
 def build(lang, d):
@@ -36,7 +35,6 @@ def build(lang, d):
                _exhibit(S, "o", "sp-fig-origin", figures.fig_supply_origin(M, S))),
         ui.row(_exhibit(S, "g", "sp-fig-groups", figures.fig_supply_groups(M, S)),
                _exhibit(S, "i", "sp-fig-ingredients", figures.fig_supply_ingredients(M, S))),
-        _exhibit(S, "r", "sp-fig-prices", figures.fig_supply_prices(M, S), "sp_src_rakuten"),
         ui.caption(S["sp_cap"]),
     ])
 

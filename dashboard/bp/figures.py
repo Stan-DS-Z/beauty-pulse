@@ -790,32 +790,3 @@ def fig_supply_ingredients(M, S):
                                  ticksuffix="%", rangemode="tozero"),
                       yaxis=_yax(automargin=True))
     return fig
-
-
-def fig_supply_prices(M, S):
-    """Median price among each Rakuten genre's most-reviewed items, highest at
-    the top; the two genres the title names in ink."""
-    P = M["prices"]
-    f = P["frame"].sort_values("med_price")
-    names = [S["sp_genre"][k] for k in f.index]
-    en = S["sp_en"]
-    fig = go.Figure(go.Bar(
-        x=f["med_price"], y=names, orientation="h",
-        marker=dict(color=[C["ink"] if k in (P["hi"], P["lo"]) else _GREY for k in f.index]),
-        text=[f"¥{v:,.0f}" if en else f"{v:,.0f}円" for v in f["med_price"]],
-        textposition="outside", cliponaxis=False, textfont=dict(size=11, color=C["muted"]),
-        customdata=np.stack([f["avg_rating"], f["rated_share"], f["sku_count"]], axis=-1),
-        hovertemplate=("<b>%{y}</b><br>Median price ¥%{x:,.0f}<br>Average rating "
-                       "%{customdata[0]:.2f} (the %{customdata[1]:.0%} of items rated)<br>"
-                       "Items: %{customdata[2]:,}<extra></extra>" if en else
-                       "<b>%{y}</b><br>価格中央値 %{x:,.0f}円<br>平均評価 %{customdata[0]:.2f}"
-                       "（評価のある%{customdata[1]:.0%}の商品）<br>商品数 %{customdata[2]:,}"
-                       "<extra></extra>")))
-    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
-                      margin=dict(l=10, r=10, t=10, b=40),
-                      xaxis=_xax(title=dict(text=S["sp_r_x"], font=dict(size=11)),
-                                 tickformat=",", tickprefix="¥" if en else "",
-                                 ticksuffix="" if en else "円",
-                                 range=[0, 1.3 * f["med_price"].max()]),
-                      yaxis=_yax(automargin=True))
-    return fig

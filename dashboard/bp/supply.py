@@ -1,5 +1,4 @@
-"""The Supply page: PR TIMES product-launch releases from the core panel, and
-median prices among each Rakuten genre's most-reviewed items.
+"""The Supply page: PR TIMES product-launch releases from the core panel.
 
 A report page: every figure is computed from the frozen edition, cut at the
 edition's cut-off (sources.CUTOFF). Launch figures use the core panel only
@@ -8,8 +7,7 @@ windows against the 12 months before; category shares run over the report's
 aligned window (funnel.funnel_window, 2022→2025 on the September 2026
 edition); issuer origin runs over the complete half-years in the launch
 window. The category and origin figures are the Brief's (brief.compute_brief),
-built with its helpers. The Rakuten measures are per item, from one weekly
-snapshot. strings.py words these figures and tests/test_supply.py holds the
+built with its helpers. strings.py words these figures and tests/test_supply.py holds the
 data to each direction the copy states. Like data.py, nothing runs at import.
 """
 
@@ -18,7 +16,7 @@ from pathlib import Path
 import pandas as pd
 
 from .brief import _core, _half
-from .data import compute_launch_headline, load_sku_treemap
+from .data import compute_launch_headline
 from .funnel import compute_funnel_matrix
 
 # A 12-month total within this many percent of the 12 months before "held".
@@ -73,12 +71,7 @@ def compute_supply(ASSETS: Path, cutoff: str):
                        any_share=L["any_ing_share"], any_n=L["any_ing_n"],
                        n_terms=len(L["terms"]), top=L["top_ing"])
 
-    # ── Rakuten: per-item measures from one weekly snapshot
-    sku = load_sku_treemap(ASSETS).set_index("category")
-    prices = dict(frame=sku, snapshot=pd.Timestamp(sku["snapshot_date"].iloc[0]),
-                  hi=sku["med_price"].idxmax(), lo=sku["med_price"].idxmin())
-
     return dict(cutoff=cutoff, window=(y0, y1), l12=L["l12"], p12=L["p12"], last=L["last"],
                 tot_l12=L["tot_l12"], tot_p12=L["tot_p12"], n_core=L["n_core"],
                 share=share, origin=origin, groups=groups, ingredients=ingredients,
-                prices=prices, terms=L["terms"])
+                terms=L["terms"])

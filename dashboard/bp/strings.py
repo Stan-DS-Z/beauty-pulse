@@ -9,9 +9,8 @@ import pandas as pd
 from .brief import TRENDS_PULL_SPREAD
 from .demand import MASK_YEARS
 from .supply import HELD_PCT, KEY_CATEGORY
-from .data import (LAUNCH_GATE, LAUNCH_WINDOW_START, load_ingredient_surge, load_makeup_rebound,
-                   load_sku_treemap, load_trends_crossover)
-from .sources import EDITION, date_label
+from .data import LAUNCH_GATE, LAUNCH_WINDOW_START
+from .sources import EDITION
 
 STRINGS = {
     "en": {
@@ -1071,17 +1070,6 @@ SUPPLY_ORIGIN = {"KR": ("Korea", "韓国"), "JP": ("Japan", "日本"),
 SUPPLY_GROUP = {"skincare": ("Skincare", "スキンケア"), "makeup": ("Makeup", "メイク"),
                 "other": ("Hair, body and fragrance", "ヘア・ボディ・フレグランス"),
                 "none": ("No category word", "カテゴリ語なし")}
-# Rakuten Ichiba's genres in the pull, in English and in Rakuten's own names.
-RAKUTEN_GENRE = {
-    "korean_cosmetics": ("Korean cosmetics", "韓国コスメ"),
-    "cosmetics": ("Base makeup and makeup", "ベースメイク・メイクアップ"),
-    "sun_protection": ("Sunscreen and UV care", "日焼け止め・UVケア"),
-    "face_cream": ("Face cream", "フェイスクリーム"), "all_in_one": ("All-in-one", "オールインワン化粧品"),
-    "face_wash": ("Face wash", "洗顔料"), "emulsion": ("Emulsion and milk", "乳液・ミルク"),
-    "toner_lotion": ("Toner and lotion", "化粧水・ローション"), "serum_essence": ("Serum", "美容液"),
-    "skincare": ("Skincare (parent genre)", "スキンケア（上位ジャンル）"),
-}
-
 
 def _supply_ing(M, lang):
     """Each ingredient named in either window -> its name, and their order:
@@ -1099,7 +1087,7 @@ def _supply_ing(M, lang):
 def supply_strings(lang, M, REG):
     """The Supply page's copy in one language, and the lookups its figures
     use: the language (sp_en), the names of categories, origins, half-years,
-    groups, ingredients and Rakuten genres, and the ingredients' order."""
+    groups and ingredients, and the ingredients' order."""
     li = _li(lang)
     out = _supply_en(M, REG) if lang == "en" else _supply_ja(M, REG)
     out["sp_en"] = lang == "en"
@@ -1108,7 +1096,6 @@ def supply_strings(lang, M, REG):
     out["sp_half"] = {h: (h if lang == "en" else _half_ja(h)) for h in M["origin"]["shares"].index}
     out["sp_group"] = {k: v[li] for k, v in SUPPLY_GROUP.items()}
     out["sp_ing"], out["sp_ing_order"] = _supply_ing(M, lang)
-    out["sp_genre"] = {k: RAKUTEN_GENRE[k][li] for k in M["prices"]["frame"].index}
     return out
 
 
@@ -1120,7 +1107,7 @@ def _held(a, b):
 def _supply_en(M, REG):
     from .sources import source_line
     y0, y1 = M["window"]
-    SH, O, G, I, P = M["share"], M["origin"], M["groups"], M["ingredients"], M["prices"]
+    SH, O, G, I = M["share"], M["origin"], M["groups"], M["ingredients"]
     rows, (n0, n1) = SH["rows"], SH["den"]
     ed = pd.Timestamp(EDITION + "-01")
     last = _ym(M["last"], "en")
@@ -1130,16 +1117,13 @@ def _supply_en(M, REG):
     f = I["frame"]
     top = f.loc[I["top"]]
     ing_name = _supply_ing(M, "en")[0]
-    sku = P["frame"]
-    genre = lambda k: RAKUTEN_GENRE[k][0][0].lower() + RAKUTEN_GENRE[k][0][1:]  # noqa: E731
     key = rows.loc[KEY_CATEGORY]
     out = {}
 
     out["sp_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
     out["sp_intro"] = (
         f"Product-launch releases from the {M['n_core']} issuers whose PR TIMES history reaches "
-        "back to September 2021, by month of release; one release is one count. Prices come from "
-        "each Rakuten Ichiba genre's most-reviewed items.")
+        "back to September 2021, by month of release; one release is one count.")
     out["sp_figs"] = [
         (f"Launch releases, 12 months to {last_short}", f"{M['tot_l12']:,}",
          f"core issuers · {M['tot_p12']:,} in the 12 months before"),
@@ -1202,18 +1186,6 @@ def _supply_en(M, REG):
     out["sp_win_l12"] = f"12 months to {last}"
     out["sp_win_p12"] = "12 months before"
 
-    out["sp_r_h"] = (
-        f"Median price ran from ¥{sku.loc[P['lo'], 'med_price']:,.0f} for {genre(P['lo'])} to "
-        f"¥{sku.loc[P['hi'], 'med_price']:,.0f} for {genre(P['hi'])} among each Rakuten genre's "
-        "most-reviewed items")
-    out["sp_r_e"] = (
-        f"From the pull of each genre's 3,000 most-reviewed items on "
-        f"{date_label(P['snapshot'], 'day', 'en')}; each item is counted in one genre, "
-        f"{sku['sku_count'].min():,}–{sku['sku_count'].max():,} per genre. Average ratings over "
-        f"rated items run from {sku['avg_rating'].min():.2f} to {sku['avg_rating'].max():.2f}; each "
-        "genre's rating is on hover.")
-    out["sp_r_x"] = "Median price (¥)"
-
     _G = LAUNCH_GATE
     out["sp_cap"] = (
         f"Measured {_G['asof']}. Launch gate: precision {_G['precision']} (95% CI "
@@ -1225,7 +1197,6 @@ def _supply_en(M, REG):
         f"brands in other tiers. The edition filter finds {_G['edition_found']} of "
         f"{_G['edition_n']} hand-labelled editions.")
     out["sp_src_prtimes"] = source_line(["prtimes"], REG)
-    out["sp_src_rakuten"] = source_line(["rakuten"], REG)
     return out
 
 
@@ -1234,7 +1205,7 @@ def _supply_ja(M, REG):
     。, the site's terms (リリース構成比, コア発行元の新商品リリース, 韓国系発行元)."""
     from .sources import source_line
     y0, y1 = M["window"]
-    SH, O, G, I, P = M["share"], M["origin"], M["groups"], M["ingredients"], M["prices"]
+    SH, O, G, I = M["share"], M["origin"], M["groups"], M["ingredients"]
     rows, (n0, n1) = SH["rows"], SH["den"]
     ed = pd.Timestamp(EDITION + "-01")
     last = _ym(M["last"], "jp")
@@ -1243,7 +1214,6 @@ def _supply_ja(M, REG):
     f = I["frame"]
     top = f.loc[I["top"]]
     ing_name = _supply_ing(M, "jp")[0]
-    sku = P["frame"]
     cj = lambda k: LAUNCH_CAT[k][1]  # noqa: E731
     key = rows.loc[KEY_CATEGORY]
     out = {}
@@ -1251,7 +1221,7 @@ def _supply_ja(M, REG):
     out["sp_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
     out["sp_intro"] = (
         f"PR TIMES上の新商品リリース。同サイト上の履歴が2021年9月まで遡る{M['n_core']}社を配信月別に"
-        "数え、1リリースを1件とする。価格は楽天市場の各ジャンルでレビュー数が上位の商品による。")
+        "数え、1リリースを1件とする。")
     out["sp_figs"] = [
         (f"新商品リリース、{last}までの12カ月", f"{M['tot_l12']:,}件",
          f"コア発行元 · 前年同期{M['tot_p12']:,}件"),
@@ -1314,17 +1284,6 @@ def _supply_ja(M, REG):
     out["sp_win_l12"] = f"直近12カ月（{last}まで）"
     out["sp_win_p12"] = "前年同期12カ月"
 
-    out["sp_r_h"] = (
-        f"楽天市場の各ジャンルでレビュー数が上位の商品の価格中央値は、{RAKUTEN_GENRE[P['lo']][1]}の"
-        f"{sku.loc[P['lo'], 'med_price']:,.0f}円から{RAKUTEN_GENRE[P['hi']][1]}の"
-        f"{sku.loc[P['hi'], 'med_price']:,.0f}円まで")
-    out["sp_r_e"] = (
-        f"{date_label(P['snapshot'], 'day', 'ja')}時点で各ジャンルのレビュー数上位3,000商品を取得し、"
-        f"各商品は1つのジャンルに数えた（1ジャンル{sku['sku_count'].min():,}〜"
-        f"{sku['sku_count'].max():,}商品）。評価のある商品の平均評価は{sku['avg_rating'].min():.2f}〜"
-        f"{sku['avg_rating'].max():.2f}。各ジャンルの評価はカーソルを合わせると表示される。")
-    out["sp_r_x"] = "価格中央値（円）"
-
     _G = LAUNCH_GATE
     out["sp_cap"] = (
         f"{_G['asof']}測定。新商品判定の精度：適合率{_G['precision']}（95%信頼区間"
@@ -1335,5 +1294,4 @@ def _supply_ja(M, REG):
         f"現れない。その他の価格帯は{_G['other_n']}ブランド中{_G['other_unseen']}。"
         f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
     out["sp_src_prtimes"] = source_line(["prtimes"], REG, "ja")
-    out["sp_src_rakuten"] = source_line(["rakuten"], REG, "ja")
     return out

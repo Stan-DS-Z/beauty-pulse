@@ -82,13 +82,6 @@ def test_the_ingredient_title_holds(M):
     assert 0 < I["any_n"] <= I["den_l12"]
 
 
-def test_the_price_title_holds(M):
-    P = M["prices"]
-    f = P["frame"]
-    assert P["lo"] == f["med_price"].idxmin() and P["hi"] == f["med_price"].idxmax()
-    assert f["snapshot_date"].nunique() == 1                             # one week's listings
-
-
 # ── Order and colour ────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("lang", ["en", "jp"])
@@ -133,10 +126,6 @@ def test_each_exhibit_spends_its_accent_on_what_its_title_names(M, headline, REG
     inked = {y for y, col in zip(fig.data[1].y, fig.data[1].marker.color) if col == C["ink"]}
     assert inked == {S["sp_ing"][M["ingredients"]["top"]]}
 
-    fig = figures.fig_supply_prices(M, S)
-    inked = {y for y, col in zip(fig.data[0].y, fig.data[0].marker.color) if col == C["ink"]}
-    assert inked == {S["sp_genre"][M["prices"]["hi"]], S["sp_genre"][M["prices"]["lo"]]}
-
 
 # ── The edition cut-off ─────────────────────────────────────────────────────
 
@@ -171,7 +160,7 @@ def test_the_page_carries_the_frozen_edition(M):
 # ── Copy ────────────────────────────────────────────────────────────────────
 
 _LOOKUPS = ("sp_en", "sp_cat", "sp_origin", "sp_half", "sp_group", "sp_ing",
-            "sp_ing_order", "sp_genre", "sp_win_l12", "sp_win_p12", "sp_kicker")
+            "sp_ing_order", "sp_win_l12", "sp_win_p12", "sp_kicker")
 
 
 def _flat(v):
@@ -203,7 +192,6 @@ def test_every_exhibit_carries_a_source_line_from_the_registry(M, headline, REG,
     S = _S(lang, headline, M, REG)
     code = "ja" if lang == "jp" else "en"
     assert S["sp_src_prtimes"] == sources.source_line(["prtimes"], REG, code)
-    assert S["sp_src_rakuten"] == sources.source_line(["rakuten"], REG, code)
 
 
 @pytest.mark.parametrize("lang", ["en", "jp"])
@@ -241,15 +229,13 @@ def page_json():
             for lang, tree in mod.TREES.items()}
 
 
-def test_the_page_shows_no_multiplier_and_states_the_rakuten_frame(page_json, M):
-    """The pull keeps each genre's 3,000 most-reviewed items, so a ratio of its
-    counts measures the pull (METHODOLOGY Revision 11). The page shows no
-    multiplier, and the price note states the frame and its date."""
-    from bp.sources import date_label
+def test_the_page_shows_no_multiplier_and_no_rakuten_data(page_json):
+    """No Rakuten SKU ratio is published (METHODOLOGY Revision 11), and no
+    Rakuten exhibit is in this edition: its snapshot postdates the cut-off
+    (Revision 18)."""
     for lang, js in page_json.items():
         assert not re.search(r"\d+\.\d+\s*[x×倍]", js), lang
-        assert "3,000" in js, lang
-        assert date_label(M["prices"]["snapshot"], "day", "en" if lang == "en" else "ja") in js, lang
+        assert "Rakuten" not in js and "楽天" not in js, lang
 
 
 def test_the_page_has_no_emoji_tile_or_rimmed_card(page_json):

@@ -51,7 +51,6 @@ def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None):
         "fig_supply_origin": lambda: [figures.fig_supply_origin(SP, S)],
         "fig_supply_groups": lambda: [figures.fig_supply_groups(SP, S)],
         "fig_supply_ingredients": lambda: [figures.fig_supply_ingredients(SP, S)],
-        "fig_supply_prices": lambda: [figures.fig_supply_prices(SP, S)],
     }
 
 
