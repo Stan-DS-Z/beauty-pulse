@@ -1,7 +1,7 @@
-"""Discovery: product launches, rising searches, YouTube, and the review map."""
+"""Discovery: product launches, YouTube, and the review map."""
 
 import dash
-from dash import Input, Output, State, callback, ctx, dcc, html, no_update
+from dash import Input, Output, State, callback, dcc, html
 
 import data_cache
 import ui
@@ -13,16 +13,6 @@ dash.register_page(__name__, path=PATH, name="Discovery", order=5,
                    title="Beauty Pulse · Japanese Beauty Market")
 
 D = data_cache.load()
-
-
-def finding_f4(window_key, S):
-    if window_key == "recent":
-        return ui.finding(S["f4r_title"], S["f4r_body"], "korean")
-    return ui.finding(S["f4c_title"], S["f4c_body"], "skin")
-
-
-def blockc_prompt():
-    return ui.detail_prompt("Click any tile to see detail")
 
 
 def umap_count_caption(df_umap, year_filter):
@@ -92,17 +82,12 @@ def _youtube_terms(S, d):
 
 def build(lang, d):
     S = d.S[lang]
-    df_bc = d.frame("blockc")
     df_umap = d.frame("umap")
-    windows = figures.blockc_window_options(S)
     return html.Div(className="bp-page", lang="ja" if lang == "jp" else "en", children=[
         dcc.Store(id="dc-lang", data=lang),
-        dcc.Store(id="dc-bc-sel", data=None),
         ui.header(S, lang, PATH),
         ui.intro(S["t3_intro"]),
         ui.row(
-            ui.kpi_card(S["t3_m1"], "アヌア", S["t3_m1d"]),
-            ui.kpi_card(S["t3_m2"], "レチノール", S["t3_m2d"]),
             ui.kpi_card(S["t3_m3"], f"{len(df_umap):,} reviews", S["t3_m3d"]),
             cls="cols-3 bp-kpis"),
 
@@ -110,14 +95,6 @@ def build(lang, d):
         *_launch_panel(lang, d),
 
         ui.panel_header(S["t3_p2"], S["t3_p2d"]),
-        ui.chart_head(S["t3_bch"], S["t3_bce"]),
-        ui.pills("dc-bc-window", list(windows.items()), "recent", label="Window"),
-        ui.graph("dc-fig-bc", figures.fig_blockc(df_bc, "recent", S)),
-        html.Div(blockc_prompt(), id="dc-bc-detail"),
-        ui.legend([("Korean brands", C["korean"]), ("Ingredients", C["skin"]),
-                   ("Other", C["ingr"])]),
-        html.Div(finding_f4("recent", S), id="dc-f4"),
-
         ui.chart_head(S["t3_ytch"], S["t3_ytche"]),
         *_youtube_channels(S, d),
         ui.chart_head(S["t3_yttfh"], S["t3_yttfe"]),
@@ -155,43 +132,6 @@ def layout(lang="en", **_):
 def _launch_ingredient(canon, lang):
     return ui.themed(figures.fig_launch_vs_search(D.LAUNCH, D.frame("ingredient_surge"), canon,
                                                   D.S[lang]))
-
-
-@callback(Output("dc-fig-bc", "figure"), Input("dc-bc-window", "value"),
-          State("dc-lang", "data"), prevent_initial_call=True)
-def _blockc(window_key, lang):
-    return ui.themed(figures.fig_blockc(D.frame("blockc"), window_key or "recent", D.S[lang]))
-
-
-@callback(Output("dc-f4", "children"), Input("dc-bc-window", "value"),
-          State("dc-lang", "data"), prevent_initial_call=True)
-def _blockc_finding(window_key, lang):
-    return finding_f4(window_key or "recent", D.S[lang])
-
-
-@callback(Output("dc-bc-sel", "data"),
-          Input("dc-fig-bc", "clickData"), Input("dc-bc-window", "value"),
-          State("dc-bc-sel", "data"), prevent_initial_call=True)
-def _select_search(click, _window, current):
-    """Clicking a tile selects it, clicking it again clears it. A window switch
-    clears it too: the other window's treemap may not hold that search."""
-    if ctx.triggered_id == "dc-bc-window":
-        return None
-    label = ui.clicked_label(click)
-    if label is None:
-        return no_update
-    return None if label == current else label
-
-
-@callback(Output("dc-bc-detail", "children"), Input("dc-bc-sel", "data"),
-          State("dc-bc-window", "value"), State("dc-lang", "data"), prevent_initial_call=True)
-def _search_detail(root, window_key, lang):
-    row = (figures.blockc_detail(D.frame("blockc"), window_key or "recent", root)
-           if root else None)
-    if row is None:
-        return blockc_prompt()
-    sig = figures.blockc_signal_labels(D.S[lang]).get(row["signal_type"], "Other")
-    return ui.blockc_panel(row, sig, figures.SIG_COLORS.get(row["signal_type"], C["ingr"]))
 
 
 @callback(Output("dc-fig-umap", "figure"), Input("dc-umap-year", "value"),

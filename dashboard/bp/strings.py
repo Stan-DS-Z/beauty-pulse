@@ -101,7 +101,7 @@ STRINGS = {
         "f2_body": "",
 
         # ── TAB 3: Discovery ──────────────────────────────────────────────
-        "t3_intro": "Product-launch releases on PR TIMES, rising Google searches in two periods, the largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
+        "t3_intro": "Product-launch releases on PR TIMES, the largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
         # Launch panel. Figure-bearing strings are empty here and rebuilt from LAUNCH.
         "t3_lp": "Product launches", "t3_lpd": "",
         "t3_l1h": "", "t3_l1e": "", "t3_l1ax": "Launch releases, 12-month total",
@@ -117,22 +117,10 @@ STRINGS = {
         "t3_lg_other": "Hair, body and fragrance", "t3_lg_none": "No category word",
         "t3_lpan_core": "Core issuers", "t3_lpan_pf": "Issuers with history from after Sep 2021",
         "t3_lwin_l12": "12 months to ", "t3_lwin_p12": "12 months before",
-        "t3_p2": "Search, video and reviews",
-        "t3_p2d": "Google Trends rising related searches, YouTube beauty channels and their comments, and @cosme reviews.",
+        "t3_p2": "Video and reviews",
+        "t3_p2d": "YouTube beauty channels and their comments, and @cosme reviews.",
 
-        "t3_m1": "Top rising search, 2023–2025",  "t3_m1d": "Korean brand · surfaced from 6 seed terms",
-        "t3_m2": "Top rising search, 2020–2021",  "t3_m2d": "ingredient · surfaced from 5 seed terms",
         "t3_m3": "Review map",                    "t3_m3d": "~69% of reviews fall in one central cluster",
-
-        "t3_bch": "Fastest-rising related searches, 2020–2021 and 2023–2025",
-        "t3_bce": "Rising related searches pulled from 20+ beauty seed terms (e.g. スキンケア, ナイアシンアミド, 口紅). Size = mean normalised rising score × number of seed terms a result surfaced from · colour = type. Brand origins are checked against official sources; unlabel, CERAMIAID and KITEN are Japanese brands.",
-        "t3_win_r": "Recent (2023–2025)", "t3_win_c": "COVID era (2020–2021)",
-        "t3_sig_kr": "Korean brand", "t3_sig_in": "Ingredient", "t3_sig_ot": "Other",
-
-        "f4r_title": "Finding 4 — Anua, a Korean brand, surfaced from more seed terms than any other brand in 2023–2025",
-        "f4r_body":  "2023–2025: Anua (アヌア) surfaced from 6 seed terms. 2020–2021: retinol surfaced from 5 and niacinamide from 4.",
-        "f4c_title": "2020–2021: ingredient names led the fastest-rising searches",
-        "f4c_body":  "Retinol (レチノール), niacinamide (ナイアシンアミド) and ceramide (セラミド) ranked highest among rising searches across seed terms in 2020–2021.",
 
         "t3_ytch":  "Top 15 YouTube beauty channels by total views",
         "t3_ytche": "Colour = skincare or cosmetics focus.",
@@ -236,7 +224,7 @@ STRINGS = {
         "f2_title":  "発見2 — レビュー語彙はわずかに収束した",
         "f2_body": "",
 
-        "t3_intro":  "PR TIMESの新商品リリース、2期間の急上昇Google検索、美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
+        "t3_intro":  "PR TIMESの新商品リリース、美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
         "t3_lp": "新商品リリース", "t3_lpd": "",
         "t3_l1h": "", "t3_l1e": "", "t3_l1ax": "新商品リリース件数、12カ月合計",
         "t3_l2h": "", "t3_l2e": "",
@@ -251,22 +239,10 @@ STRINGS = {
         "t3_lg_other": "ヘア・ボディ・フレグランス", "t3_lg_none": "カテゴリ語なし",
         "t3_lpan_core": "コア発行元", "t3_lpan_pf": "履歴が2021年9月より後に始まる発行元",
         "t3_lwin_l12": "直近12カ月 〜", "t3_lwin_p12": "前年同期12カ月",
-        "t3_p2": "検索・動画・レビュー",
-        "t3_p2d": "Googleトレンドの急上昇関連検索、美容YouTubeのチャンネルとコメント、@cosmeレビュー。",
+        "t3_p2": "動画・レビュー",
+        "t3_p2d": "美容YouTubeのチャンネルとコメント、@cosmeレビュー。",
 
-        "t3_m1":     "急上昇検索1位（2023–2025）", "t3_m1d": "韓国ブランド · 6つの起点語から出現",
-        "t3_m2":     "急上昇検索1位（2020–2021）", "t3_m2d": "成分 · 5つの起点語から出現",
         "t3_m3":     "レビューマップ",  "t3_m3d": "レビューの約69%が中央の一つのクラスタに入る",
-
-        "t3_bch":    "急上昇した関連検索、2020–2021年と2023–2025年",
-        "t3_bce":    "20以上の美容起点語（スキンケア、ナイアシンアミド、口紅など）から急上昇関連検索を取得。サイズ = 正規化した急上昇スコアの平均 × その結果が出現した起点語の数 · 色 = 種別。ブランドの原産国は公式情報で確認しており、アンレーベル・セラミエイド・キテンは日本ブランド。",
-        "t3_win_r":  "直近（2023–2025）", "t3_win_c": "コロナ期（2020–2021）",
-        "t3_sig_kr": "韓国ブランド", "t3_sig_in": "成分", "t3_sig_ot": "その他",
-
-        "f4r_title": "発見4 — 2023〜2025年、韓国ブランドのアヌアはブランド別で最多の起点語から出現した",
-        "f4r_body":  "2023〜2025年：アヌアは6つの起点語から出現。2020〜2021年：レチノールは5つ、ナイアシンアミドは4つ。",
-        "f4c_title": "2020〜2021年：急上昇検索の上位は成分名",
-        "f4c_body":  "2020〜2021年、レチノール、ナイアシンアミド、セラミドが複数の起点語で急上昇検索の上位に入った。",
 
         "t3_ytch":   "総視聴数上位15の美容YouTubeチャンネル",
         "t3_ytche":  "色 = スキンケア／コスメのどちらを主に扱うか。",
@@ -1357,8 +1333,6 @@ SEARCH_TERM = {
 # Readings for the kanji terms, so Japanese lists follow 五十音 order.
 _READING = {"美容液": "びようえき", "化粧水": "けしょうすい", "洗顔": "せんがん", "乳液": "にゅうえき",
             "日焼け止め": "ひやけどめ", "口紅": "くちべに", "化粧品": "けしょうひん"}
-# Rising-search roots named in the copy that are not an active.
-ROOT_EN = {"アヌア": "Anua"}
 DEMAND_GROUPS = ("active", "category", "umbrella")
 
 
@@ -1377,14 +1351,6 @@ def _term_name(term, M, lang, cap=True):
     return name if (cap or lang != "en" or "(" in name) else name[0].lower() + name[1:]
 
 
-def _root_name(root, M, lang):
-    t = M["terms"]
-    by_ja = dict(zip(t["label_ja"], t["label_short_en"]))
-    if lang != "en":
-        return root
-    return ROOT_EN.get(root) or by_ja.get(root, root)
-
-
 def _sorted_terms(terms, M, lang):
     if lang == "en":
         return sorted(terms, key=lambda x: _term_name(x, M, "en").lower())
@@ -1393,22 +1359,21 @@ def _sorted_terms(terms, M, lang):
 
 def demand_strings(lang, M, REG):
     """The Demand page's copy in one language, and the lookups its figures use:
-    the language (dm_en), each term's name (dm_term), the change chart's order
-    by group (dm_order) and each root's name (dm_root)."""
+    the language (dm_en), each term's name (dm_term) and the change chart's
+    order by group (dm_order)."""
     out = _demand_en(M, REG) if lang == "en" else _demand_ja(M, REG)
     out["dm_en"] = lang == "en"
     out["dm_term"] = {t: _term_name(t, M, lang) for t in M["change"].index}
     ch = M["change"]
     out["dm_order"] = [t for g in DEMAND_GROUPS
                        for t in _sorted_terms(list(ch.index[ch["kind"] == g]), M, lang)]
-    out["dm_root"] = {r: _root_name(r, M, lang) for r in M["related"]["tiles"]["root"]}
     return out
 
 
 def _demand_en(M, REG):
     from .sources import source_line
     y0, y1 = M["window"]
-    C, P, K, MK, R = M["changes"], M["pair"], M["keys"], M["makeup"], M["related"]
+    C, P, K, MK = M["changes"], M["pair"], M["keys"], M["makeup"]
     ed = pd.Timestamp(EDITION + "-01")
     last = M["cross"]["week_start"].max()
     nm = lambda t, cap=False: _term_name(t, M, "en", cap)  # noqa: E731
@@ -1483,21 +1448,7 @@ def _demand_en(M, REG):
     out["dm_m_base"] = "2019 = 100"
     out["dm_m_y"] = "Search interest, own 2019 = 100"
 
-    kind = "a Korean brand, " if R["brand_type"] == "korean_brand" else ""
-    (c1, n1), (c2, n2) = R["covid"]
-    out["dm_r_h"] = (
-        f"{_root_name(R['brand'], M, 'en')}, {kind}surfaced in rising searches from "
-        f"{_NUM_EN[R['brand_seeds']]} of the {_NUM_EN[R['n_seeds']]} seed terms, more than any "
-        "other brand")
-    out["dm_r_e"] = (
-        f"Google Trends rising related searches for {_NUM_EN[R['n_seeds']]} seed terms, from "
-        f"{_RELATED_EN['recent']}: the {len(R['tiles'])} with the highest score. Tile size: mean "
-        "normalised rising score × the number of seed terms a search surfaced from. In "
-        f"{_RELATED_EN['covid']}, {_root_name(c1, M, 'en').lower()} surfaced from "
-        f"{_NUM_EN[n1]} seed terms and {_root_name(c2, M, 'en').lower()} from {_NUM_EN[n2]}.")
-
     out["dm_src_trends"] = source_line(["trends"], REG)
-    out["dm_src_related"] = source_line(["trends_related"], REG)
     return out
 
 
@@ -1506,7 +1457,7 @@ def _demand_ja(M, REG):
     。, the site's terms (検索関心度, カテゴリ語)."""
     from .sources import source_line
     y0, y1 = M["window"]
-    C, P, K, MK, R = M["changes"], M["pair"], M["keys"], M["makeup"], M["related"]
+    C, P, K, MK = M["changes"], M["pair"], M["keys"], M["makeup"]
     ed = pd.Timestamp(EDITION + "-01")
     last = M["cross"]["week_start"].max()
     nm = lambda t: _term_name(t, M, "jp")  # noqa: E731
@@ -1574,17 +1525,7 @@ def _demand_ja(M, REG):
     out["dm_m_base"] = "2019年＝100"
     out["dm_m_y"] = "検索関心度（各語の2019年＝100）"
 
-    kind = "韓国ブランドの" if R["brand_type"] == "korean_brand" else ""
-    (c1, n1), (c2, n2) = R["covid"]
-    out["dm_r_h"] = (f"{kind}{R['brand']}は、起点語{R['n_seeds']}語のうち{R['brand_seeds']}語の"
-                     "急上昇関連検索に現れ、ブランドで最多")
-    out["dm_r_e"] = (
-        f"Googleトレンドの急上昇関連検索、起点語{R['n_seeds']}語、{_RELATED_JA['recent']}以降。"
-        f"スコア上位{len(R['tiles'])}件。タイルの大きさ：正規化した急上昇スコアの平均×その検索が"
-        f"現れた起点語の数。{_RELATED_JA['covid']}では、{c1}が{n1}語、{c2}が{n2}語から現れた。")
-
     out["dm_src_trends"] = source_line(["trends"], REG, "ja")
-    out["dm_src_related"] = source_line(["trends_related"], REG, "ja")
     return out
 
 
@@ -1592,8 +1533,3 @@ def _MASK_LOW(a):
     """The mask year in which lipstick search was lowest."""
     return int(a.loc[list(MASK_YEARS), "口紅"].idxmin())
 
-
-# The related-search windows as NB01d requests them (TIMEFRAME_RISE and
-# TIMEFRAME_RISE2). The stored file carries neither window's dates.
-_RELATED_EN = {"recent": "January 2022", "covid": "January 2020 – December 2022"}
-_RELATED_JA = {"recent": "2022年1月", "covid": "2020年1月〜2022年12月"}

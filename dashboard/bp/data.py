@@ -438,9 +438,6 @@ def load_makeup_rebound(ASSETS: Path):
 def load_review_slope(ASSETS: Path):
     return pd.read_csv(ASSETS / "nb07_review_slope.csv")
 
-def load_blockc(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb07_blockc.csv")
-
 def load_umap(ASSETS: Path):
     return pd.read_csv(ASSETS / "umap_embedding.csv")
 

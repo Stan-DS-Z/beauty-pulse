@@ -1,7 +1,7 @@
 """The Demand page: its figures, the directions its copy states, and the page.
 
-The Demand copy says rose, fell, narrowed, above, below, lowest and more than
-any other, and the data decides each. These tests hold the data to every
+The Demand copy says rose, fell, narrowed, above, below and lowest, and the
+data decides each. These tests hold the data to every
 direction the copy states, so a refresh that turns one fails here and the
 sentence is rewritten for the new edition instead of shipping wrong.
 """
@@ -75,19 +75,6 @@ def test_the_makeup_note_holds(M):
     assert last - rel == 2                                               # "two years after"
 
 
-def test_the_related_title_and_note_hold(M):
-    R = M["related"]
-    bc = data.load_blockc(E)
-    recent = bc[(bc["window"] == "recent") & (bc["metric"] > 0)]
-    others = recent[(recent["signal_type"] != "ingredient") & (recent["root"] != R["brand"])]
-    assert R["brand_seeds"] > others["seed_count"].max()                # "more than any other brand"
-    assert R["brand_type"] == "korean_brand"                            # "a Korean brand"
-    covid = bc[bc["window"] == "covid"].sort_values("seed_count", ascending=False)
-    n = list(covid["seed_count"][:3])
-    assert n[0] > n[1] > n[2]                                            # the two named are the two largest
-    assert R["brand"] in set(R["tiles"]["root"])
-
-
 # ── Order and colour ────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize("lang", ["en", "jp"])
@@ -122,9 +109,6 @@ def test_each_exhibit_spends_its_one_accent_on_what_its_title_names(M, headline,
                        (figures.fig_demand_ingredients(M, S), S["dm_term"][demand.LONG_ACTIVE]),
                        (figures.fig_demand_makeup(M, S), S["dm_m_names"]["口紅"])):
         assert [t.name for t in fig.data if t.line.color == C["ink"]] == [named]
-    tm = figures.fig_demand_related(M, S).data[0]
-    inked = [lab for lab, col in zip(tm.labels, tm.marker.colors) if col == C["ink"]]
-    assert inked == [S["dm_root"][M["related"]["brand"]]]
 
 
 # ── The edition cut-off ─────────────────────────────────────────────────────
@@ -154,7 +138,7 @@ def test_the_page_carries_the_frozen_edition(M):
 
 # ── Copy ────────────────────────────────────────────────────────────────────
 
-_LOOKUPS = ("dm_en", "dm_term", "dm_order", "dm_root", "dm_c_hover", "dm_p_names",
+_LOOKUPS = ("dm_en", "dm_term", "dm_order", "dm_c_hover", "dm_p_names",
             "dm_m_names", "dm_c_groups", "dm_kicker")
 
 
@@ -183,7 +167,6 @@ def test_every_exhibit_carries_a_source_line_from_the_registry(M, headline, REG,
     S = _S(lang, headline, M, REG)
     code = "ja" if lang == "jp" else "en"
     assert S["dm_src_trends"] == sources.source_line(["trends"], REG, code)
-    assert S["dm_src_related"] == sources.source_line(["trends_related"], REG, code)
 
 
 @pytest.mark.parametrize("lang", ["en", "jp"])

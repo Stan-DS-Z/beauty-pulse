@@ -53,9 +53,11 @@ def test_every_source_says_how_current_it_is(registry):
 def test_used_on_names_real_pages(src, registry):
     for key, s in registry.items():
         assert set(s.used_on) <= set(src.PAGES), key
-    # Collected, and used by no finding or chart (README, METHODOLOGY caveat 7).
-    assert registry["amazon"].used_on == ()
-    assert all(s.used_on for k, s in registry.items() if k != "amazon")
+    # Collected, and used by no finding or chart (README, METHODOLOGY caveats 6
+    # and 7; Revision 17).
+    unused = ("amazon", "trends_related")
+    assert all(registry[k].used_on == () for k in unused)
+    assert all(s.used_on for k, s in registry.items() if k not in unused)
 
 
 def test_no_source_is_dated_after_its_collection(registry):

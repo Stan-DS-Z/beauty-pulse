@@ -308,25 +308,5 @@ def sku_panel(row_, colour):
     ])
 
 
-def blockc_panel(row_, sig_label, colour):
-    """The rising-search tile detail, from bp.figures.blockc_detail()."""
-    seed_word = "seed" if row_["seed_count"] == 1 else "seeds"
-    return html.Div(className="bp-detail bp-detail-stack", style={"borderLeftColor": colour},
-                    children=[
-        html.Div(className="bp-detail-head", children=[
-            html.Span(row_["root"], className="bp-detail-root"),
-            html.Span(sig_label, className="bp-detail-type", style={"color": colour}),
-        ]),
-        html.Div(className="bp-detail-stats", children=[
-            html.Div([html.Div("Signal strength", className="bp-upper"),
-                      html.Div(f"{row_['metric']:.3f}", className="bp-strong")]),
-            html.Div([html.Div("Seed queries", className="bp-upper"),
-                      html.Div(f"{row_['seed_count']} {seed_word}", className="bp-strong")]),
-        ]),
-        html.Div([html.Div("Appears in searches for", className="bp-upper"),
-                  html.Div(row_["seeds"], className="bp-seeds")]),
-    ])
-
-
 def detail_prompt(text):
     return html.Div(html.Span(text), className="bp-detail-prompt")

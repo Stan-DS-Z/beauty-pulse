@@ -1,7 +1,7 @@
 """Demand: Google Trends search for the actives, the category words and the
-umbrella terms; 化粧品 against スキンケア on one scale; the ingredient and
-makeup series; and the rising related searches. A report page: no controls,
-one edition date, every exhibit a result with its source line."""
+umbrella terms; 化粧品 against スキンケア on one scale; and the ingredient and
+makeup series. A report page: no controls, one edition date, every exhibit a
+result with its source line."""
 
 import dash
 from dash import html
@@ -17,9 +17,9 @@ dash.register_page(__name__, path=PATH, name="Demand", order=2,
 D = data_cache.load()
 
 
-def _exhibit(S, key, graph_id, figure, src="dm_src_trends"):
+def _exhibit(S, key, graph_id, figure):
     return html.Div([ui.chart_head(S[f"dm_{key}_h"], S[f"dm_{key}_e"]),
-                     ui.graph(graph_id, figure), ui.source(S[src])])
+                     ui.graph(graph_id, figure), ui.source(S["dm_src_trends"])])
 
 
 def build(lang, d):
@@ -33,7 +33,6 @@ def build(lang, d):
         _exhibit(S, "p", "dm-fig-pair", figures.fig_demand_pair(M, S)),
         ui.row(_exhibit(S, "i", "dm-fig-ingredients", figures.fig_demand_ingredients(M, S)),
                _exhibit(S, "m", "dm-fig-makeup", figures.fig_demand_makeup(M, S))),
-        _exhibit(S, "r", "dm-fig-related", figures.fig_demand_related(M, S), "dm_src_related"),
     ])
 
 

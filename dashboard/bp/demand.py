@@ -1,6 +1,6 @@
 """The Demand page: Google Trends search for the tracked actives, the
 category words and the two umbrella terms; 化粧品 against スキンケア on one
-scale; the ingredient and makeup series; and the rising related searches.
+scale; and the ingredient and makeup series.
 
 A report page: every figure is computed from the frozen edition, cut at the
 edition's cut-off (sources.CUTOFF). Changes between terms run over the
@@ -15,7 +15,7 @@ from pathlib import Path
 import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
-from .data import load_attention_annual, load_blockc, load_makeup_rebound, load_trends_crossover
+from .data import load_attention_annual, load_makeup_rebound, load_trends_crossover
 from .funnel import CATEGORIES, funnel_window
 
 # block_A holds the tracked actives, one word per category and the two
@@ -36,9 +36,6 @@ MAKEUP_BASE = 2019
 MASK_RELAXED = "2023-03-13"
 MASK_YEARS = (2020, 2021, 2022)
 SMOOTH_MONTHS = 3
-
-# The related-search exhibit: the most tiles drawn, by the file's metric.
-RELATED_TILES = 20
 
 
 def _cut(d: pd.DataFrame, cutoff, col="week_start") -> pd.DataFrame:
@@ -114,20 +111,5 @@ def compute_demand(ASSETS: Path, cutoff: str) -> dict:
     makeup = dict(frame=mk, annual=rb, last=int(rb.index.max()),
                   relaxed=pd.Timestamp(MASK_RELAXED))
 
-    # ── Rising related searches: the recent window's tiles, the brand with
-    # the most seed terms, and the two roots with the most in the earlier window
-    bc = load_blockc(ASSETS)
-    seeds = sorted({s.strip() for x in bc["seeds"].dropna() for s in str(x).split(",")})
-    recent = bc[(bc["window"] == "recent") & (bc["metric"] > 0)]
-    tiles = recent.nlargest(RELATED_TILES, "metric").reset_index(drop=True)
-    others = recent[recent["signal_type"] != "ingredient"]
-    top = others.loc[others["seed_count"].idxmax()]
-    covid = bc[bc["window"] == "covid"].nlargest(2, "seed_count")
-    related = dict(tiles=tiles, n_seeds=len(seeds), seeds=seeds, brand=top["root"],
-                   brand_seeds=int(top["seed_count"]), brand_type=top["signal_type"],
-                   runner_up=int(others.loc[others["root"] != top["root"], "seed_count"].max()),
-                   covid=list(zip(covid["root"], covid["seed_count"].astype(int))))
-
     return dict(cutoff=cutoff, window=(y0, y1), change=change, changes=changes,
-                terms=terms, pair=pair, cross=cross, ing=ing, keys=keys, makeup=makeup,
-                related=related)
+                terms=terms, pair=pair, cross=cross, ing=ing, keys=keys, makeup=makeup)

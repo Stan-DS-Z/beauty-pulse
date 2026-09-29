@@ -57,8 +57,11 @@ DECLARED = {
                        ("market",)),
     "trends":         ("Google Trends JP", "Googleトレンド（日本）", "series",
                        ("brief", "demand", "timing", "funnel", "categories")),
+    # Collected, and used by no page: the stored pull records no date and no
+    # window, and its seed list sets how many seeds a result can surface from
+    # (METHODOLOGY Revision 17). A re-pull is planned for the next edition.
     "trends_related": ("Google Trends related searches", "Googleトレンド 関連キーワード",
-                       "snapshot", ("demand",)),
+                       "snapshot", ()),
     "prtimes":        ("PR TIMES", "PR TIMES", "series",
                        ("brief", "supply", "timing", "funnel", "categories")),
     "rakuten":        ("Rakuten Ichiba", "楽天市場", "series", ("supply",)),

@@ -231,26 +231,6 @@ def test_launch_ingredient_dropdown_redraws_the_pair(client, pages):
     assert fig["data"][0]["y"] != _tree(default)["data"][0]["y"]
 
 
-def test_window_pills_switch_the_treemap_and_the_finding(client):
-    fig = _post(client, "dc-fig-bc.figure", [_in("dc-bc-window", "value", "covid")],
-                [_in("dc-lang", "data", "en")])
-    assert fig["data"][0]["type"] == "treemap"
-    finding = _post(client, "dc-f4.children", [_in("dc-bc-window", "value", "covid")],
-                    [_in("dc-lang", "data", "en")])
-    assert "2020–2021" in _text(finding)
-
-
-def test_blockc_tile_click_opens_its_detail(client):
-    sel = _post(client, "dc-bc-sel.data",
-                [_in("dc-fig-bc", "clickData", {"points": [{"label": "アヌア"}]}),
-                 _in("dc-bc-window", "value", "recent")],
-                [_in("dc-bc-sel", "data", None)])
-    assert sel == "アヌア"
-    detail = _post(client, "dc-bc-detail.children", [_in("dc-bc-sel", "data", "アヌア")],
-                   [_in("dc-bc-window", "value", "recent"), _in("dc-lang", "data", "jp")])
-    assert "アヌア" in _text(detail) and "Seed queries" in _text(detail)
-
-
 def test_umap_year_pills_filter_the_map_and_the_count(client):
     fig = _post(client, "dc-fig-umap.figure", [_in("dc-umap-year", "value", 2023)],
                 [_in("dc-lang", "data", "en")])
@@ -268,7 +248,6 @@ FIGURE_CALLBACKS = {
     "sh-fig2": ("sh-ingr", ["グルタチオン", "レチナール"], "sh-lang"),
     "sh-fig3": ("sh-lens", "med_price", "sh-lang"),
     "dc-fig-l5": ("dc-launch-ing", None, "dc-lang"),
-    "dc-fig-bc": ("dc-bc-window", "covid", "dc-lang"),
     "dc-fig-umap": ("dc-umap-year", 2023, "dc-lang"),
 }
 
@@ -358,6 +337,19 @@ def test_stylesheet_tokens_mirror_the_theme():
         assert tokens.get(key.replace("_", "-"), "").upper() == hexval.upper(), key
     from bp.theme import FONT
     assert " ".join(re.search(r"--font:\s*([^;]+);", root).group(1).split()) == FONT
+
+
+@pytest.mark.parametrize("path", list(PAGES))
+@pytest.mark.parametrize("lang", ["en", "jp"])
+def test_no_page_shows_rising_related_searches(pages, path, lang):
+    """The related-search pull records no date and no window, and its count
+    across seed terms follows the seed list (METHODOLOGY Revision 17); no page
+    shows it until a dated re-pull brings it back."""
+    text = json.dumps(_tree(pages[path].TREES[lang]), ensure_ascii=False)
+    for tell in ("seed term", "起点語", "rising related", "rising search", "急上昇",
+                 "related search", "関連検索", "アヌア"):
+        assert tell.lower() not in text.lower(), (path, lang, tell)
+    assert not re.search(r"\bAnua\b", text), (path, lang)
 
 
 def test_every_tag_in_the_string_tables_is_one_the_renderer_supports(dash_app):
