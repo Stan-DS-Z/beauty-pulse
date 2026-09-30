@@ -30,10 +30,22 @@ def test_the_docs_publish_no_sku_ratio(docs):
 def test_the_docs_use_no_retired_measure(docs):
     """No phrasing of a retired measure in README or METHODOLOGY (outside the
     revision log, which records them). See tests/retired_phrases.py."""
-    from retired_phrases import RETIRED
+    from retired_phrases import RETIRED, plain
+    text = plain(docs)
     hits = [(why, m.group(0)) for pat, why, *_ in RETIRED
-            for m in re.finditer(pat, docs, re.I)]
+            for m in re.finditer(pat, text, re.I)]
     assert not hits, hits
+
+
+def test_markdown_emphasis_does_not_hide_a_retired_phrase():
+    """The phrasing NB07's introduction carried until 30 September 2026: the
+    asterisks around "attention" kept it from matching."""
+    from retired_phrases import RETIRED, plain
+    was = "Multiple independent *attention* signals point the same direction"
+    hit = lambda t: [why for pat, why, *_ in RETIRED if re.search(pat, t, re.I)]   # noqa: E731
+    assert hit(plain(was))
+    assert plain("**a** _b_ ***c*** x*y") == "a b c x*y"
+    assert plain("`tier_predicted` and snake_case stay") == "`tier_predicted` and snake_case stay"
 
 
 def test_committed_notebooks_use_no_retired_measure():
@@ -41,7 +53,7 @@ def test_committed_notebooks_use_no_retired_measure():
     import json
     import subprocess
     from pathlib import Path
-    from retired_phrases import RETIRED, SITE_ONLY
+    from retired_phrases import RETIRED, SITE_ONLY, plain
     root = Path(__file__).resolve().parent.parent
     try:
         tracked = subprocess.run(["git", "ls-files", "notebooks/*.ipynb"], cwd=root,
@@ -63,7 +75,7 @@ def test_committed_notebooks_use_no_retired_measure():
                 if SITE_ONLY in scope:
                     continue
                 for tx in texts:
-                    for m in re.finditer(pat, tx, re.I):
+                    for m in re.finditer(pat, plain(tx), re.I):
                         hits.append((nb_path, i, why, m.group(0)))
     assert not hits, hits
 

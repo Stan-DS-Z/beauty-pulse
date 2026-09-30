@@ -136,12 +136,12 @@ def test_version_reports_the_build_and_the_data_months(client):
 @pytest.mark.parametrize("lang", ["en", "jp"])
 def test_no_page_uses_a_retired_phrase(pages, path, lang):
     import data_cache
-    from retired_phrases import EXEMPT, RETIRED
-    text = _text(_tree(pages[path].TREES[lang]))
+    from retired_phrases import EXEMPT, RETIRED, plain
+    text = plain(_text(_tree(pages[path].TREES[lang])))
     S = data_cache.load().S[lang]
     for key in EXEMPT.get(path, ()):
-        assert S[key] in text, key       # an exemption names a line the page carries
-        text = text.replace(S[key], "")
+        assert plain(S[key]) in text, key     # an exemption names a line the page carries
+        text = text.replace(plain(S[key]), "")
     hits = [(why, m.group(0)) for pat, why, *_ in RETIRED
             for m in re.finditer(pat, text, re.I)]
     assert not hits, hits

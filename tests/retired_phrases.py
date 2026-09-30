@@ -11,7 +11,27 @@ Notebook cells headed "## Revisions" record removals by name and are not
 checked.
 """
 
+import re
+
 SITE_ONLY = "site only"
+
+# Markdown emphasis inside a phrase must not hide it: "independent *attention*
+# signals" is the phrase "independent attention signals". An underscore is
+# emphasis only at a word's edge, so snake_case names are left alone.
+_EMPHASIS = (re.compile(r"(\*{1,3})(?=\S)(.+?)(?<=\S)\1"),
+             re.compile(r"(?<!\w)(_{1,3})(?=\S)(.+?)(?<=\S)\1(?!\w)"))
+
+
+def plain(text: str) -> str:
+    """The text with * and _ emphasis markers removed, as a reader sees it.
+    Every check matches the patterns below against this."""
+    prev = None
+    while prev != text:
+        prev = text
+        for pat in _EMPHASIS:
+            text = pat.sub(r"\2", text)
+    return text
+
 
 RETIRED = [
     (r"shelf[- ]?(share|space)|棚占有|棚シェア|SKU棚",
@@ -22,7 +42,7 @@ RETIRED = [
      "'five sources': three of them were retired (Revisions 2, 3, 11)"),
     (r"review[- ]volume[^.。]{0,30}\bis a (market )?signal",
      "@cosme review-volume share as a signal (Revision 2)"),
-    (r"(multiple|several|two|three|five) independent (signals|sources)|複数の独立した",
+    (r"(multiple|several|two|three|five) independent (\w+ )?(signals|sources)|複数の独立した",
      "'independent signals': the within-side instruments are not (Source roles)"),
     (r"YouTube comments?[^.。]{0,40}(moved toward|outnumbered)|YouTubeコメント[^。]{0,20}比重",
      "YouTube comment counts across sides: set by the query list (Source roles)"),
