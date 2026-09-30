@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from . import seasonal
 from .data import (METI_BREAK, METI_MAKE, METI_SKIN, METI_SUN, cut_months,
                    load_meti_annual, load_meti_monthly)
 
@@ -53,12 +54,11 @@ def _yen_per_kg(ASSETS: Path, cutoff) -> pd.DataFrame:
 
 
 def _peak_months(series: pd.Series) -> dict:
-    """Peak month of each full calendar year: {month: [years]}, in the order
-    the months first peak."""
+    """The highest-ratio month of each full year of the seasonal window
+    (bp/seasonal.py): {month: [years]}, in the order the months first peak."""
     out = {}
-    for y, s in series.groupby(series.index.year):
-        if len(s) == 12:
-            out.setdefault(int(s.idxmax().month), []).append(int(y))
+    for y, m in seasonal.year_peaks(series).items():
+        out.setdefault(m, []).append(y)
     return out
 
 
@@ -109,7 +109,8 @@ def compute_market(ASSETS: Path, cutoff: str) -> dict:
                    make=_chg(v.loc[METI_MAKE, ytd_y - 1].sum(), v.loc[METI_MAKE, ytd_y].sum()),
                    total=_chg(v.loc[items, ytd_y - 1].sum(), v.loc[items, ytd_y].sum()))
 
-    # ── Groups by month, and each group's peak month in each full year
+    # ── Groups by month, and each group's peak month in each full year of the
+    # seasonal window
     monthly, _ = load_meti_monthly(ASSETS, cutoff)
     peaks = {g: _peak_months(monthly[g]) for g in ("skincare", "makeup")}
     last = monthly.index.max()

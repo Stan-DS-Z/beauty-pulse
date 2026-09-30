@@ -61,7 +61,8 @@ def category_table(B, S):
             html.Td(f"{r['launch_s0']:.1f} → {r['launch_s1']:.1f}%", className="num"),
             html.Td([f"{r['kr_s']:.0f}% " if r["kr_n"] else "— ",
                      html.Span(f"({r['kr_n']})", className="muted")], className="num"),
-            html.Td(S["b_t_monsep"].join(mon[m] for m in r["peak"])),
+            html.Td(mon[r["peak"]]) if r["peak"] else
+            html.Td("—", title=S["b_t_nopeak"], className="muted"),
         ]))
     return html.Div(html.Table([head, html.Tbody(body)], className="bp-table"),
                     className="bp-tablewrap")

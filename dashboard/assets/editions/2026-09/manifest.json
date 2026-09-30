@@ -30,6 +30,7 @@
   "prtimes_launches.csv": "1ecbecf9cbf722826bdc70725c95ffdb1833d138db69c4cdb1e573eaa38b86e5",
   "review_map.csv": "22b71e5c0f12e0dda692619e6a92c4abbecacfd9f3fffc5bfdfedd3fd434f50f",
   "source_dates.csv": "7fbe703615713bb776ce78a1a52debe1e7cd322117a883002ae6bb08378d740d",
+  "trends_monthly.csv": "331c388fbe72456d9d679e4656d8452bd527a949362403e2086927756b2f3aa4",
   "umap_embedding.csv": "fc059d488685e02bcacbd1499233dcc90a3ca8adb9f98c2a62768d6433b9fe1c",
   "vocab_overlap.csv": "590882c6c5cfb843d6779a8aaf00673dcf5d983444d6470b31a5db6504ec108f",
   "wordcloud_2019.png": "c39c11be0d78265d4a4dab9006b5ebfa2d0c93fa093c3aaacdb4b2b278875071",
@@ -57,6 +58,13 @@
     "convergence_periods.csv"
    ],
    "why": "The convergence test rebuilt on one design, with the product-matched and phrase checks (build_convergence.py; METHODOLOGY Revision 20). Derived only from @cosme reviews collected before the cut-off; no existing file changed."
+  },
+  {
+   "date": "2026-09-30",
+   "added": [
+    "trends_monthly.csv"
+   ],
+   "why": "Every month of the 27 September 2026 block_A pull, the same pull as nb04b_attention_monthly.csv, to August 2026: the centred 12-month average behind the seasonal ratio needs the months after 2025 (build_attention_annual.py; METHODOLOGY Revision 21). No existing file changed."
   }
  ]
 }

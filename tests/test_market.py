@@ -88,12 +88,10 @@ def test_the_break_footnote_holds(M):
         assert not r["above"], li                                       # no line is above its range
 
 
-def test_the_peak_caption_names_every_full_year(M):
-    monthly = M["monthly"]
-    n = monthly.groupby(monthly.index.year).size()
-    full = sorted(int(y) for y in n[n == 12].index)
+def test_the_peak_caption_names_every_full_year_of_the_seasonal_window(M):
+    from bp.seasonal import FULL_YEARS
     for g, peaks in M["peaks"].items():
-        assert sorted(y for ys in peaks.values() for y in ys) == full, g
+        assert sorted(y for ys in peaks.values() for y in ys) == list(FULL_YEARS), g
 
 
 def test_no_skincare_yen_change_crosses_the_break(M, headline, REG):

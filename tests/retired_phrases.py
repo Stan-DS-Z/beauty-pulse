@@ -45,4 +45,8 @@ RETIRED = [
      r"語彙[^。]{0,10}収束|収束[^。]{0,10}語彙|0\.252\s*(→|->|to)\s*0\.317",
      "skincare-makeup vocabulary convergence across periods: product-matched it does not hold "
      "(Revision 20); NB06 and NB07 keep the test", SITE_ONLY),
+    (r"launch(es| releases)? peak(s|ed)? in|launch releases[^.。]{0,30}\bpeak|"
+     r"(新商品)?リリースは[^。]{0,20}月に多い|リリースのピーク",
+     "peak months of launch releases: each year's months are consistent with an even spread "
+     "(chi-square, 7 of 8 side-years; Revision 21)"),
 ]

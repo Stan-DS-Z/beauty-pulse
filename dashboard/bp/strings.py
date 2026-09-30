@@ -8,6 +8,7 @@ import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
 from .demand import MASK_YEARS
+from .seasonal import FULL_YEARS
 from .supply import HELD_PCT, KEY_CATEGORY
 from .data import LAUNCH_GATE, LAUNCH_WINDOW_START
 from .sources import EDITION
@@ -136,6 +137,40 @@ def _half_ja(h):
     return f"{h[:4]}年{'1〜6' if h.endswith('1') else '7〜12'}月"
 
 
+def _same(d):
+    return len(set(d.values())) == 1
+
+
+def _timing_en(T):
+    """Sunscreen's shipment and search peak runs in each full year, with the
+    offset, and how many lines ship most in the same month every year."""
+    ys, sh, se, off = list(T["ship"]), T["ship"], T["search"], T["offset"]
+    rng = lambda r: f"{_MON_EN[r[0]]}–{_MON_EN[r[1]]}"  # noqa: E731
+    if _same(sh) and _same(se):
+        a, b, o = sh[ys[0]], se[ys[0]], off[ys[0]]
+        first = (f"Sunscreen shipments peak <b>{rng(a)}</b> and search peaks {rng(b)}, "
+                 f"{_NUM_EN[o]} months later, in every year from {ys[0]} to {ys[-1]}.")
+    else:
+        first = ("Sunscreen shipments and search peak " + "; ".join(
+            f"{rng(sh[y])} and {rng(se[y])} in {y}" for y in ys) + ".")
+    return (f"{first} {_NUM_EN[T['n_stable']].capitalize()} of the {T['n_lines']} product lines "
+            "ship most in the same month, give or take one, every year.")
+
+
+def _timing_ja(T):
+    ys, sh, se, off = list(T["ship"]), T["ship"], T["search"], T["offset"]
+    rng = lambda r: f"{r[0]}〜{r[1]}月"  # noqa: E731
+    if _same(sh) and _same(se):
+        a, b, o = sh[ys[0]], se[ys[0]], off[ys[0]]
+        first = (f"日焼け止めの出荷金額は<b>{rng(a)}</b>、検索は{rng(b)}にピークとなり、"
+                 f"{ys[0]}〜{ys[-1]}年の各年で{o}カ月の差がある。")
+    else:
+        first = ("日焼け止めの出荷金額と検索のピークは、" + "、".join(
+            f"{y}年が{rng(sh[y])}と{rng(se[y])}" for y in ys) + "である。")
+    return (f"{first}{T['n_lines']}品目のうち{T['n_stable']}品目は、毎年同じ月（前後1カ月以内）に"
+            "出荷金額が最も多い。")
+
+
 def brief_strings(lang, B, H, REG):
     """The Brief page's copy in one language. Besides text it carries two
     lookups for the page and its figures: which LAUNCH_CAT name to use
@@ -193,11 +228,7 @@ def _brief_ja(B, H, REG):
     out["b_kf_consumer"] = (
         f"@cosmeレビューのスキンケア上位{H['vocab_top']}語のうち<b>{H['vocab_shared']}語</b>が、"
         f"YouTubeのスキンケア動画へのコメントの上位{H['vocab_top']}語にも入る。")
-    (a0, a1, lo, hi), (b0, b1, blo, bhi) = T["ship"], T["search"]
-    out["b_kf_timing"] = (
-        f"日焼け止めの出荷金額は<b>{a0}〜{a1}月</b>にピークとなる（季節指数{lo:.0f}〜{hi:.0f}、"
-        f"月平均 = 100）。検索のピークは{b0}〜{b1}月である（{blo:.0f}〜{bhi:.0f}）。メイクの新商品"
-        f"リリースは{_and_ja(f'{m}月' for m in T['makeup_peaks'])}に多い（{y0}〜{y1}年）。")
+    out["b_kf_timing"] = _timing_ja(T)
     out["b_kf_labels"] = {"market": "市場", "demand": "需要", "supply": "供給",
                           "consumer": "消費者", "timing": "季節性"}
 
@@ -239,15 +270,16 @@ def _brief_ja(B, H, REG):
     out["b_t_e"] = (
         "PR TIMESの新商品リリースと経産省の品目の双方にあるカテゴリ。検索はカテゴリ語を追跡して"
         f"いる場合のみ表示する。韓国系発行元：カテゴリの{y1}年のコア発行元の新商品リリースに占める"
-        f"比率、括弧内は件数。出荷ピーク：{y0}〜{y1}年の季節指数が最も高い2カ月。")
+        f"比率、括弧内は件数。出荷ピーク：出荷金額を中心化12カ月移動平均で割った比率が最も高い月で、"
+        f"{FULL_YEARS[0]}〜{FULL_YEARS[-1]}年の各年のピークがその前後1カ月以内にある品目のみ示す。")
     out["b_t_cols"] = [("カテゴリ", ""), ("経産省の品目", ""), (f"{y1}年の金額", "億円"),
                        ("金額", f"{y0}→{y1}年"), ("個数", f"{y0}→{y1}年"),
                        ("1個あたり金額", f"{y0}→{y1}年"),
                        ("検索", f"{y0}→{y1}年、ポイント"), ("リリース構成比", f"{y0}→{y1}年"),
                        ("韓国系発行元", f"{y1}年リリースに占める比率"), ("出荷ピーク", "月")]
     out["b_t_partial"] = "一部"
+    out["b_t_nopeak"] = "ピーク月は年により異なる"
     out["b_t_months"] = [None] + [f"{m}月" for m in range(1, 13)]
-    out["b_t_monsep"] = "、"
     out["b_t_src"] = source_line(["meti", "trends", "prtimes"], REG, "ja")
     _G = LAUNCH_GATE
     out["b_fn_t"] = "各指標の範囲"
@@ -306,12 +338,7 @@ def _brief_en(B, H, REG):
     out["b_kf_consumer"] = (
         f"<b>{H['vocab_shared']} of the top {H['vocab_top']}</b> skincare terms in @cosme "
         f"reviews are also in the top {H['vocab_top']} of comments on YouTube skincare videos.")
-    (a0, a1, lo, hi), (b0, b1, blo, bhi) = T["ship"], T["search"]
-    out["b_kf_timing"] = (
-        f"Sunscreen shipments peak <b>{_MON_EN[a0]}–{_MON_EN[a1]}</b> (index {lo:.0f}–{hi:.0f}, "
-        f"100 = the monthly mean); search peaks {_MON_EN[b0]}–{_MON_EN[b1]} ({blo:.0f}–{bhi:.0f}). "
-        f"Makeup launch releases peak in {_and(_MON_EN[m] for m in T['makeup_peaks'])}, "
-        f"{y0}–{y1}.")
+    out["b_kf_timing"] = _timing_en(T)
     out["b_kf_labels"] = {"market": "Market", "demand": "Demand", "supply": "Supply",
                           "consumer": "Consumer", "timing": "Timing"}
 
@@ -355,16 +382,17 @@ def _brief_en(B, H, REG):
     out["b_t_e"] = (
         "Categories that PR TIMES launch releases and METI product lines both name. Search is "
         "shown where the category word is tracked. Korean share: Korean-origin issuers' share of "
-        f"the category's {y1} core launch releases, count in brackets. Shipment peak: the two "
-        f"months with the highest seasonal index, {y0}–{y1}.")
+        f"the category's {y1} core launch releases, count in brackets. Shipment peak: the month "
+        "with the highest ratio of shipped value to its centred 12-month average, shown where "
+        f"each of {FULL_YEARS[0]}–{FULL_YEARS[-1]} peaks within a month of it.")
     out["b_t_cols"] = [("Category", ""), ("METI line", ""), (f"Value {y1}", "¥億"),
                        ("Value", f"{y0}→{y1}"), ("Units", f"{y0}→{y1}"),
                        ("Value / unit", f"{y0}→{y1}"),
                        ("Search", f"{y0}→{y1}, pts"), ("Launch share", f"{y0} → {y1}"),
-                       ("Korean issuers", f"share of {y1} launches"), ("Shipment peak", "months")]
+                       ("Korean issuers", f"share of {y1} launches"), ("Shipment peak", "month")]
     out["b_t_partial"] = "partial"
+    out["b_t_nopeak"] = "Peak month differs by year"
     out["b_t_months"] = _MON_ABBR
-    out["b_t_monsep"] = ", "
     out["b_t_src"] = source_line(["meti", "trends", "prtimes"], REG)
     _G = LAUNCH_GATE
     out["b_fn_t"] = "How each measure is bounded"
@@ -514,7 +542,8 @@ def _market_en(M, REG):
         f"{y0}.")
     out["mk_g_cap"] = (
         f"Monthly, {_MON_EN[first.month]} {first.year} – {_MON_EN[lm]} {ly} · shaded from January "
-        f"{y0} = after the break · skincare peaks in {pk['skincare']}; makeup in {pk['makeup']}")
+        f"{y0} = after the break · highest month against its centred 12-month average: "
+        f"skincare {pk['skincare']}; makeup {pk['makeup']}")
 
     lead, run = _origin(I["leader"], "en"), _origin(I["runner"], "en")
     since = (f"since {I['since']}" if I["since"] < I["y1"] else f"in {I['y1']}")
@@ -594,7 +623,7 @@ def _market_ja(M, REG):
         f"縦線は{y0}年1月。")
     out["mk_g_cap"] = (
         f"月次、{first.year}年{first.month}月〜{ly}年{lm}月 · {y0}年1月以降の網掛け＝断層後 · "
-        f"ピーク月は皮膚用が{pk['skincare']}、仕上用が{pk['makeup']}")
+        f"中心化12カ月移動平均に対して最も高い月は、皮膚用が{pk['skincare']}、仕上用が{pk['makeup']}")
 
     lead, run = _origin(I["leader"], "jp"), _origin(I["runner"], "jp")
     out["mk_i_h"] = (f"HS 3304の輸入元は{I['since']}年以降{lead}が最大で、{I['y1']}年は"

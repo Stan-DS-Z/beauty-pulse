@@ -19,7 +19,12 @@ every other Trends figure; this keeps the market layer on the same arithmetic.
 
 Full calendar years only — the current year is partial and beauty search is
 seasonal, so a partial-year endpoint biases any delta. The monthly file carries
-the same full years, month by month, for the seasonal profiles.
+the same full years, month by month.
+
+trends_monthly.csv carries every month of the pull, the partial year included:
+the seasonal ratio (bp/seasonal.py) divides each month by a centred 12-month
+average, which for January 2026 needs the months to July 2026. Report pages cut
+it at the edition's cut-off.
 
     python build_attention_annual.py
 """
@@ -35,6 +40,7 @@ from src.schema import get_connection          # noqa: E402
 
 OUT = ROOT / "dashboard" / "assets" / "nb04b_attention_annual.csv"
 OUT_M = ROOT / "dashboard" / "assets" / "nb04b_attention_monthly.csv"
+OUT_ALL = ROOT / "dashboard" / "assets" / "trends_monthly.csv"
 
 
 def main() -> int:
@@ -62,6 +68,9 @@ def main() -> int:
                .groupby(["term", "year", "month"])["interest"].mean()
                .round(2).reset_index())
     monthly.to_csv(OUT_M, index=False)
+    (df.assign(month=df["week_start"].dt.month)
+       .groupby(["term", "year", "month"])["interest"].mean().round(2).reset_index()
+       .to_csv(OUT_ALL, index=False))
     print(f"wrote {OUT.relative_to(ROOT)}  "
           f"{out['term'].nunique()} terms x {out['year'].nunique()} years "
           f"({out['year'].min()}-{out['year'].max()})")

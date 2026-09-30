@@ -14,43 +14,28 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from . import seasonal
 from .data import (METI_MAKE, METI_SKIN, compute_launch_headline, cut_months,
-                   load_attention_annual, load_attention_monthly, load_meti_annual)
+                   load_attention_annual, load_meti_annual, load_trends_monthly)
 from .funnel import CATEGORIES, compute_funnel_matrix
 
 # Repeat Google Trends pulls differ by 5–20 index points on the same month
 # (recon/2026-09-27_report_trends-s1-block-a.md). A change smaller than the low
 # end is inside that spread, and is counted as neither a rise nor a fall.
 TRENDS_PULL_SPREAD = 5
+# The top of that spread. A search term's seasonal swing (bp/seasonal.py,
+# profile peak to trough in index points) must exceed it to count as a season.
+SEARCH_SWING = 20
 
 # The governing thought names the categories whose shipped value rose this
 # much or more over the category window.
 VALUE_RISE_NAMED = 30
 
-# How many months make a seasonal peak on the Timing line, and in the table.
-PEAK_RUN, PEAK_TOP = 3, 2
-
-
-def _seasonal(frame: pd.DataFrame, years) -> pd.Series:
-    """Month-of-year index, 100 = the year's monthly mean, averaged over years.
-    `frame` is indexed by (year, month) with one value column."""
-    f = frame[frame.index.get_level_values(0).isin(years)].iloc[:, 0].unstack()
-    return (f.div(f.mean(axis=1), axis=0) * 100).mean()
-
-
-def _peak_run(idx: pd.Series, run: int = PEAK_RUN):
-    """The `run` consecutive months (wrapping December into January) with the
-    highest mean index: (first month, last month, lowest index, highest index)."""
-    months = list(idx.index)
-    best = max(range(12), key=lambda i: np.mean([idx[months[(i + k) % 12]] for k in range(run)]))
-    got = [idx[months[(best + k) % 12]] for k in range(run)]
-    return months[best], months[(best + run - 1) % 12], min(got), max(got)
-
-
-def _meti_monthly_value(ASSETS: Path, cutoff) -> pd.DataFrame:
+def _meti_monthly_value(ASSETS: Path, cutoff) -> dict:
+    """Monthly shipped value by METI line, each a series by month."""
     d = cut_months(pd.read_csv(ASSETS / "estat_meti_cosmetics.csv"), cutoff)
     d = d[(d["month"] >= 1) & (d["measure"] == "販売金額")]
-    return d.groupby(["item", "year", "month"])["value"].sum()
+    return {li: seasonal.monthly(g) for li, g in d.groupby("item")}
 
 
 def _core(ASSETS: Path, cutoff) -> pd.DataFrame:
@@ -106,11 +91,11 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
     rows["kr_s"] = [100 * (cat1.loc[tags1.apply(lambda t, k=k: k in t), "origin"] == "KR").mean()
                     if n else np.nan for k, n in zip(rows.index, rows["kr_n"])]
 
+    # A line's shipment peak is named only when it is stable (bp/seasonal.py).
     mv = _meti_monthly_value(ASSETS, cutoff)
-    years = range(y0, y1 + 1)
-    seas_meti = {li: _seasonal(mv.loc[li].to_frame(), years) for li in line.unique()}
-    rows["peak"] = [list(seas_meti[li].sort_values(ascending=False).index[:PEAK_TOP])
-                    for li in line]
+    seas_meti = {li: seasonal.assess(mv[li]) for li in line.unique()}
+    rows["peak"] = pd.Series([seas_meti[li]["peak"] if seas_meti[li]["stable"] else None
+                              for li in line], index=rows.index, dtype=object)
     rows = rows.sort_values("value_y1", ascending=False)
 
     # ── Demand: the ten actives both Trends and PR TIMES track, and the
@@ -181,16 +166,16 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
         fell_ship_hi=float(fell_share["ship_d"].max()) if len(fell_share) else np.nan,
         den=fm["launch_den"])
 
-    # ── Timing: sunscreen's shipment and search peaks, and makeup launches
+    # ── Timing: sunscreen's shipment and search peak runs, each full year, and
+    # how many lines ship most in the same month every year
     sun_line, _, sun_term, _ = CATEGORIES["sunscreen"]
-    am = load_attention_monthly(ASSETS, cutoff)
-    sun_search = am[am["term"] == sun_term].set_index(["year", "month"])[["interest"]]
-    s_ship = _peak_run(seas_meti[sun_line])
-    s_search = _peak_run(_seasonal(sun_search, years))
-    mk = core[(core["category_group"] == "makeup") & core["year"].isin(years)]
-    moy = mk["month"].str[5:7].astype(int).value_counts()
-    timing = dict(ship=s_ship, search=s_search,
-                  makeup_peaks=sorted(moy.nlargest(PEAK_TOP).index))
+    tm = load_trends_monthly(ASSETS, cutoff)
+    sun_search = seasonal.monthly(tm[tm["term"] == sun_term], "interest")
+    ship_runs, search_runs = seasonal.year_runs(mv[sun_line]), seasonal.year_runs(sun_search)
+    timing = dict(ship=ship_runs, search=search_runs,
+                  offset={y: search_runs[y][0] - ship_runs[y][0] for y in seasonal.FULL_YEARS},
+                  n_stable=int(sum(a["stable"] for a in seas_meti.values())),
+                  n_lines=len(seas_meti))
 
     # The few headline figures the Brief's copy uses, kept with its own
     # figures so the copy never reads a headline built on other files.

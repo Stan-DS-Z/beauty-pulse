@@ -484,6 +484,13 @@ def load_attention_annual(ASSETS: Path, cutoff=None):
             .pivot(index="year", columns="term", values="interest"))
 
 
+def load_trends_monthly(ASSETS: Path, cutoff=None):
+    """block_A by month, every month of the pull (build_attention_annual.py):
+    term, year, month, interest. The seasonal ratio needs the months after
+    the last full year."""
+    return cut_months(pd.read_csv(ASSETS / "trends_monthly.csv"), cutoff)
+
+
 def load_attention_monthly(ASSETS: Path, cutoff=None):
     """block_A by month, full years only: term, year, month, interest."""
     return cut_months(pd.read_csv(ASSETS / "nb04b_attention_monthly.csv"), cutoff)
