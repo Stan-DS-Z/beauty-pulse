@@ -1,0 +1,23 @@
+seed,seed_group,side,note
+スキンケア,category,skincare,umbrella word for the side
+化粧水,category,skincare,METI 化粧水; funnel toner_lotion
+美容液,category,skincare,METI 美容液; funnel serum
+乳液,category,skincare,METI 乳液; funnel emulsion
+洗顔,category,skincare,METI 洗顔クリーム・フォーム; funnel face_wash
+メイク,category,makeup,umbrella word for the side
+ファンデーション,category,makeup,METI ファンデーション; funnel foundation
+口紅,category,makeup,METI 口紅; funnel lipstick
+アイシャドウ,category,makeup,METI アイメークアップ; funnel eye_makeup
+チーク,category,makeup,METI ほほ紅; funnel blush
+日焼け止め,category,sunscreen,METI 日やけ止め及び日やけ用化粧品; funnel sunscreen
+化粧品,category,umbrella,covers both sides
+ナイアシンアミド,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+レチノール,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+レチナール,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+ヒアルロン酸,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+セラミド,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+ビタミンC 美容,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+トラネキサム酸,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+グルタチオン,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+アゼライン酸,ingredient,,tracked active (prtimes_ingredient_terms.csv)
+エクソソーム,ingredient,,tracked active (prtimes_ingredient_terms.csv)
