@@ -219,13 +219,6 @@ def themed(figure):
     return finish(figure)
 
 
-def wide_graph(id_, figure):
-    """A chart that keeps a minimum width and scrolls sideways inside its own
-    box on a narrow screen, as a wide table does: twelve printed month columns
-    do not fit 390 px."""
-    return html.Div(graph(id_, figure), className="bp-widewrap")
-
-
 def graph(id_, figure):
     """A chart whose box is the figure's own height. With responsive on, Plotly
     fills its container, and a container with no height of its own collapses

@@ -53,18 +53,30 @@ def test_the_heatmaps_are_ordered_by_peak_month(M):
         assert g["peak"].is_monotonic_increasing
 
 
+def test_the_launch_title_counts_each_side(M):
+    t = M["tests"].groupby("side")["even"].agg(["sum", "size"])
+    assert (t.loc["makeup", "sum"], t.loc["skincare", "sum"]) == (4, 3)
+
+
+def test_every_heatmap_row_has_a_name_in_both_languages(M, headline, REG):
+    for lang in ("en", "jp"):
+        S = _S(lang, headline, M, REG)
+        assert set(S["tm_rows_ship"]) == set(M["ship"].index)
+        assert set(S["tm_rows_search"]) == set(M["search"].index)
+
+
 def test_the_counts_the_titles_state(M):
     assert int(M["ship"]["passes"].sum()) == 6 and len(M["ship"]) == 16
-    assert set(M["search"].index[M["search"]["passes"]]) == {"sunscreen", "emulsion"}
+    assert set(M["search"].index[M["search"]["passes"]]) == {"日焼け止め", "乳液"}
     t = M["tests"]
     assert int(t["even"].sum()) == 7 and len(t) == 8
 
 
 # ── The copy ────────────────────────────────────────────────────────────────
 
-_LOOKUPS = ("tm_kicker", "tm_months", "tm_h_hover", "tm_l_side", "tm_l_hover", "tm_l_end",
+_LOOKUPS = ("tm_kicker", "tm_h_hover", "tm_l_side", "tm_l_hover", "tm_l_end",
             "tm_src_sun", "tm_src_meti", "tm_src_trends", "tm_src_prtimes", "tm_s_search",
-            "tm_s_ship")
+            "tm_s_ship", "tm_rows_ship", "tm_rows_search", "tm_h_months", "tm_h2_swing")
 
 
 def _flat(v):

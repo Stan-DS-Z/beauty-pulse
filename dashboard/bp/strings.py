@@ -1285,10 +1285,20 @@ def _consumer_ja(M, REG):
 # (bp/seasonal.py). The copy names a peak only where the method finds it
 # stable, and uses no causal wording.
 
+# The umbrella search terms are not categories; they are named as terms.
+_UMBRELLA_ROW = {"スキンケア": ("スキンケア", "スキンケア"), "化粧品": ("化粧品", "化粧品")}
+
+
 def timing_strings(lang, M, REG):
     """The Timing page's copy in one language, and the lookups its figures
-    use: month labels, panel names and hover text."""
-    return _timing_page_en(M, REG) if lang == "en" else _timing_page_ja(M, REG)
+    use: row names by category (tm_rows_ship, tm_rows_search), month labels,
+    panel names and hover text."""
+    out = _timing_page_en(M, REG) if lang == "en" else _timing_page_ja(M, REG)
+    li = _li(lang)
+    out["tm_rows_ship"] = {k: LAUNCH_CAT[k][li] for k in M["ship"].index}
+    out["tm_rows_search"] = {t: (_UMBRELLA_ROW.get(t) or SEARCH_TERM[t])[li]
+                             for t in M["search"].index}
+    return out
 
 
 def _tm_facts(M):
@@ -1296,7 +1306,10 @@ def _tm_facts(M):
     ship, srch, t = M["ship"], M["search"], M["tests"]
     odd = t[~t["even"]]
     w0, w1 = (pd.Timestamp(x) for x in RATIO_WINDOW)
+    per_side = t.groupby("side")["even"].agg(["sum", "size"])
+    per_side = per_side.sort_values("sum", ascending=False)
     return dict(ship=ship, srch=srch, t=t, odd=odd, w0=w0, w1=w1, swing=SEARCH_SWING,
+                per_side=per_side,
                 n_pass=int(ship["passes"].sum()), n_ship=len(ship),
                 s_pass=srch[srch["passes"]].sort_values("swing", ascending=False),
                 n_even=int(t["even"].sum()), n_tests=len(t),
@@ -1336,36 +1349,41 @@ def _timing_page_en(M, REG):
     out["tm_s_search"] = "Search: 日焼け止め (Google Trends)"
     out["tm_s_ship"] = "Shipped value: 日やけ止め及び日やけ用化粧品 (METI)"
     out["tm_y"] = "Seasonal ratio (trend = 100)"
-    out["tm_months"] = _MON_ABBR[1:]
-    out["tm_h_hover"] = "%{y}, %{x}: %{z:.0f}"
+    out["tm_h_months"] = [m[0] for m in _MON_ABBR[1:]]
+    out["tm_h_hover"] = "%{customdata}, month %{x}: %{z:.0f}"
+    cap = "Shading is capped at 70 and 130; printed values are not."
 
     out["tm_h1_h"] = (f"{_NUM_EN[F['n_pass']].capitalize()} of the {F['n_ship']} METI product lines "
                       f"ship most in the same month, give or take one, every year {F['y0']}–{F['y1']}")
     out["tm_h1_e"] = (
         f"Seasonal ratio of shipped value, averaged over {win}; lines ordered by their highest "
         "month. Grey label: in at least one year the highest month is more than one month from "
-        "the centre of the average's peak run.")
+        f"the centre of the average's peak run. {cap}")
     sp = F["s_pass"]
-    names = _and(f"{r['name']} ({r['swing']:.1f})" for _, r in sp.iterrows())
+    names = _and(f"{SEARCH_TERM[t][0].lower()} ({r['swing']:.1f})" for t, r in sp.iterrows())
     out["tm_h2_h"] = (f"{_NUM_EN[len(sp)].capitalize()} of {_NUM_EN[len(F['srch'])]} search terms "
                       f"have a stable peak and swing more than {F['swing']} index points: {names}")
     out["tm_h2_e"] = (
         f"Google Trends, each term requested on its own; seasonal ratio averaged over {win}. Swing: "
         "the average's peak-to-trough range in index points. "
         f"{F['swing']} points is the top of the spread between repeat pulls of the same month. "
-        "Grey label: a term that fails either test.")
+        "スキンケア and 化粧品 are the umbrella terms. Grey label: a term that fails either test. "
+        f"{cap}")
+    out["tm_h2_swing"] = "Swing"
 
     odd = F["odd"]
     exc = "; ".join(f"the exception is {r['side']} in {r['year']}, with {r['top_n']} of {r['n']} "
                     f"in {_MON_EN[r['top_month']]}" for _, r in odd.iterrows())
-    out["tm_l_h"] = (f"Launch releases by month are consistent with an even spread in "
-                     f"{_NUM_EN[F['n_even']]} of {_NUM_EN[F['n_tests']]} side-years"
+    sides = _and((f"all {_NUM_EN[n]} {side} years" if e == n
+                  else f"{_NUM_EN[e]} of {_NUM_EN[n]} {side} years")
+                 for side, (e, n) in F["per_side"].iterrows())
+    out["tm_l_h"] = (f"Launch releases by month are consistent with an even spread in {sides}"
                      + (f"; {exc}" if len(odd) else ""))
     t = F["t"]
     out["tm_l_e"] = (
         f"Core-panel launch releases by month of release, {t['year'].min()}–{t['year'].max()}; "
         f"each year tested against an even spread across the months (chi-square, 11 degrees of "
-        f"freedom, 5%). Sunscreen, with {F['sl'].min()}–{F['sl'].max()} releases a year, is not shown.")
+        "freedom, 5%). Ink: the year that departs from an even spread.")
     out["tm_l_side"] = {"skincare": "Skincare", "makeup": "Makeup"}
     out["tm_l_hover"] = "{y}, month %{{x}}: %{{y}} releases"
     out["tm_l_end"] = "{y}: {n}"
@@ -1409,33 +1427,36 @@ def _timing_page_ja(M, REG):
     out["tm_s_search"] = "検索：日焼け止め（Googleトレンド）"
     out["tm_s_ship"] = "出荷金額：日やけ止め及び日やけ用化粧品（経産省）"
     out["tm_y"] = "季節比率（トレンド＝100）"
-    out["tm_months"] = [f"{m}月" for m in range(1, 13)]
-    out["tm_h_hover"] = "%{y}、%{x}：%{z:.0f}"
+    out["tm_h_months"] = [str(m) for m in range(1, 13)]
+    out["tm_h_hover"] = "%{customdata}、%{x}月：%{z:.0f}"
+    cap = "濃淡は70と130で打ち切り、表示の数値は打ち切らない。"
 
     out["tm_h1_h"] = (f"経産省の{F['n_ship']}品目のうち{F['n_pass']}品目は、{F['y0']}〜{F['y1']}年の"
                       "毎年、同じ月（前後1カ月以内）に出荷金額が最も多い")
     out["tm_h1_e"] = (f"出荷金額の季節比率を{win}で平均し、最も高い月の順に並べた。灰色のラベル：少なくとも"
-                      "1年で、最も高い月が平均のピークの3カ月の中央から1カ月より離れている品目。")
+                      f"1年で、最も高い月が平均のピークの3カ月の中央から1カ月より離れている品目。{cap}")
     sp = F["s_pass"]
-    names = "、".join(f"{r['name']}（{r['swing']:.1f}）" for _, r in sp.iterrows())
+    names = "、".join(f"{SEARCH_TERM[t][1]}（{r['swing']:.1f}）" for t, r in sp.iterrows())
     out["tm_h2_h"] = (f"{len(F['srch'])}語のうち、ピークが安定し振れ幅が{F['swing']}ポイントを超える検索語は"
                       f"{len(sp)}語：{names}")
     out["tm_h2_e"] = (
         f"Googleトレンド、各語を単独で取得。季節比率は{win}の平均。振れ幅：平均のピークから谷までの"
         f"幅を指数のポイントで表したもの。{F['swing']}ポイントは同じ月を再取得したときの差の上限である。"
-        "灰色のラベル：いずれかの基準を満たさない語。")
+        f"スキンケアと化粧品は総称。灰色のラベル：いずれかの基準を満たさない語。{cap}")
+    out["tm_h2_swing"] = "振れ幅"
 
     odd = F["odd"]
     side = {"skincare": "スキンケア", "makeup": "メイク"}
     exc = "、".join(f"例外は{r['year']}年の{side[r['side']]}で、{r['n']}件中{r['top_n']}件が"
                     f"{r['top_month']}月" for _, r in odd.iterrows())
-    out["tm_l_h"] = (f"新商品リリースの月別件数は、側と年の{F['n_tests']}組のうち{F['n_even']}組で均等な"
-                     "分布と区別できない" + (f"（{exc}）" if len(odd) else ""))
+    sides = "、".join((f"{side[sd]}は{n}年すべて" if e == n else f"{side[sd]}は{n}年中{e}年")
+                     for sd, (e, n) in F["per_side"].iterrows())
+    out["tm_l_h"] = (f"新商品リリースの月別件数は、{sides}で均等な分布と区別できない"
+                     + (f"（{exc}）" if len(odd) else ""))
     t = F["t"]
     out["tm_l_e"] = (
         f"コアパネルの新商品リリースを公開月で数えた（{t['year'].min()}〜{t['year'].max()}年）。各年を"
-        "月ごとに均等な分布と比べた（カイ二乗、自由度11、5%）。日焼け止めは年に"
-        f"{F['sl'].min()}〜{F['sl'].max()}件で、示さない。")
+        "月ごとに均等な分布と比べた（カイ二乗、自由度11、5%）。濃色：均等な分布から外れた年。")
     out["tm_l_side"] = {"skincare": "スキンケア", "makeup": "メイク"}
     out["tm_l_hover"] = "{y}年%{{x}}月：%{{y}}件"
     out["tm_l_end"] = "{y}年：{n}"

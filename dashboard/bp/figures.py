@@ -541,8 +541,8 @@ _RAMP = [[0, "#F4F2EE"], [0.5, _GREY], [1, C["ink"]]]
 
 
 def _month_axis(S, **kw):
-    return _xax(tickmode="array", tickvals=list(range(1, 13)), ticktext=S["tm_months"],
-                range=[0.5, 12.5], **kw)
+    return _xax(tickmode="array", tickvals=list(range(1, 13)), ticktext=S["tm_h_months"],
+                tickangle=0, range=[0.5, 12.5], **kw)
 
 
 def fig_timing_sun(M, S):
@@ -579,65 +579,86 @@ def fig_timing_sun(M, S):
     return fig
 
 
-def _heatmap(grid, S, height):
-    """Rows by peak month (top first), values printed; a row that fails its
-    test is labelled in grey."""
+def _heatmap(grid, S, rows, height, swing=False):
+    """Rows by peak month (top first), labelled by name in the page's language
+    (S[rows]), the METI line or search query in the hover; values printed,
+    colour capped at timing.HEAT_RANGE. A row that fails its test is labelled
+    in grey. swing=True prints each row's swing after December."""
+    from .timing import HEAT_RANGE
     z = grid[list(range(1, 13))].round(0)
-    labels = [name if ok else f"<span style='color:{C['muted']}'>{name}</span>"
-              for name, ok in zip(grid["name"], grid["passes"])]
+    labels = [S[rows][k] if ok else f"<span style='color:{C['muted']}'>{S[rows][k]}</span>"
+              for k, ok in zip(grid.index, grid["passes"])]
     fig = go.Figure(go.Heatmap(
-        z=z.values, x=S["tm_months"], y=labels, colorscale=_RAMP, showscale=False,
-        zmin=float(z.values.min()), zmax=float(z.values.max()),
-        texttemplate="%{z:.0f}", textfont=dict(size=10), xgap=1, ygap=1,
+        z=z.values, x=list(range(1, 13)), y=labels, colorscale=_RAMP, showscale=False,
+        zmin=HEAT_RANGE[0], zmax=HEAT_RANGE[1],
+        customdata=[[src] * 12 for src in grid["name"]],
+        texttemplate="%{z:.0f}", textfont=dict(size=9), xgap=1, ygap=1,
         hovertemplate=S["tm_h_hover"] + "<extra></extra>"))
+    if swing:
+        # Anchored to the plot's right edge: Plotly drops an annotation whose
+        # data x falls outside the axis range.
+        fig.add_annotation(xref="paper", x=1, xshift=4, yref="paper", y=1, yanchor="bottom",
+                           text=S["tm_h2_swing"], showarrow=False, xanchor="left",
+                           font=dict(size=9, color=C["muted"]))
+        for lab, (k, r) in zip(labels, grid.iterrows()):
+            fig.add_annotation(xref="paper", x=1, xshift=4, y=lab, text=f"{r['swing']:.1f}",
+                               showarrow=False, xanchor="left",
+                               font=dict(size=9, color=C["ink"] if r["passes"] else C["muted"]))
     fig.update_layout(**{**_base(height), "hovermode": "closest"},
-                      margin=dict(l=10, r=10, t=30, b=10),
-                      xaxis=dict(side="top", showgrid=False),
+                      margin=dict(l=4, r=34 if swing else 4, t=24, b=4),
+                      xaxis=dict(side="top", showgrid=False, tickmode="array",
+                                 tickvals=list(range(1, 13)), ticktext=S["tm_h_months"],
+                                 tickangle=0, tickfont=dict(size=10), range=[0.5, 12.5]),
                       yaxis=dict(autorange="reversed", showgrid=False, automargin=True,
-                                 tickfont=dict(color=C["ink"])))
+                                 tickfont=dict(color=C["ink"], size=11)))
     return fig
 
 
 def fig_timing_ship(M, S):
     """The 16 METI lines' seasonal profiles."""
-    return _heatmap(M["ship"], S, 40 + 26 * len(M["ship"]))
+    return _heatmap(M["ship"], S, "tm_rows_ship", 40 + 24 * len(M["ship"]))
 
 
 def fig_timing_search(M, S):
-    """The category words' and umbrella terms' seasonal profiles."""
-    return _heatmap(M["search"], S, 40 + 26 * len(M["search"]))
+    """The category words' and umbrella terms' seasonal profiles, each with
+    its swing."""
+    return _heatmap(M["search"], S, "tm_rows_search", 40 + 24 * len(M["search"]), swing=True)
 
 
 def fig_timing_launch(M, S):
-    """Core launch releases by month, one line per year, skincare and makeup
-    panels; each year's count at the line's end."""
+    """Core launch releases by month, one line per year, skincare above
+    makeup; the side-year the title names in ink, every other year grey, and
+    each year's count at the line's end."""
     from plotly.subplots import make_subplots
     from .timing import LAUNCH_SIDES
-    fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=0.06,
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.14,
                         subplot_titles=[S["tm_l_side"][s] for s in LAUNCH_SIDES])
-    shades = ["#CFCBC4", _GREY, "#6B6862", C["ink"]]
     tests = M["tests"].set_index(["side", "year"])
+    odd = set(tests.index[~tests["even"]])
     top = max(int(c.values.max()) for c in M["counts"].values())
-    for col, side in enumerate(LAUNCH_SIDES, start=1):
+    for row, side in enumerate(LAUNCH_SIDES, start=1):
         c = M["counts"][side]
         ends = {}
-        for colour, (y, row) in zip(shades, c.iterrows()):
+        for y, vals in c.iterrows():
+            ink = (side, y) in odd
             fig.add_trace(go.Scatter(
-                x=list(range(1, 13)), y=row.values, mode="lines", line=dict(color=colour, width=2),
-                hovertemplate=S["tm_l_hover"].format(y=y) + "<extra></extra>"), row=1, col=col)
-            ends[y] = (12, float(row.values[-1]))
-        names = {y: S["tm_l_end"].format(y=y, n=int(tests.loc[(side, y), "n"])) for y in ends}
-        gap, placed = 0.06 * top, {}
-        for y, (_, v) in sorted(ends.items(), key=lambda kv: kv[1][1]):
+                x=list(range(1, 13)), y=vals.values, mode="lines",
+                line=dict(color=C["ink"] if ink else _GREY, width=2.5 if ink else 1.5),
+                hovertemplate=S["tm_l_hover"].format(y=y) + "<extra></extra>"), row=row, col=1)
+            ends[y] = float(vals.values[-1])
+        gap, placed = 0.08 * top, {}
+        for y, v in sorted(ends.items(), key=lambda kv: kv[1]):
             placed[y] = max(v, max(placed.values(), default=-gap) + gap)
-        for colour, y in zip(shades, ends):
-            fig.add_annotation(x=12, y=placed[y], text=names[y], showarrow=False, xanchor="left",
-                               xshift=6, font=dict(size=10, color=colour), row=1, col=col)
-    fig.update_layout(**{**_base(340), "hovermode": "closest"}, showlegend=False,
-                      margin=dict(l=20, r=70, t=30, b=30))
+        for y in ends:
+            ink = (side, y) in odd
+            fig.add_annotation(x=12, y=placed[y], showarrow=False, xanchor="left", xshift=6,
+                               text=S["tm_l_end"].format(y=y, n=int(tests.loc[(side, y), "n"])),
+                               font=dict(size=10, color=C["ink"] if ink else C["muted"]),
+                               row=row, col=1)
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=64, t=30, b=30))
     fig.update_annotations(selector=dict(xanchor="center"), font=dict(size=11, color=C["muted"]))
-    for col in (1, 2):
-        fig.update_xaxes(**_month_axis(S), row=1, col=col)
-    fig.update_yaxes(**_yax(S["tm_l_y"], rangemode="tozero"), row=1, col=1)
-    fig.update_yaxes(rangemode="tozero", gridcolor=C["grid"], row=1, col=2)
+    for row in (1, 2):
+        fig.update_xaxes(**_month_axis(S), row=row, col=1)
+        fig.update_yaxes(**_yax(S["tm_l_y"], rangemode="tozero"), row=row, col=1)
     return fig

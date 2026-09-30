@@ -23,6 +23,9 @@ from .funnel import CATEGORIES
 # the launch window and the cut-off.
 LAUNCH_SIDES = ("skincare", "makeup")
 LAUNCH_YEARS = (2022, 2023, 2024, 2025)
+# The heatmaps' one colour range: ratios beyond it take the end colour, and
+# the printed values stay as computed (sunscreen's full shape is exhibit a).
+HEAT_RANGE = (70, 130)
 
 
 def _band(series: pd.Series) -> pd.DataFrame:
@@ -69,9 +72,8 @@ def compute_timing(ASSETS: Path, cutoff: str) -> dict:
 
     # ── Search: the category words and the umbrella terms; a term passes when
     # its peak is stable and it swings more than SEARCH_SWING index points
-    words = {k: t for k, (_, _, t, _) in CATEGORIES.items() if t}
-    words.update({t: t for t in UMBRELLA})
-    srch = _grid({k: search[t] for k, t in words.items()}, words,
+    words = [t for _, _, t, _ in CATEGORIES.values() if t] + list(UMBRELLA)
+    srch = _grid({t: search[t] for t in words}, {t: t for t in words},
                  lambda a: a["stable"] and a["swing"] > seasonal.SEARCH_SWING)
 
     # ── Launch releases by month, per side and year, against an even spread
