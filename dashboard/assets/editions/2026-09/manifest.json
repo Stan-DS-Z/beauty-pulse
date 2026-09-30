@@ -3,6 +3,9 @@
  "cutoff": "2026-08",
  "issued": "2026-09-28",
  "files": {
+  "convergence_checks.csv": "0a356e6acf6bd118be77929cba50744f2560039cf7293cba60553c823d1ca5c2",
+  "convergence_curve.csv": "71d21c0d92c687040554f3966b7d63d814c0d46003f45616b9e09ea919b30476",
+  "convergence_periods.csv": "fa841122172778b310de1cb644736d6319b16f87e328caba9c8dffc58bdd9245",
   "estat_meti_cosmetics.csv": "df802b9891d7d06bd760a448586adf983ade8716ba7542720cd4f544817d52ae",
   "estat_trade_hs3304.csv": "b3df181c63c5d983737f675f9ca9d690d3373ce9c8c0f4fbe6fc6bc9550cabde",
   "nb04b_attention_annual.csv": "ca066fbbca4441057b8a3fb84862d67d52d88eba763b7594d7587acb0b0eb918",
@@ -45,6 +48,15 @@
     "review_map.csv"
    ],
    "why": "The review map's labels need each review's category and phrase flag, which no frozen file carries. Added on Stan's ruling; no existing file changed."
+  },
+  {
+   "date": "2026-09-30",
+   "added": [
+    "convergence_checks.csv",
+    "convergence_curve.csv",
+    "convergence_periods.csv"
+   ],
+   "why": "The convergence test rebuilt on one design, with the product-matched and phrase checks (build_convergence.py; METHODOLOGY Revision 20). Derived only from @cosme reviews collected before the cut-off; no existing file changed."
   }
  ]
 }

@@ -1,12 +1,17 @@
 """Phrasings of retired measures, shared by the docs test and the page tests.
 
-Each entry is (regex, what it retired, where). A measure leaves this site when
-its revision retires it; these keep its wording from coming back. The sweep in
+Each entry is (regex, what it retired), or (regex, what it retired, SITE_ONLY)
+for a measure the notebooks keep as the record of how it was made: those are
+checked on the pages and in the docs, not in the notebooks. A measure leaves
+this site when its revision retires it; these keep its wording from coming
+back. The sweep in
 recon/2026-09-27_sweep_retired-measures-as-shift-evidence.md lists claims still
 open; each is added here when it is fixed, so the list only ever grows.
 Notebook cells headed "## Revisions" record removals by name and are not
 checked.
 """
+
+SITE_ONLY = "site only"
 
 RETIRED = [
     (r"shelf[- ]?(share|space)|棚占有|棚シェア|SKU棚",
@@ -35,4 +40,9 @@ RETIRED = [
      r"動画・参考・思う|Top terms by platform|プラットフォーム別の上位語",
      "Discovery's register note on NB06 §6's term lists, whose tokeniser kept verbs "
      "(Revision 15)"),
+    (r"share[sd]? more vocabulary|共有する語彙は|"
+     r"(vocabulary|review language)[^.。]{0,40}\bconverg|\bconverg\w*[^.。]{0,20}\b(vocabulary|review)|"
+     r"語彙[^。]{0,10}収束|収束[^。]{0,10}語彙|0\.252\s*(→|->|to)\s*0\.317",
+     "skincare-makeup vocabulary convergence across periods: product-matched it does not hold "
+     "(Revision 20); NB06 and NB07 keep the test", SITE_ONLY),
 ]

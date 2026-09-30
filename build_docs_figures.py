@@ -137,13 +137,6 @@ def build_registry() -> dict[str, str]:
         "vocab_shared":  f"{int(h['vocab_shared'])}",
         "vocab_top":     f"{int(h['vocab_top'])}",
 
-        # ── convergence ─────────────────────────────────────────────────────
-        "conv_delta":  f"{float(h['conv_delta']):.3f}",
-        "conv_lo":     f"{float(h['conv_lo']):.3f}",
-        "conv_hi":     f"{float(h['conv_hi']):.3f}",
-        "conv_ci":     str(h["conv_ci"]),
-        "conv_ci_jp":  str(h["conv_ci_jp"]),
-
         # ── launch layer ────────────────────────────────────────────────────
         **launch_feeds(),
     }

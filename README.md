@@ -41,9 +41,6 @@ Cosmetics search demand fell ~<!--f:cosm_decline-->33<!--/f-->% across full cale
 
 *What is measured where:* **Market measures** (Google Trends, METI shipments, 財務省 trade statistics HS 3304, the PR TIMES core panel) have a frame set outside this project, and are compared across skincare and makeup and across years: search measures attention, shipments and trade measure yen and kilograms. **Within-side instruments** (@cosme reviews, YouTube comments, Rakuten items) were collected by this project for depth on each side; they are read for language, ingredients, price and rating within a side, and no count or share from them is compared across sides or years. Rules and reasons: [METHODOLOGY.md](METHODOLOGY.md), Source roles.
 
-*Nuance:* スキンケアとコスメのレビュー言語は緩やかに収束しているが、その規模は小さく、サンプルサイズに敏感である。サンプル数を揃えた厳密な比較では Δ +<!--f:conv_delta-->0.065<!--/f-->（<!--f:conv_lo-->0.252<!--/f-->→<!--f:conv_hi-->0.317<!--/f-->、ブートストラップ<!--f:conv_ci_jp-->95%CI [+0.047, +0.083]<!--/f-->）。  
-*Nuance:* skincare and cosmetics review language is converging slowly, but the effect is small and sample-size sensitive — Δ +<!--f:conv_delta-->0.065<!--/f--> (<!--f:conv_lo-->0.252<!--/f-->→<!--f:conv_hi-->0.317<!--/f-->, bootstrap <!--f:conv_ci-->95% CI [+0.047, +0.083]<!--/f-->) under a size-matched comparison.
-
 ---
 
 ## ライブダッシュボード / Live Dashboard
@@ -51,11 +48,13 @@ Cosmetics search demand fell ~<!--f:cosm_decline-->33<!--/f-->% across full cale
 **[Beauty Pulse](https://beautypulse.web.app)** はDashアプリで、Google Cloud Run上で動き、Firebase Hosting経由で英語・日本語で配信している。  
 **[Beauty Pulse](https://beautypulse.web.app)** is a Dash app on Google Cloud Run, served through Firebase Hosting, in English and Japanese.
 
-| Tab | What it shows |
+| Page | What it shows |
 |---|---|
-| 📈 The Shift / 市場変化 | Three panels: the attention layer (search, mask-rebound test, ingredient surge, Rakuten treemap, YouTube), the market layer (METI shipped value, the 2022 break), then the two set side by side |
-| 🔤 The Language / 消費者の言語 | Word clouds by year, size-matched vocabulary convergence |
-| 🔍 Discovery / 発見 | Google Trends rising searches, YouTube channel analysis, interactive review map |
+| Brief / 要旨 | The findings of the edition, one line per layer |
+| Market / 市場 | METI shipped value by group and the January 2022 break; 財務省 imports (HS 3304) |
+| Demand / 需要 | Google Trends: actives, category words, 化粧品 against スキンケア, the makeup terms |
+| Supply / 供給 | PR TIMES product-launch releases: category, issuer origin, ingredients |
+| Consumer / 消費者 | The top-30 skincare terms in @cosme reviews and YouTube comments; the review map |
 
 ---
 
@@ -128,7 +127,7 @@ gunicorn     26.0.0    # WSGI server in the Cloud Run image
 | NB03 | SQL analytical foundation — BI layer demonstrating CTEs, window functions, self-joins |
 | NB04 | Consumer voice — vocabulary analysis, ingredient detection, review quality |
 | NB05 | The Shift — search attention on Google Trends, one source |
-| NB06 | Discovery layer — vocabulary convergence (size-matched), topic modelling, review mapping, search discovery |
+| NB06 | Discovery layer — cosine similarity and sample size, topic modelling, review mapping, search discovery |
 | NB07 | Executive synthesis + dashboard asset generation |
 
 **Execution order:** NB02 → NB02b → NB02c → NB03 → NB04 → NB05 → NB06 → NB07 → `dashboard/app.py`

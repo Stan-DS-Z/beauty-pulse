@@ -443,9 +443,6 @@ def load_review_map(ASSETS: Path):
     reviews carry the phrase (build_review_map.py)."""
     return pd.read_csv(ASSETS / "review_map.csv")
 
-def load_cosine_sizecurve(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
-
 def load_meti_annual(ASSETS: Path, cutoff=None):
     """METI shipments, annual, by product line. 販売金額 in 億円, 販売個数 in 十個.
 

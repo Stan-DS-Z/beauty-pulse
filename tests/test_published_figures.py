@@ -31,7 +31,7 @@ def test_the_docs_use_no_retired_measure(docs):
     """No phrasing of a retired measure in README or METHODOLOGY (outside the
     revision log, which records them). See tests/retired_phrases.py."""
     from retired_phrases import RETIRED
-    hits = [(why, m.group(0)) for pat, why in RETIRED
+    hits = [(why, m.group(0)) for pat, why, *_ in RETIRED
             for m in re.finditer(pat, docs, re.I)]
     assert not hits, hits
 
@@ -41,7 +41,7 @@ def test_committed_notebooks_use_no_retired_measure():
     import json
     import subprocess
     from pathlib import Path
-    from retired_phrases import RETIRED
+    from retired_phrases import RETIRED, SITE_ONLY
     root = Path(__file__).resolve().parent.parent
     try:
         tracked = subprocess.run(["git", "ls-files", "notebooks/*.ipynb"], cwd=root,
@@ -59,7 +59,9 @@ def test_committed_notebooks_use_no_retired_measure():
             for o in c.get("outputs", []):
                 texts.append("".join(o.get("text", "")))
                 texts.append("".join(o.get("data", {}).get("text/markdown", "")))
-            for pat, why in RETIRED:
+            for pat, why, *scope in RETIRED:
+                if SITE_ONLY in scope:
+                    continue
                 for tx in texts:
                     for m in re.finditer(pat, tx, re.I):
                         hits.append((nb_path, i, why, m.group(0)))
@@ -96,14 +98,6 @@ def test_ingredient_levels_match(docs, headline):
 
 def test_cosmetics_decline_matches(docs, headline):
     assert f"{abs(headline['cosm_decline'])}%" in docs
-
-
-def test_convergence_figures_match(docs, headline):
-    for value in (headline["conv_delta"], headline["conv_lo"], headline["conv_hi"]):
-        assert f"{value:.3f}" in docs, f"{value:.3f} missing from the docs"
-    # The CI is published as a bracketed pair; both bounds must appear.
-    for bound in re.findall(r"\+(\d\.\d{3})", headline["conv_ci"]):
-        assert bound in docs, f"CI bound {bound} missing from the docs"
 
 
 # No docs assertion for ratio_0 / ratio_1: outside the revision log they are

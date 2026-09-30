@@ -2,14 +2,14 @@
 map's asset, and the page.
 
 @cosme and YouTube are within-side instruments (METHODOLOGY, Source roles).
-The copy compares vocabulary at equal sample sizes and says rose, more,
-sit together and all ten; these tests hold the data to each, so a rebuilt
-asset that turns one fails here instead of shipping wrong.
+The copy says in both, sit together and all ten; these tests hold the data to
+each, so a rebuilt asset that turns one fails here instead of shipping wrong.
 """
 
 import json
 import re
 
+import pandas as pd
 import pytest
 
 from bp import consumer, data, sources, strings
@@ -34,19 +34,6 @@ def _S(lang, headline, M, REG):
 
 
 # ── The directions the copy states ──────────────────────────────────────────
-
-def test_size_matched_vocabulary_converged_and_the_interval_excludes_zero(M):
-    c = M["conv"]
-    assert c["hi"] > c["lo"]
-    assert c["delta"] == pytest.approx(c["hi"] - c["lo"], abs=0.0015)
-    assert 0 < c["ci_lo"] < c["delta"] < c["ci_hi"]
-
-
-def test_the_size_curve_rises_with_the_sample(M):
-    cv = M["curve"].sort_values("sample_size")
-    assert cv["cross_tier_cosine"].is_monotonic_increasing
-    assert M["size"]["c1"] > M["size"]["c0"]
-
 
 def test_the_term_lists_hold_the_count_the_title_states(M):
     L = M["vocab"]["lists"]
@@ -94,9 +81,26 @@ def test_the_neighbour_counts_match_the_map():
         assert abs(ph[near].sum() - emb["nn_phrase"].iloc[i]) <= 1, i
 
 
+# ── The withdrawn convergence: the record the Method page will carry ─────
+
+def test_the_convergence_record_holds_what_revision_20_states():
+    """build_convergence.py's files in the edition: on one design the curve
+    passes through the matched late value, and product-matched the change's
+    interval includes zero (the ground for the withdrawal)."""
+    ck = pd.read_csv(E / "convergence_checks.csv").set_index("check")
+    cv = pd.read_csv(E / "convergence_curve.csv").set_index("sample_size")["cosine"]
+    per = pd.read_csv(E / "convergence_periods.csv").set_index(["side", "period"])
+    base, pm = ck.loc["baseline"], ck.loc["products_in_both"]
+    assert cv.loc[int(base["n"])] == base["late"]
+    assert cv.is_monotonic_increasing
+    assert pm["ci_lo"] <= 0 <= pm["ci_hi"]
+    assert set(ck["late_period"]) == {"2023–2025"}
+    assert per.loc[("makeup", "2021–2022"), "products"] < per.loc[("makeup", "2023–2025"), "products"]
+
+
 # ── The copy ────────────────────────────────────────────────────────────────
 
-_LOOKUPS = ("cs_en", "cs_cat", "cs_kicker", "cs_c_hover", "cs_m_hover", "cs_m_label",
+_LOOKUPS = ("cs_en", "cs_cat", "cs_kicker", "cs_m_hover", "cs_m_label",
             "cs_vcols", "cs_src_cosme", "cs_src_both")
 
 
@@ -137,10 +141,9 @@ def test_the_copy_names_no_removal_no_page_and_no_campaign(M, headline, REG, lan
         assert tell not in text.lower(), tell
 
 
-def test_the_brief_and_the_page_carry_the_same_convergence(M, headline):
-    c = M["conv"]
-    assert (headline["conv_lo"], headline["conv_hi"]) == (round(c["lo"], 3), round(c["hi"], 3))
-    assert (headline["conv_p0"], headline["conv_p1"]) == (c["p0"], c["p1"])
+def test_the_brief_and_the_page_carry_the_same_overlap(M, headline):
+    assert (headline["vocab_shared"], headline["vocab_top"]) == (M["vocab"]["shared"],
+                                                                  M["vocab"]["top"])
 
 
 # ── The page ────────────────────────────────────────────────────────────────
@@ -161,7 +164,6 @@ def test_the_page_has_no_emoji_tile_rimmed_card_or_control(page_json):
         assert not EMOJI.search(js), lang
         assert "kpi-card" not in js and "bp-finding" not in js and "bp-note" not in js, lang
         assert "borderLeft" not in js and "bp-pill" not in js, lang
-        assert "bp-figs" in js, lang
 
 
 def test_the_map_uses_no_side_colour(page_json):

@@ -1,5 +1,5 @@
-"""Consumer: @cosme review vocabulary at equal sample sizes, the two top-30
-skincare term lists (@cosme reviews and YouTube comments), and the review map.
+"""Consumer: the two top-30 skincare term lists (@cosme reviews and YouTube
+comments), and the review map.
 A report page: no controls, one edition date, every exhibit a result with its
 source line."""
 
@@ -37,10 +37,6 @@ def build(lang, d):
         ui.header(S, lang, PATH),
         ui.kicker(S["cs_kicker"]),
         ui.intro(S["cs_intro"]),
-        ui.key_figures(S["cs_figs"]),
-        html.Div([ui.chart_head(S["cs_c_h"], S["cs_c_e"]),
-                  ui.graph("cs-fig-curve", figures.fig_consumer_curve(M, S)),
-                  ui.source(S["cs_src_cosme"])]),
         html.Div([ui.chart_head(S["cs_v_h"], S["cs_v_e"]),
                   _term_lists(S, M),
                   ui.source(S["cs_src_both"])]),

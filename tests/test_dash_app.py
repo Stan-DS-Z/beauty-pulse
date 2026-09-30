@@ -137,7 +137,7 @@ def test_version_reports_the_build_and_the_data_months(client):
 def test_no_page_uses_a_retired_phrase(pages, path, lang):
     from retired_phrases import RETIRED
     text = _text(_tree(pages[path].TREES[lang]))
-    hits = [(why, m.group(0)) for pat, why in RETIRED
+    hits = [(why, m.group(0)) for pat, why, *_ in RETIRED
             for m in re.finditer(pat, text, re.I)]
     assert not hits, hits
 

@@ -157,6 +157,19 @@ Both pages leave the site, and both addresses go to the Consumer page. Their exh
 - **ワードクラウド / Word clouds.** どのページにもない。年ごとの図と注記は、収集が件数を決めるコーパス（2019年は89件、2026年は18,920件）の語の構成を年どうしで比べていた（情報源の役割）。 / On no page. The yearly clouds and their notes compared the corpus's word make-up across years, in a corpus whose size per year the collection sets (89 reviews in 2019, 18,920 in 2026) (Source roles).
 - **YouTubeチャンネル / YouTube channels.** 総視聴数上位15チャンネルの図と韓国コスメの注記は、どのページにもない。視聴数は収集した動画の合計であり、その順位とスキンケア・メイクの内訳は検索カテゴリの数（スキンケア10、メイク4）で決まる（情報源の役割）。 / The top-15 channels by total views and the Korean-beauty note are on no page. The views are summed over the videos collected, so the ranking and its skincare/makeup split follow the search categories (ten skincare, four makeup) (Source roles).
 
+**改訂20 — スキンケアとメイクの語彙の収束を撤回する（2026年9月30日）/ Revision 20 — the convergence of skincare and makeup vocabulary withdrawn (30 September 2026)**  
+改訂3以降、サンプル数を揃えた比較で、スキンケアとメイクのレビューが共有する語彙は2021〜2022年より後の期間のほうが多いとしてきた（コサイン類似度0.252→0.317、Δ +0.065）。`build_convergence.py`がNB06 §2の方法をローカルのデータベースで再現し（0.252→0.316、Δ +0.064）、2つの検証を加えた。  
+Since Revision 3, a size-matched comparison stated that skincare and makeup reviews shared more vocabulary after 2021–2022 (cosine 0.252 → 0.317, Δ +0.065). `build_convergence.py` reproduces NB06 §2's method on the local database (0.252 → 0.316, Δ +0.064) and adds two checks.
+- **(a) 「プレゼント」「当選」を含むレビューを除く / Without reviews containing プレゼント or 当選.** 含むレビューの割合は2021〜2022年から2023〜2025年に、メイクで0.4%から6.1%、スキンケアで7.8%から13.3%に上がる。除くとΔ +0.057（95%CI [+0.039, +0.082]）で、変化はほぼ残る。 / Their share rises from 0.4% to 6.1% of makeup reviews and from 7.8% to 13.3% of skincare reviews, 2021–2022 to 2023–2025. Without them, Δ is +0.057 (95% CI [+0.039, +0.082]); the change mostly remains.
+- **(b) 両期間にレビューがある商品のみ / Only products with reviews in both periods.** 2021〜2022年のメイクのレビューは3商品から、2023〜2025年は31商品から来る（スキンケアは20商品と72商品）。両期間にレビューがある23商品に限ると、Δ +0.015（95%CI [−0.002, +0.034]）で、区間はゼロを含む。 / Makeup reviews come from 3 products in 2021–2022 and 31 in 2023–2025 (skincare: 20 and 72). Restricted to the 23 products with reviews in both periods, Δ is +0.015 (95% CI [−0.002, +0.034]); the interval includes zero.
+
+公表してきた収束は、各期間に収集した商品の構成を反映していた。ブートストラップの信頼区間はレビューの抽出によるばらつきだけを測り、商品の構成は含まない。発見として撤回し、消費者のページと要旨からその数値を外した。要旨の消費者の行は、@cosmeとYouTubeのスキンケア上位30語の重なり（30語中15語）とする。  
+The published convergence reflected which products were collected in each period. The bootstrap interval measured only the variation from drawing reviews, not the product mix. The finding is withdrawn, and its figures leave the Consumer page and the Brief. The Brief's Consumer line becomes the overlap of the top-30 skincare terms in @cosme reviews and YouTube comments (15 of 30).
+
+- **期間の表記 / Period label.** NB06は後の期間を「2023–26」と表記していたが、定義は2023〜2025年であり、2026年のレビューを含まない。新しいファイルは2023〜2025年と表記する。 / NB06 labelled the late period "2023–26" but defined it as 2023–2025, so 2026's reviews were not in it. The new files say 2023–2025.
+- **サンプル数の曲線 / The size curve.** 曲線とサンプル数を揃えた数値を1つの方法で作り直した。249件の点は揃えた検定の値そのものであり、曲線は150件の0.28から6,000件の0.67へ上がる。曲線と2つの検証は方法のページに置き、それまではサイトに載せない。 / The curve and the size-matched figures are rebuilt on one method: the curve's 249-review point is the matched test's own value, and the curve rises from 0.28 at 150 reviews to 0.67 at 6,000. The curve and the two checks go on the Method page, and are off the site until it is built.
+- **ファイル / Files.** `convergence_checks.csv`、`convergence_curve.csv`、`convergence_periods.csv`は、締め以前に収集した@cosmeレビューのみから作った派生ファイルであり、2026年9月版に日付付きの追補として加えた（マニフェストの`amended`）。版の他のファイルは変わらない。NB06とNB07は検定の記録としてこの分析を残す。 / `convergence_checks.csv`, `convergence_curve.csv` and `convergence_periods.csv` are derived only from @cosme reviews collected before the cut-off, and were added to the 2026-09 edition as a dated amendment (the manifest's `amended` entry). No other edition file changed. NB06 and NB07 keep the analysis as the record of the test.
+
 ---
 
 ## 情報源の役割 / Source roles
@@ -167,7 +180,7 @@ Each source is used only for what its collection method can support.
 | 役割 / Role | 情報源 / Sources | 用いる / Used for | 用いない / Not used for |
 |---|---|---|---|
 | **市場の測定** —— 枠は本プロジェクトの外で決まる / **Market measures** — the frame is set outside this project | 経産省 生産動態統計、財務省 貿易統計 HS 3304、Googleトレンド、PR TIMESのコアパネル / METI shipments, 財務省 trade statistics HS 3304, Google Trends, the PR TIMES core panel | 水準と推移の比較。スキンケアとメイクの比較を含む / Levels and trends, including skincare against makeup | 経産省の2022年1月の断層をまたぐ比較。PR TIMESのコアパネルと、履歴が遡らないフィードの接続 / Comparisons across METI's January 2022 break; joining the PR TIMES core panel with feeds whose history does not reach back |
-| **側ごとの測定** —— 枠は本プロジェクトの収集が決める / **Within-side instruments** — the frame is set by this project's collection | @cosmeレビュー、YouTubeコメント、楽天の商品 / @cosme reviews, YouTube comments, Rakuten items | 各側の内側での言葉・成分・価格・評価。開示のとおりサンプル数を揃えた語彙の比較 / Language, ingredients, price and rating within one side; vocabulary comparisons at equal sample sizes, as disclosed | 側や年をまたぐ件数・比率・量の比較 / Any count, share or volume compared across sides or across years |
+| **側ごとの測定** —— 枠は本プロジェクトの収集が決める / **Within-side instruments** — the frame is set by this project's collection | @cosmeレビュー、YouTubeコメント、楽天の商品 / @cosme reviews, YouTube comments, Rakuten items | 各側の内側での言葉・成分・価格・評価 / Language, ingredients, price and rating within one side | 側や年をまたぐ件数・比率・量の比較、年をまたぐ語彙の比較 / Any count, share or volume compared across sides or across years, and vocabulary compared across years |
 
 収集は各側を深く調べるために設計された（`config/categories.xlsx`、2026年4月6日）。@cosmeはスキンケア7カテゴリに対しメイク3カテゴリ（ファンデーション・口紅・アイシャドウ、マスク検証に用いる3品目）、YouTubeはスキンケア10検索カテゴリに対しメイク4検索カテゴリ、楽天はスキンケア側9ジャンルに対しメイク側2ジャンル。各側の件数と年ごとの分布はこれらの選択で決まるため、側ごとの測定から得た件数は収集を測る。  
 The collection was designed for depth on each side (`config/categories.xlsx`, 6 April 2026): seven @cosme skincare categories against three makeup ones (foundation, lipstick and eyeshadow, the products the mask test uses), ten YouTube search categories on skincare against four on makeup, and nine Rakuten genres on the skincare side against two on the makeup side. The count on each side, and its spread across years, follow those choices, so counts from the within-side instruments measure the collection.
@@ -177,8 +190,8 @@ The collection was designed for depth on each side (`config/categories.xlsx`, 6 
 ## 方法論的注意点 / Methodological Caveats
 
 1. **TF-IDFコサイン類似度のサンプルサイズ依存 / Sample-size dependence of TF-IDF cosine**  
-   プールされたコーパス間のコサイン類似度は、語彙被覆率がサンプル数とともに増えるため機械的に上昇する。期間横断の収束比較は、必ずサンプル数を揃えて行う必要がある（発見2参照）。  
-   Cosine similarity between pooled corpora rises mechanically with sample size as vocabulary coverage grows. Any cross-period convergence comparison must be size-matched (see Finding 2).
+   プールされたコーパス間のコサイン類似度は、語彙被覆率がサンプル数とともに増えるため機械的に上昇する。サンプル数を揃えても、各期間のレビューがどの商品から来るかは揃わない。スキンケアとメイクの語彙の類似度を期間どうしで比べた結果は、この理由で撤回した（改訂20）。  
+   Cosine similarity between pooled corpora rises mechanically with sample size as vocabulary coverage grows. Matching sample sizes does not match which products each period's reviews come from; the comparison of skincare and makeup vocabulary similarity across periods was withdrawn on that ground (Revision 20).
 
 2. **Googleトレンドの正規化 / Google Trends normalisation**  
    Googleトレンドはリクエストごとに、その期間内の最大値を100として正規化する。block_Aは1語1リクエストで、各語の自身の年との比較にのみ用いる。スキンケア対化粧品の比較（block_B）は、両語を1回のリクエストで取得した系列のみを用いる。いずれの系列も1回のリクエストで全期間を取得し、末尾の継ぎ足しはしない。同じ月でも取得のたびに5〜20ポイント異なる。テーブル名`trends_weekly`と列名`week_start`は週次を示すが、格納値は月初日付の月次データである。  
@@ -189,8 +202,8 @@ The collection was designed for depth on each side (`config/categories.xlsx`, 6 
    Review bodies are listing-page previews (~76 chars, ~67% truncated). Full-text scraping was deferred for compute and server-load reasons. Truncation applies equally to both tiers, so it does not bias comparisons, but limits lexical depth.
 
 4. **コーパス構成の交絡 / Corpus-composition confound**  
-   @cosmeコーパスのカテゴリ構成比は年により変動する。両カテゴリを合算した期間横断比較（量シェア・語彙頻度デルタ）は交絡するため用いない。期間「内」のカテゴリ間比較（サンプル数を揃えた語彙収束）はこの交絡を受けない。  
-   The @cosme corpus's category mix varies by year. Pooled cross-period comparisons (volume share, term-frequency deltas) are confounded and are not used. Within-period, size-matched tier-vs-tier comparison (vocabulary convergence) is not affected.
+   @cosmeコーパスのカテゴリと商品の構成は年により変動する（メイクのレビューは2021〜2022年が3商品、2023〜2025年が31商品）。期間をまたぐ比較（量シェア、語彙頻度の差、サンプル数を揃えた語彙の類似度）は交絡するため用いない（改訂20）。  
+   The @cosme corpus's category and product mix varies by year: makeup reviews come from 3 products in 2021–2022 and 31 in 2023–2025. Comparisons across periods (volume share, term-frequency deltas, and vocabulary similarity at equal sample sizes) are confounded and are not used (Revision 20).
 
 5. **楽天の取得範囲 / What the Rakuten pull covers**  
    毎週、楽天の11ジャンルそれぞれからレビュー数上位3,000商品を取得する。スキンケア側は9ジャンル（スキンケアとその下位6ジャンル、日焼け止め・UVケア、美容・コスメ・香水）、メイク側は2ジャンル（ベースメイク・メイクアップ、韓国コスメ）で、どのジャンルも上限に達する。各側の商品数は取得するジャンルの数で決まるため、取得した商品の件数とその比率は公表しない。取得からは最新の1週について、各サブカテゴリの評価と価格中央値のみを読む。ジャンル564517「韓国コスメ」は商品種別ではなく原産国のジャンルで、無作為抽出150件の手作業分類はスキンケア49%・メイク36%・対象外15%（ヘアケア、ボディケア、生理用品、二重まぶた用テープ、歯磨き粉、玩具）。204233「ベースメイク・メイクアップ」の150件はメイク75%・対象外24%・スキンケア1%で、対象外の大半はまつげエクステ用品と二重まぶた用品である。ラベルは`config/rakuten_564517_validation_labels.csv`と`config/rakuten_204233_validation_labels.csv`。再分類に教師あり分類器は用いていない —— 564517はNB02bの分類器のcosmetics訓練クラスの66%を占めるため循環的である。商品種別ジャンルのみで再学習した分類器も、ドメイン内では0.981の精度である一方、564517に対しては0.740、メイクの再現率0.389にとどまり、手作業ラベルが58%とする箇所を84%スキンケアと予測した。学習器の問題ではない：同一特徴量でロジスティック回帰0.851、LinearSVC 0.838、XGBoost 0.788であり、いずれもドメイン内では0.98〜0.99である。同じモデルが204233では0.974を記録しており、補正が必要なジャンルでのみ失敗する。手作業ラベル241件を訓練に加えると0.905に上がる —— 効くのは学習器ではなくラベルである。楽天自身が報告する各ジャンルの掲載件数は、2026年9月20日分から`genre_totals`に格納している（改訂11）。2026年9月版のページは楽天を用いない（改訂18）。  

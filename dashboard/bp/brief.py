@@ -68,7 +68,7 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
     """The Brief's figures on data up to `cutoff` ("YYYY-MM"), or None without
     the launch export (the Brief rests on launches as much as on shipments and
     search). From HEADLINE it takes only mkt_y0, the first METI year, and the
-    size-matched cosine, which is computed on the single @cosme scrape."""
+    @cosme-YouTube term overlap (build_vocab_overlap.py)."""
     LAUNCH = compute_launch_headline(ASSETS, cutoff)
     if LAUNCH is None:
         return None
@@ -194,8 +194,7 @@ def compute_brief(ASSETS: Path, HEADLINE: dict, cutoff: str):
 
     # The few headline figures the Brief's copy uses, kept with its own
     # figures so the copy never reads a headline built on other files.
-    H = {k: HEADLINE[k] for k in ("mkt_y0", "matched_n", "conv_lo", "conv_hi",
-                                   "conv_p0", "conv_p1", "conv_ci", "conv_ci_jp")}
+    H = {k: HEADLINE[k] for k in ("mkt_y0", "vocab_top", "vocab_shared")}
     return dict(cutoff=cutoff, H=H, window=(y0, y1), market=market, demand=demand, supply=supply,
                 portfolio=portfolio, timing=timing, rows=rows, actives=actives,
                 n_rows=len(rows), n_core=LAUNCH["n_core"])

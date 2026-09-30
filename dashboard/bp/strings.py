@@ -191,9 +191,8 @@ def _brief_ja(B, H, REG):
         f"（{n1}件中{k1}件）で、{_half_ja(Sp['h_first'])}の{100 * k0 / n0:.0f}%"
         f"（{n0}件中{k0}件）から上昇した。")
     out["b_kf_consumer"] = (
-        f"各期間を{H['matched_n']}件に揃えると、スキンケアとメイクのレビューが共有する語彙は"
-        f"{H['conv_p0']}年より{H['conv_p1']}年のほうが多い。コサイン類似度は"
-        f"<b>{H['conv_lo']} → {H['conv_hi']}</b>となった（{H['conv_ci_jp']}）。")
+        f"@cosmeレビューのスキンケア上位{H['vocab_top']}語のうち<b>{H['vocab_shared']}語</b>が、"
+        f"YouTubeのスキンケア動画へのコメントの上位{H['vocab_top']}語にも入る。")
     (a0, a1, lo, hi), (b0, b1, blo, bhi) = T["ship"], T["search"]
     out["b_kf_timing"] = (
         f"日焼け止めの出荷金額は<b>{a0}〜{a1}月</b>にピークとなる（季節指数{lo:.0f}〜{hi:.0f}、"
@@ -305,9 +304,8 @@ def _brief_en(B, H, REG):
         f"made <b>{100 * k1 / n1:.0f}%</b> ({k1} of {n1}) of core launch releases in "
         f"{Sp['h_last']}, from {100 * k0 / n0:.0f}% ({k0} of {n0}) in {Sp['h_first']}.")
     out["b_kf_consumer"] = (
-        f"At {H['matched_n']} reviews per period, skincare and makeup reviews share more "
-        f"vocabulary in {H['conv_p1']} than in {H['conv_p0']}: cosine "
-        f"<b>{H['conv_lo']} → {H['conv_hi']}</b> ({H['conv_ci']}).")
+        f"<b>{H['vocab_shared']} of the top {H['vocab_top']}</b> skincare terms in @cosme "
+        f"reviews are also in the top {H['vocab_top']} of comments on YouTube skincare videos.")
     (a0, a1, lo, hi), (b0, b1, blo, bhi) = T["ship"], T["search"]
     out["b_kf_timing"] = (
         f"Sunscreen shipments peak <b>{_MON_EN[a0]}–{_MON_EN[a1]}</b> (index {lo:.0f}–{hi:.0f}, "
@@ -1154,9 +1152,8 @@ def _supply_ja(M, REG):
 
 # ── Consumer ────────────────────────────────────────────────────────────────
 # Every figure comes from consumer.compute_consumer. @cosme and YouTube are
-# read within one side (METHODOLOGY, Source roles): the copy compares
-# vocabulary at equal sample sizes and states no count, share or volume
-# across sides or years.
+# read within one side (METHODOLOGY, Source roles): the copy compares no
+# vocabulary, count, share or volume across sides or years.
 
 # The @cosme categories in review_map.csv (categories.normalized_name) → names.
 REVIEW_CAT = {
@@ -1179,38 +1176,19 @@ def consumer_strings(lang, M, REG):
 
 def _consumer_en(M, REG):
     from .sources import source_line
-    cv, sz, vc, ph = M["conv"], M["size"], M["vocab"], M["phrase"]
+    vc, ph = M["vocab"], M["phrase"]
     ed = pd.Timestamp(EDITION + "-01")
-    ci = f"95% CI [+{cv['ci_lo']:.3f}, +{cv['ci_hi']:.3f}]"
     out = {}
     out["cs_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
-    out["cs_intro"] = (f"At {cv['n']} reviews per period, skincare and makeup reviews on @cosme "
-                       f"share more vocabulary in {cv['p1']} than in {cv['p0']}.")
-    out["cs_figs"] = [
-        ("Vocabulary convergence", f"+{cv['delta']:.3f}",
-         f"change in cosine similarity, {cv['p0']} → {cv['p1']}, {ci}"),
-        ("Size-matched cosine", f"{cv['lo']:.3f} → {cv['hi']:.3f}",
-         f"each period set to {cv['n']} reviews"),
-        ("Sample-size effect", f"{sz['c0']:.2f} → {sz['c1']:.2f}",
-         f"the same reviews, as N grows from {sz['n0']:,} to {sz['n1']:,}"),
-    ]
-
-    out["cs_c_h"] = (f"On the same reviews, cosine similarity rises from {sz['c0']:.2f} to "
-                     f"{sz['c1']:.2f} as the sample grows from {sz['n0']:,} to {sz['n1']:,}")
-    out["cs_c_e"] = (
-        f"The {cv['p1']} reviews, subsampled to each size; cosine similarity between the pooled "
-        "skincare reviews and the pooled makeup reviews, on TF-IDF vocabulary. The convergence "
-        f"figures above subsample every period, on both sides, to {cv['n']} reviews.")
-    out["cs_c_x"] = "Reviews in the sample"
-    out["cs_c_y"] = "Cosine similarity, skincare and makeup reviews"
-    out["cs_c_hover"] = "N = %{x:,} reviews: %{y:.3f}"
+    out["cs_intro"] = ("Skincare vocabulary in @cosme reviews and YouTube comments, and a map of "
+                       "@cosme reviews placed by vocabulary.")
 
     out["cs_v_h"] = (f"{vc['shared']} of the top {vc['top']} skincare terms appear in both "
                      "@cosme reviews and YouTube comments")
     out["cs_v_e"] = (
-        "@cosme skincare reviews, and comments on YouTube videos from the skincare search categories. One "
-        "tokeniser (nouns and adjectives) and one TF-IDF for both; terms ranked by mean weight "
-        "across skincare documents. In ink: terms in both lists.")
+        "@cosme skincare reviews, and comments on YouTube videos from the skincare search "
+        "categories. One tokeniser (nouns and adjectives) and one TF-IDF for both; terms ranked "
+        "by mean weight across skincare documents. In ink: terms in both lists.")
     out["cs_vcols"] = ["", "@cosme reviews", "YouTube comments"]
 
     out["cs_m_h"] = (
@@ -1235,31 +1213,11 @@ def _consumer_ja(M, REG):
     """The Consumer page in Japanese: 産業調査体, である調, titles without a
     closing 。, the site's terms (スキンケアとメイク)."""
     from .sources import source_line
-    cv, sz, vc, ph = M["conv"], M["size"], M["vocab"], M["phrase"]
+    vc, ph = M["vocab"], M["phrase"]
     ed = pd.Timestamp(EDITION + "-01")
-    ci = f"95%CI [+{cv['ci_lo']:.3f}, +{cv['ci_hi']:.3f}]"
     out = {}
     out["cs_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
-    out["cs_intro"] = (f"各期間を{cv['n']}件に揃えると、@cosmeのスキンケアとメイクのレビューが共有する"
-                       f"語彙は{cv['p0']}年より{cv['p1']}年のほうが多い。")
-    out["cs_figs"] = [
-        ("語彙の収束", f"+{cv['delta']:.3f}",
-         f"コサイン類似度の変化、{cv['p0']}年→{cv['p1']}年、{ci}"),
-        ("件数を揃えたコサイン類似度", f"{cv['lo']:.3f} → {cv['hi']:.3f}",
-         f"各期間{cv['n']}件"),
-        ("サンプル数の影響", f"{sz['c0']:.2f} → {sz['c1']:.2f}",
-         f"同じレビューで、Nを{sz['n0']:,}件から{sz['n1']:,}件に増やした場合"),
-    ]
-
-    out["cs_c_h"] = (f"同じレビューでも、サンプルを{sz['n0']:,}件から{sz['n1']:,}件に増やすと"
-                     f"コサイン類似度は{sz['c0']:.2f}から{sz['c1']:.2f}へ上昇する")
-    out["cs_c_e"] = (
-        f"{cv['p1']}年のレビューを各件数にサブサンプルし、スキンケアとメイクのレビューをそれぞれ"
-        "プールして、TF-IDF語彙のコサイン類似度を測った。上の語彙の収束の数値は、両側の各期間を"
-        f"{cv['n']}件にサブサンプルしたものである。")
-    out["cs_c_x"] = "サンプルのレビュー件数"
-    out["cs_c_y"] = "コサイン類似度（スキンケアとメイクのレビュー）"
-    out["cs_c_hover"] = "%{x:,}件：%{y:.3f}"
+    out["cs_intro"] = "@cosmeレビューとYouTubeコメントのスキンケア語彙、および語彙で配置した@cosmeレビューのマップ。"
 
     out["cs_v_h"] = (f"スキンケアの上位{vc['top']}語のうち{vc['shared']}語が、@cosmeレビューと"
                      "YouTubeコメントの両方に入る")

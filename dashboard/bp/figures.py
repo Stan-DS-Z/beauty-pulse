@@ -504,27 +504,8 @@ def fig_supply_ingredients(M, S):
 
 
 # ── Consumer ────────────────────────────────────────────────────────────────
-# Grey, with the one accent in ink on what each title names: the size curve,
-# and the reviews that contain the two phrases.
-
-def fig_consumer_curve(M, S):
-    """Cosine similarity between pooled skincare and cosmetics reviews, the
-    same reviews subsampled to growing sizes. The size-matched figures are not
-    drawn on it: NB06 fits them with all four period slices subsampled, and
-    the curve with only the two 2023-26 slices subsampled, so the two sit on
-    different scales (0.317 at 249 reviews against 0.352 at 250)."""
-    cv = M["curve"]
-    fig = go.Figure(go.Scatter(
-        x=cv["sample_size"], y=cv["cross_tier_cosine"], mode="lines+markers",
-        line=dict(color=C["ink"], width=2.5), marker=dict(size=7, color=C["ink"]),
-        hovertemplate=S["cs_c_hover"] + "<extra></extra>"))
-    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
-                      margin=dict(l=20, r=20, t=20, b=50),
-                      xaxis=_xax(title=dict(text=S["cs_c_x"], font=dict(size=11)),
-                                 tickformat=",", rangemode="tozero"),
-                      yaxis=_yax(S["cs_c_y"], range=[0, 0.8]))
-    return fig
-
+# Grey, with the one accent in ink on what the title names: the reviews that
+# contain the two phrases.
 
 def fig_consumer_map(M, S):
     """The @cosme reviews placed by vocabulary; the reviews that contain the
