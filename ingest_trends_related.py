@@ -213,6 +213,11 @@ def read_pull(pull_id: str, raw_root: Path = RAW) -> tuple[pd.DataFrame, pd.Data
         reqs.append({k: q.get(k) for k in ("seed", "seed_group", "side", "timeframe", "geo",
                                             "client", "client_version", "pulled_at")})
         frames.append(parse(rec))
+    # The seed list is frozen from pull 1 until compare has run: a file the list
+    # no longer names means the list changed after this pull.
+    extra = sorted({f.name for f in folder.glob("*.json")} - set(seeds["file"]))
+    problems += [f"{name}: not in the seed list; the list changed after this pull"
+                 for name in extra]
     if problems:
         raise ValueError(f"pull {pull_id} is not loadable:\n  " + "\n  ".join(problems))
     return pd.DataFrame(reqs), pd.concat(frames, ignore_index=True)

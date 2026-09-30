@@ -81,6 +81,35 @@ def test_a_seed_with_no_rising_list_parses_to_its_top_list_only():
 
 # ── A pull: stored as fetched, refused when incomplete ─────────────────────
 
+def test_a_seed_google_returns_nothing_for_is_stored_with_no_queries(tmp_path, capsys):
+    """Google's answer for a term with too little search, as a smoke on 30
+    September returned it: both lists present and empty. The pull goes on, the
+    seed is stored as returned, and load names it."""
+    seeds = itr.load_seeds()["seed"].tolist()
+    quiet = seeds[-1]
+
+    def fetch(seed):
+        rec = _rec(seed, [(seed, 100)], [(f"{seed} 語A", 300)], "2026-10-01T00:00:00+00:00")
+        if seed == quiet:
+            rec["response"] = {"default": {"rankedList": [{"rankedKeyword": []},
+                                                          {"rankedKeyword": []}]}}
+        return rec
+
+    pid = itr.pull(fetch=fetch, sleep=lambda s: None, raw_root=tmp_path)
+    reqs, rows = itr.read_pull(pid, tmp_path)
+    assert quiet in set(reqs["seed"]) and quiet not in set(rows["seed"])
+    itr.load(pid, raw_root=tmp_path, db=tmp_path / "t.db")
+    assert f"no rising list for: {quiet}" in capsys.readouterr().out
+
+
+def test_a_pull_is_refused_once_the_seed_list_has_changed(tmp_path):
+    """The list is frozen from pull 1 until compare: a stored file the list no
+    longer names (a seed removed or renamed) makes the pull unreadable."""
+    _write_pull(tmp_path, "p1", "2026-10-01T00:00:00+00:00")
+    (tmp_path / "p1" / "99_removed_seed.json").write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="the list changed after this pull"):
+        itr.read_pull("p1", tmp_path)
+
 def test_a_pull_stops_when_a_request_keeps_failing_and_resumes_where_it_stopped(tmp_path):
     seeds = itr.load_seeds()["seed"].tolist()
     stop_at = seeds[2]
