@@ -18,13 +18,19 @@ HTML comments render as nothing on GitHub, so the published page is unchanged.
 Running this rewrites whatever sits between the markers, so the docs cannot
 disagree with the assets they are quoting.
 
-The registry has these sources, in order of authority:
+The registry reads the issued edition, as the report pages do
+(dashboard/data_cache.build_report: the frozen files, cut at sources.CUTOFF):
 
-  HEADLINE   dashboard/bp/data.py's compute_headline() — the exact values
-             the deployed page renders, so docs and dashboard cannot diverge
-  LAUNCH     compute_launch_headline() and prtimes_feeds.csv — the launch
-             panel's feed counts
-  the database         corpus sizes for the data-source tables
+  HEADLINE   compute_headline() on the edition's files: the values the report
+             pages render, so docs and site cannot diverge
+  LAUNCH     compute_launch_headline() and prtimes_feeds.csv, on the edition
+  the site   whole sentences and tables from the report's own string tables
+             (the Brief's findings, the Demand titles, the Method page's
+             sources table), turned into markdown
+
+A span may hold a sentence or a table as well as a number. Counts that only
+the database holds (reviews stored, SKUs pulled) are not published: the
+README states what the edition holds.
 
 Not everything is derivable. Hand-label proportions, classifier scores and the
 2022 break diagnostics are measurements recorded once, not recomputed per pull;
@@ -42,30 +48,30 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT))
-from src.schema import get_connection          # noqa: E402
+sys.path.insert(0, str(ROOT / "dashboard"))
+SITE = "https://beautypulse.web.app"
 
 DOCS = ["README.md", "METHODOLOGY.md"]
 MARKER = re.compile(r"<!--f:([a-z0-9_]+)-->(.*?)<!--/f-->", re.DOTALL)
 
 
 def headline() -> dict:
-    """compute_headline() from the dashboard's bp package — the function the
-    deployed page computes HEADLINE with, over the same shipped assets."""
-    sys.path.insert(0, str(ROOT / "dashboard"))
-    from bp import data
-    return data.compute_headline(data.ASSETS)
+    """compute_headline() on the issued edition's frozen files: the function
+    and the files the report pages compute HEADLINE with."""
+    from bp import data, sources
+    return data.compute_headline(sources.edition_assets(data.ASSETS))
 
 
 def launch_feeds() -> dict:
-    """The launch panel's feed counts: compute_launch_headline() for what the
-    figures use, prtimes_feeds.csv for the panel each active feed is on."""
-    sys.path.insert(0, str(ROOT / "dashboard"))
-    from bp import data
-    lau = data.compute_launch_headline(data.ASSETS)
+    """The launch panel's feed counts on the edition, cut at CUTOFF:
+    compute_launch_headline() for what the figures use, prtimes_feeds.csv for
+    the panel each active feed is on."""
+    from bp import data, sources
+    E = sources.edition_assets(data.ASSETS)
+    lau = data.compute_launch_headline(E, sources.CUTOFF)
     if lau is None:
         return {}
-    feeds = pd.read_csv(data.ASSETS / "prtimes_feeds.csv")
+    feeds = pd.read_csv(E / "prtimes_feeds.csv")
     return {
         "launch_core_feeds": f"{lau['n_core_feeds']}",
         "launch_core_issuers": f"{lau['n_core']}",
@@ -74,31 +80,78 @@ def launch_feeds() -> dict:
     }
 
 
-def corpus() -> dict:
-    conn = get_connection()
-    q = lambda sql: conn.execute(sql).fetchone()[0]          # noqa: E731
+# ── Text from the site ──────────────────────────────────────────────────────
+# The sources on the Method page, by source role (METHODOLOGY, Source roles).
+# A source no report page uses is listed last whatever its role.
+ROLES = (("market", ("meti", "trade", "trends", "prtimes")),
+         ("within", ("cosme", "youtube")))
+SOURCE_COLS = ("ソース / Source", "測るもの / Measures", "収録範囲 / Coverage",
+               "掲載ページ / Report pages")
+
+
+def _md(text: str) -> str:
+    """Page text as markdown: the renderer's <b> as bold, <br> as a space."""
+    return re.sub(r"<b>(.*?)</b>", r"**\1**", text).replace("<br>", " ")
+
+
+def _cell(text: str) -> str:
+    return _md(text).replace("|", "\\|")
+
+
+def _table(head, rows) -> str:
+    lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+    lines += ["| " + " | ".join(_cell(c) for c in r) + " |" for r in rows]
+    return _block(lines)
+
+
+def _block(lines) -> str:
+    """A block-level span: blank lines inside the markers, so the markdown
+    around the comments parses as its own block."""
+    return "\n\n" + "\n".join(lines) + "\n\n"
+
+
+def site_text() -> dict:
+    """Sentences and tables from the report's string tables, as the site
+    renders them for the edition."""
+    import data_cache
+    from bp import sources
+    d = data_cache.build_data(data_cache.ASSETS)
+    en, ja = d.S["en"], d.S["jp"]
     out = {
-        "rakuten_skus": q("SELECT COUNT(*) FROM products WHERE source_id = 1"),
-        "weekly_rows": q("SELECT COUNT(*) FROM products_weekly"),
-        "weekly_dates": q("SELECT COUNT(DISTINCT snapshot_date) FROM products_weekly"),
-        "cosme_reviews": q("SELECT COUNT(*) FROM reviews r JOIN products p "
-                           "ON r.product_id = p.product_id WHERE p.source_id = 2"),
-        "amazon_asins": q("SELECT COUNT(*) FROM products WHERE source_id = 3"),
-        "amazon_reviews": q("SELECT COUNT(*) FROM reviews r JOIN products p "
-                            "ON r.product_id = p.product_id WHERE p.source_id = 3"),
-        # The two blocks the analysis reads and the public DB ships; the
-        # per-company blocks stay private.
-        "trends_rows": q("SELECT COUNT(*) FROM trends_weekly "
-                         "WHERE term_group IN ('block_A', 'block_B')"),
-        "yt_videos": q("SELECT COUNT(*) FROM yt_videos"),
-        "yt_comments": q("SELECT COUNT(*) FROM yt_comments"),
+        "lead_search_en": _md(en["dm_p_h"]),
+        "lead_search_ja": _md(ja["dm_p_h"]),
+        "lead_actives_en": _md(en["b_kf_demand"]),
+        "lead_actives_ja": _md(ja["b_kf_demand"]),
+        "lead_mask_en": _md(en["dm_m_h"]),
+        "lead_mask_ja": _md(ja["dm_m_h"]),
+        "edition_en": _md(en["b_kicker"].split(" · ")[1]),
+        "edition_ja": ja["b_kicker"].split(" · ")[1],
     }
-    conn.close()
+    # The Brief: its governing thought and one line per finding, each linking
+    # to its page, as the Brief's key findings do.
+    from bp.strings import BRIEF_LINKS
+    for code, S, q in (("en", en, ""), ("ja", ja, "?lang=ja")):
+        lines = [f"> {_md(S['b_governing'])}", ""]
+        for key, (path, _) in BRIEF_LINKS.items():
+            lines.append(f"- **[{S['b_kf_labels'][key]}]({SITE}{path}{q})** — "
+                         f"{_md(S[f'b_kf_{key}'])}")
+        out[f"brief_{code}"] = _block(lines)
+    # The Method page's sources table, split by source role.
+    rows = dict(zip((r["key"] for r in d.METHOD["sources"]), en["me_s_rows"]))
+    used = {r["key"] for r in d.METHOD["sources"] if r["pages"]}
+    listed = [k for _, keys in ROLES for k in keys]
+    assert set(listed) | (set(rows) - used) == set(rows), "a source has no role"
+    for role, keys in ROLES:
+        out[f"sources_{role}"] = _table(SOURCE_COLS, [rows[k] for k in keys if k in used])
+    out["sources_unused"] = _table(SOURCE_COLS, [rows[k] for k in rows if k not in used])
+    cut = pd.Timestamp(sources.CUTOFF + "-01")
+    out["cutoff_en"] = f"{cut:%B %Y}"
+    out["cutoff_ja"] = f"{cut.year}年{cut.month}月"
     return out
 
 
 def build_registry() -> dict[str, str]:
-    h, c = headline(), corpus()
+    h = headline()
 
     def pct(x) -> str:
         """Signed percentages are written without the sign in prose that already
@@ -106,18 +159,8 @@ def build_registry() -> dict[str, str]:
         return f"{abs(float(x)):.0f}"
 
     reg = {
-        # ── corpus sizes ────────────────────────────────────────────────────
-        **{k: f"{v:,}" for k, v in c.items()},
-
         # ── attention layer ─────────────────────────────────────────────────
         "cosm_decline":  pct(h["cosm_decline"]),
-        "skin_change":   pct(h["skin_change"]),
-        "gap_change":    pct(h["gap_change"]),
-        "cosm_share":    f"{int(h['cosm_share'])}",
-        "nia_pre":       f"{int(h['nia_pre'])}",
-        "nia_post":      f"{int(h['nia_post'])}",
-        "ing_y0":        f"{int(h['ing_y0'])}",
-        "ing_y1":        f"{int(h['ing_y1'])}",
 
         # ── market layer ────────────────────────────────────────────────────
         "found_d":         pct(h["found_d"]),
@@ -130,6 +173,7 @@ def build_registry() -> dict[str, str]:
         "mkt_pre1":        f"{int(h['mkt_pre1'])}",
         "ytd_y":           f"{int(h['ytd_y'])}",
         "ytd_m":           f"{int(h['ytd_m'])}",
+        "ytd_m_en":        pd.Timestamp(2000, int(h["ytd_m"]), 1).strftime("%B"),
         "ytd_skin":        f"{float(h['ytd_skin']):.1f}",
         "ytd_make":        f"{abs(float(h['ytd_make'])):.1f}",
 
@@ -139,6 +183,9 @@ def build_registry() -> dict[str, str]:
 
         # ── launch layer ────────────────────────────────────────────────────
         **launch_feeds(),
+
+        # ── text from the site ──────────────────────────────────────────────
+        **site_text(),
     }
     return reg
 

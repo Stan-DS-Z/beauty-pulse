@@ -88,12 +88,9 @@ def test_ingredient_levels_match(docs, headline):
     assert not stray, (
         f"docs carry windows {sorted(stray)} that compute_headline does not "
         f"define; it uses {sorted(expected)}")
-    # The reverse guard, kept narrow: the README is an index now and does not
-    # re-narrate every finding, but the ingredient endpoints are the one pair
-    # the docs still assert outright, so they must not drift out of them.
-    assert (headline["nia_pre"], headline["nia_post"]) in pairs, (
-        "the niacinamide endpoints have left the docs — either restore them or "
-        "drop this guard deliberately")
+    # No reverse guard on the niacinamide endpoints: the README's lead carries
+    # the Brief's Demand line instead (README pass, 2026-09-30), rendered from
+    # the site's strings by build_docs_figures.py, so it cannot drift.
 
 
 def test_cosmetics_decline_matches(docs, headline):
