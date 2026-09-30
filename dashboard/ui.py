@@ -33,7 +33,8 @@ def href(path, lang):
 # registry. A replaced page's path redirects (app.RETIRED).
 NAV = [("nav_report", [("/brief", "nav_brief"), ("/market", "nav_market"),
                        ("/demand", "nav_demand"), ("/supply", "nav_supply"),
-                       ("/consumer", "nav_consumer"), ("/timing", "nav_timing")])]
+                       ("/consumer", "nav_consumer"), ("/timing", "nav_timing"),
+                       ("/method", "nav_method")])]
 NAV_PATHS = [path for _, items in NAV for path, _ in items]
 
 GRAPH_CONFIG = {"displaylogo": False, "displayModeBar": False, "responsive": True}
@@ -156,6 +157,13 @@ def key_figures(items):
                                html.Div(sub, className="bp-fig-sub")])
                      for label, value, sub in items],
                     className=f"bp-figs cols-{len(items)}")
+
+
+def section(title, paragraphs):
+    """A note under a topic heading, for the Method page: plain paragraphs,
+    no box."""
+    return html.Div([html.H2(title, className="bp-section-title"),
+                     *[html.P(rich(p)) for p in paragraphs]], className="bp-section")
 
 
 def source(text):

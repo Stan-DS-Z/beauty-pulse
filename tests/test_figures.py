@@ -11,8 +11,8 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pytest
 
-from bp import (brief, consumer, data, demand, figures, market, sources, strings, supply,
-                timing)
+from bp import (brief, consumer, data, demand, figures, market, method, sources, strings,
+                supply, timing)
 
 A = data.ASSETS
 BUILDERS = sorted(n for n in vars(figures) if n.startswith("fig_"))
@@ -31,7 +31,7 @@ def frames():
     return dict(grp=df_grp)
 
 
-def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None, CS=None, TM=None):
+def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None, CS=None, TM=None, MT=None):
     """Builder name -> the figures it draws with default controls."""
     return {
         "fig_meti_groups": lambda: [figures.fig_meti_groups(f["grp"], H, lang)],
@@ -53,6 +53,8 @@ def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None, CS=None, TM=None):
         "fig_timing_ship": lambda: [figures.fig_timing_ship(TM, S)],
         "fig_timing_search": lambda: [figures.fig_timing_search(TM, S)],
         "fig_timing_launch": lambda: [figures.fig_timing_launch(TM, S)],
+        "fig_method_price_kg": lambda: [figures.fig_method_price_kg(MT, S)],
+        "fig_method_curve": lambda: [figures.fig_method_curve(MT, S)],
     }
 
 
@@ -67,9 +69,10 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
     SP = supply.compute_supply(A, sources.CUTOFF)
     CS = consumer.compute_consumer(A)
     TM = timing.compute_timing(A, sources.CUTOFF)
-    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M, DM, SP,
-                              CS, TM)
-    table = cases(frames, headline, launch, lang, S, B, M, DM, SP, CS, TM)
+    REG = sources.build_registry(A)
+    MT = method.compute_method(A, sources.CUTOFF, M, TM, REG)
+    S = strings.build_strings(lang, headline, launch, A, B, REG, M, DM, SP, CS, TM, MT)
+    table = cases(frames, headline, launch, lang, S, B, M, DM, SP, CS, TM, MT)
     assert name in table, f"{name} has no case in tests/test_figures.py"
     for fig in table[name]():
         assert isinstance(fig, go.Figure)
@@ -90,8 +93,9 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
     SP = supply.compute_supply(A, sources.CUTOFF)
     CS = consumer.compute_consumer(A)
     TM = timing.compute_timing(A, sources.CUTOFF)
-    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M, DM, SP,
-                              CS, TM)
+    REG = sources.build_registry(A)
+    MT = method.compute_method(A, sources.CUTOFF, M, TM, REG)
+    S = strings.build_strings("en", headline, launch, A, B, REG, M, DM, SP, CS, TM, MT)
     default = pio.templates[pio.templates.default].to_plotly_json()
-    for fig in cases(frames, headline, launch, "en", S, B, M, DM, SP, CS, TM)[name]():
+    for fig in cases(frames, headline, launch, "en", S, B, M, DM, SP, CS, TM, MT)[name]():
         assert fig.layout.template.to_plotly_json() == default

@@ -50,3 +50,10 @@ RETIRED = [
      "peak months of launch releases: each year's months are consistent with an even spread "
      "(chi-square, 7 of 8 side-years; Revision 21)"),
 ]
+
+# Lines a page carries although a retired pattern matches them, by page path:
+# string-table keys whose whole text is left out of that page's check. The
+# Method page is the one place the withdrawn convergence is recorded (Revision
+# 20), in one plain line; the architect ruled it exempt, not reworded (Timing
+# ruling 5). Nothing else on any page is exempt.
+EXEMPT = {"/method": ("me_cv_line",)}

@@ -52,22 +52,22 @@ def edition_assets(ASSETS: Path) -> Path:
 # key: (English name, Japanese name, kind, pages that use it)
 DECLARED = {
     "meti":           ("METI 生産動態統計", "経済産業省 生産動態統計", "series",
-                       ("brief", "market", "timing", "funnel", "categories")),
+                       ("brief", "market", "timing", "method", "funnel", "categories")),
     "trade":          ("財務省 貿易統計 HS 3304", "財務省 貿易統計 HS 3304", "series",
                        ("market",)),
     "trends":         ("Google Trends JP", "Googleトレンド（日本）", "series",
-                       ("brief", "demand", "timing", "funnel", "categories")),
+                       ("brief", "demand", "timing", "method", "funnel", "categories")),
     # Collected, and used by no page: the stored pull records no date and no
     # window, and its seed list sets how many seeds a result can surface from
     # (METHODOLOGY Revision 17). A re-pull is planned for the next edition.
     "trends_related": ("Google Trends related searches", "Googleトレンド 関連キーワード",
                        "snapshot", ()),
     "prtimes":        ("PR TIMES", "PR TIMES", "series",
-                       ("brief", "supply", "timing", "funnel", "categories")),
+                       ("brief", "supply", "timing", "method", "funnel", "categories")),
     # Collected, and used by no page in this edition: its snapshot postdates the
     # cut-off and its genres mix levels. It returns on the monitor (Phase 4).
     "rakuten":        ("Rakuten Ichiba", "楽天市場", "series", ()),
-    "cosme":          ("@cosme", "@cosme", "snapshot", ("consumer", "funnel")),
+    "cosme":          ("@cosme", "@cosme", "snapshot", ("consumer", "method", "funnel")),
     "youtube":        ("YouTube", "YouTube", "snapshot", ("consumer",)),
     # Collected, and used by no finding or chart: its products carry no category.
     "amazon":         ("Amazon JP", "Amazon.co.jp", "snapshot", ()),

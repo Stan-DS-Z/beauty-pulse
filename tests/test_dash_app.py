@@ -11,7 +11,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/supply": "supply",
-         "/consumer": "consumer", "/timing": "timing"}
+         "/consumer": "consumer", "/timing": "timing", "/method": "method"}
 
 
 @pytest.fixture(scope="module")
@@ -135,8 +135,13 @@ def test_version_reports_the_build_and_the_data_months(client):
 @pytest.mark.parametrize("path", list(PAGES))
 @pytest.mark.parametrize("lang", ["en", "jp"])
 def test_no_page_uses_a_retired_phrase(pages, path, lang):
-    from retired_phrases import RETIRED
+    import data_cache
+    from retired_phrases import EXEMPT, RETIRED
     text = _text(_tree(pages[path].TREES[lang]))
+    S = data_cache.load().S[lang]
+    for key in EXEMPT.get(path, ()):
+        assert S[key] in text, key       # an exemption names a line the page carries
+        text = text.replace(S[key], "")
     hits = [(why, m.group(0)) for pat, why, *_ in RETIRED
             for m in re.finditer(pat, text, re.I)]
     assert not hits, hits
@@ -225,8 +230,18 @@ def test_stylesheet_tokens_mirror_the_theme():
 def test_no_page_shows_rising_related_searches(pages, path, lang):
     """The related-search pull records no date and no window, and its count
     across seed terms follows the seed list (METHODOLOGY Revision 17); no page
-    shows it until a dated re-pull brings it back."""
+    shows it until a dated re-pull brings it back. Method's sources table lists
+    every collected source, this one with "none" for its pages: its row and
+    its name are the one mention allowed, and they show no result."""
+    import data_cache
     text = json.dumps(_tree(pages[path].TREES[lang]), ensure_ascii=False)
+    if path == "/method":
+        d = data_cache.load()
+        row = next(cells for r, cells in zip(d.METHOD["sources"], d.S[lang]["me_s_rows"])
+                   if r["key"] == "trends_related")
+        assert row[3].startswith(("None:", "なし：")), row
+        for cell in row + [d.REPORT_REGISTRY["trends_related"].name("ja" if lang == "jp" else "en")]:
+            text = text.replace(cell, "")
     for tell in ("seed term", "起点語", "rising related", "rising search", "急上昇",
                  "related search", "関連検索", "アヌア"):
         assert tell.lower() not in text.lower(), (path, lang, tell)

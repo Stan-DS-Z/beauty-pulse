@@ -662,3 +662,63 @@ def fig_timing_launch(M, S):
         fig.update_xaxes(**_month_axis(S), row=row, col=1)
         fig.update_yaxes(**_yax(S["tm_l_y"], rangemode="tozero"), row=row, col=1)
     return fig
+
+
+# ── Method ──────────────────────────────────────────────────────────────────
+# Neither title sets skincare against makeup: grey, with the lines the title
+# names in ink.
+
+def fig_method_price_kg(M, S):
+    """METI yen per kg by month: the lines with the January 2022 step in ink,
+    the comparison lines grey, each labelled at its end; log scale."""
+    P = M["price"]
+    f = P["frame"].dropna(how="all")
+    brk = pd.Timestamp(P["year"], 1, 1) - pd.Timedelta(days=15)
+    fig = go.Figure()
+    for li in P["controls"] + P["lines"]:
+        ink = li in P["lines"]
+        fig.add_trace(go.Scatter(
+            x=f.index, y=f[li], mode="lines", name=li,
+            line=dict(color=C["ink"] if ink else _GREY_LIGHT, width=2 if ink else 1.2),
+            hovertemplate=f"{li} {S['me_pk_hover']}<extra></extra>"))
+    # End labels on the log axis: spaced in log10 units.
+    last = f.index.max()
+    ends = {li: (last, float(np.log10(f[li].dropna().iloc[-1]))) for li in f.columns}
+    lo, hi = np.log10(f.min().min()), np.log10(f.max().max())
+    gap, placed = 0.06 * (hi - lo), {}
+    for k, (_, y) in sorted(ends.items(), key=lambda kv: kv[1][1]):
+        placed[k] = max(y, max(placed.values(), default=-np.inf) + gap)
+    for k, y in placed.items():
+        fig.add_annotation(x=last, y=y, text=k, showarrow=False, xanchor="left", xshift=6,
+                           font=dict(size=11, color=C["ink"] if k in P["lines"] else C["muted"]))
+    fig.add_vline(x=brk, line_width=1, line_dash="dot", line_color=C["muted"])
+    fig.add_annotation(x=brk, y=1, yref="paper", text=S["me_pk_brk"], showarrow=False,
+                       xanchor="left", yanchor="top", xshift=4, font=dict(size=10, color=C["muted"]))
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=118, t=10, b=30),
+                      xaxis=_xax(dtick="M24", tickformat="%Y", tickangle=0,
+                                 range=[f.index.min(), last]),
+                      yaxis=_yax(S["me_pk_y"], type="log", tickformat=",.0f"))
+    return fig
+
+
+def fig_method_curve(M, S):
+    """Cosine similarity of the late period's skincare and makeup reviews by
+    sample size, with the early period's matched value dotted; log x."""
+    cv = M["convergence"]
+    cur = cv["curve"]
+    fig = go.Figure(go.Scatter(
+        x=cur["sample_size"], y=cur["cosine"], mode="lines+markers",
+        line=dict(color=C["ink"], width=2.5), marker=dict(size=7, color=C["ink"]),
+        hovertemplate=S["me_v_hover"] + "<extra></extra>"))
+    fig.add_hline(y=cv["early"], line_width=1.5, line_dash="dot", line_color=_GREY)
+    fig.add_annotation(x=1, xref="x domain", y=cv["early"], text=S["me_v_dot"], showarrow=False,
+                       xanchor="right", yanchor="top", font=dict(size=11, color=C["muted"]))
+    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=20, t=10, b=40),
+                      xaxis=_xax(type="log", title=dict(text=S["me_v_x"], font=dict(size=11)),
+                                 tickvals=list(cur["sample_size"]), tickangle=0,
+                                 ticktext=[f"{n / 1000:g}k" if n >= 1000 else str(n)
+                                           for n in cur["sample_size"]]),
+                      yaxis=_yax(S["me_v_y"], range=[0, 0.8]))
+    return fig

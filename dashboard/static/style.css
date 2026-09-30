@@ -256,3 +256,20 @@ a.bp-kf:hover .bp-kf-go { color:var(--ink); }
    overflow-wrap:anywhere); keep-all with overflow-wrap normal
    breaks only at punctuation such as 、 */
 .bp-page:lang(ja) .bp-table th { word-break:keep-all; overflow-wrap:normal; }
+
+/* Method: notes under a topic heading, and tables whose cells wrap so no
+   table is wider than a phone; the sources table stacks each source there */
+.bp-section { margin-top:40px; padding-top:14px; border-top:1px solid var(--rule); }
+.bp-section p { max-width:1000px; }
+.bp-row .bp-section { margin-top:28px; }
+.bp-section-title { font-size:17px; font-weight:650; line-height:1.35; margin:0 0 8px; }
+.bp-section p { font-size:13px; line-height:1.65; margin:0 0 8px; }
+.bp-table.wrap td { white-space:normal; vertical-align:top; }
+.bp-table .bp-ink { color:var(--ink); font-weight:700; }
+.bp-src-name { font-weight:600; }
+@media (max-width:720px) {
+  .bp-table.wrap th, .bp-table.wrap td { padding-left:4px; padding-right:4px; }
+  .bp-table.stack thead { display:none; }
+  .bp-table.stack tr { display:block; padding:8px 0; border-bottom:1px solid var(--grid); }
+  .bp-table.stack td { display:block; border:0; padding:1px 0; }
+}

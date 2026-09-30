@@ -8,6 +8,7 @@ import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
 from .demand import MASK_YEARS
+from .method import COVERAGE_CATEGORY, LATE_CATEGORY
 from .seasonal import FULL_YEARS
 from .supply import HELD_PCT, KEY_CATEGORY
 from .data import LAUNCH_GATE, LAUNCH_WINDOW_START
@@ -19,14 +20,14 @@ STRINGS = {
         "subtitle":      "",   # rebuilt from the edition (sources.EDITION)
         "nav_report": "Report", "nav_brief": "Brief", "nav_market": "Market",
         "nav_demand": "Demand", "nav_supply": "Supply", "nav_consumer": "Consumer",
-        "nav_timing": "Timing",
+        "nav_timing": "Timing", "nav_method": "Method",
         "launch_empty": "Launch export not found: dashboard/assets/prtimes_launches.csv.",
     },
     "jp": {
         "tagline":        "日本の美容市場分析",
         "subtitle":       "",  # rebuilt from the edition (sources.EDITION)
         "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要", "nav_supply": "供給",
-        "nav_consumer": "消費者", "nav_timing": "季節性",
+        "nav_consumer": "消費者", "nav_timing": "季節性", "nav_method": "手法",
         "launch_empty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
     },
 }
@@ -64,7 +65,7 @@ def _ym(ym, lang):
 
 
 def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MARKET=None,
-                  DEMAND=None, SUPPLY=None, CONSUMER=None, TIMING=None):
+                  DEMAND=None, SUPPLY=None, CONSUMER=None, TIMING=None, METHOD=None):
     """STRINGS[lang] with the live figures written in, and each report page's
     copy when its figures (brief.compute_brief, market.compute_market) and the
     source registry are given."""
@@ -84,6 +85,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
         S.update(consumer_strings(lang, CONSUMER, REGISTRY))
     if TIMING is not None and REGISTRY is not None:
         S.update(timing_strings(lang, TIMING, REGISTRY))
+    if METHOD is not None and REGISTRY is not None:
+        S.update(method_strings(lang, METHOD, REGISTRY))
     return S
 
 
@@ -1466,4 +1469,424 @@ def _timing_page_ja(M, REG):
     out["tm_src_meti"] = source_line(["meti"], REG, "ja")
     out["tm_src_trends"] = source_line(["trends"], REG, "ja")
     out["tm_src_prtimes"] = source_line(["prtimes"], REG, "ja")
+    return out
+
+
+# ── Method ──────────────────────────────────────────────────────────────────
+# Every figure comes from method.compute_method: the registry's dates and
+# pages, the edition's counts, Market's January 2022 step, Timing's seasonal
+# figures and build_convergence.py's record. Method is the one page that
+# records the withdrawn review-vocabulary convergence (Revision 20); its line
+# me_cv_line is exempt from the retired phrases (tests/retired_phrases.py).
+
+# Why a source feeds no report page, stated as it is now.
+_UNUSED = {
+    "trends_related": ("its pull records no date or window", "取得の日付と期間が記録されていない"),
+    "rakuten": ("its snapshot postdates the cut-off", "取得がデータの締め月より後である"),
+    "amazon": ("its products carry no category", "商品にカテゴリがない"),
+}
+# The YouTube search sides, as the coverage note names them.
+_YT_SIDE = {"skincare": ("skincare", "スキンケア"), "cosmetics": ("makeup", "メイク"),
+            "korean": ("Korean beauty", "韓国コスメ")}
+# The convergence checks, as the table names them.
+_CHECK = {"baseline": ("All reviews", "全レビュー"),
+          "without_phrases": ("(a) Without プレゼント or 当選", "(a) 「プレゼント」「当選」を除く"),
+          "products_in_both": ("(b) Products reviewed in both periods", "(b) 両期間にレビューのある商品のみ"),
+          "both": ("(a) and (b)", "(a)と(b)")}
+_SIDE = {"skincare": ("Skincare", "スキンケア"), "makeup": ("Makeup", "メイク")}
+
+
+def method_strings(lang, M, REG):
+    """The Method page's copy in one language, with the sources table's rows
+    (me_src_rows), the tables' labels and the charts' hover text."""
+    out = _method_en(M, REG) if lang == "en" else _method_ja(M, REG)
+    li = _li(lang)
+    out["me_check"] = {k: v[li] for k, v in _CHECK.items()}
+    out["me_side"] = {k: v[li] for k, v in _SIDE.items()}
+    return out
+
+
+def _me_facts(M):
+    from .brief import TRENDS_PULL_SPREAD
+    t = M["tests"]
+    odd = t[~t["even"]]
+    per = M["convergence"]["per"]
+    rv = M["reviews"]
+    late = rv.loc[LATE_CATEGORY]
+    cat = rv.loc[COVERAGE_CATEGORY]
+    return dict(t=t, odd=odd, n_even=int(t["even"].sum()), spread=TRENDS_PULL_SPREAD,
+                cv=M["convergence"], ck=M["convergence"]["checks"], per=per,
+                rv=rv, cat=cat, y_lo=int(M["convergence"]["periods"][0][:4]),
+                y_hi=int(cat.index.max()), late_first=int(late[late > 0].index.min()),
+                used=[r for r in M["sources"] if r["pages"]],
+                unused=[r for r in M["sources"] if not r["pages"]])
+
+
+def _me_coverage_en(r):
+    """The sources table's coverage cell, from the registry's dates."""
+    from .sources import date_label, data_to_label
+    s = r["src"]
+    if s.data_to is None:
+        return data_to_label(s)
+    to = date_label(s.data_to, s.precision)
+    if s.cadence == "monthly":
+        return f"Monthly, {date_label(s.first, 'month')} – {to}"
+    if s.cadence == "annual":
+        return f"Annual, {s.first.year}–{to}"
+    if s.cadence == "per_release":
+        return f"Per release, {date_label(s.first, 'month')} – {to}"
+    if s.cadence == "weekly":
+        return f"{s.collections} weekly pulls, {date_label(s.first, 'day')} – {to}"
+    if r["key"] == "cosme":
+        return f"Reviews dated {r['counts']['first']} – {to}"
+    if s.collections:
+        return f"{s.collections} pulls, the last dated {to}"
+    return f"Comments to {to}"
+
+
+def _me_coverage_ja(r):
+    from .sources import date_label, data_to_label
+    s = r["src"]
+    if s.data_to is None:
+        return data_to_label(s, "ja")
+    to = date_label(s.data_to, s.precision, "ja")
+    if s.cadence == "monthly":
+        return f"月次、{date_label(s.first, 'month', 'ja')}〜{to}"
+    if s.cadence == "annual":
+        return f"年次、{s.first.year}〜{to}"
+    if s.cadence == "per_release":
+        return f"リリースごと、{date_label(s.first, 'month', 'ja')}〜{to}"
+    if s.cadence == "weekly":
+        return f"週次取得{s.collections}回、{date_label(s.first, 'day', 'ja')}〜{to}"
+    if r["key"] == "cosme":
+        return f"投稿日{r['counts']['first']}年〜{to}"
+    if s.collections:
+        return f"取得{s.collections}回、最終{to}"
+    return f"コメントは{to}まで"
+
+
+def _me_measures(r, lang):
+    c, ja = r["counts"], lang == "jp"
+    k = r["key"]
+    if k == "meti":
+        return (f"化粧品メーカーの品目別月次出荷（{c['lines']}品目）：金額・個数・重量" if ja else
+                f"Manufacturers' monthly shipments for {c['lines']} product lines: value, units, "
+                "kilograms")
+    if k == "trade":
+        return "原産国別の輸入（HS 3304の全細分）" if ja else \
+            "Imports by country of origin, all HS 3304 sub-codes"
+    if k == "trends":
+        return "語ごとの検索関心度。各リクエストの最大値を100とする" if ja else \
+            "Search interest per term; each request is scaled to its own peak of 100"
+    if k == "trends_related":
+        return "シード語の関連キーワード" if ja else "Related queries for seed terms"
+    if k == "prtimes":
+        return (f"コア発行元{c['issuers']}社（{c['feeds']}フィード）の新商品リリース" if ja else
+                f"Product-launch releases from {c['issuers']} core issuers ({c['feeds']} feeds)")
+    if k == "rakuten":
+        return "週次ランキング取得の商品リスト" if ja else "Product listings from weekly ranking pulls"
+    if k == "cosme":
+        return (f"{c['categories']}商品カテゴリの20字を超えるレビュー{c['reviews']:,}件" if ja else
+                f"{c['reviews']:,} reviews of more than 20 characters in {c['categories']} "
+                "product categories")
+    if k == "youtube":
+        return (f"{c['queries']}の検索カテゴリで集めた{c['channels']}チャンネルの動画{c['videos']}本と"
+                "そのコメント" if ja else
+                f"{c['videos']} videos from {c['channels']} channels, found by {c['queries']} search "
+                "categories, and their comments")
+    return "商品リストとレビュー" if ja else "Product listings and reviews"
+
+
+def _method_en(M, REG):
+    from .sources import date_label, source_line
+    F = _me_facts(M)
+    ed = pd.Timestamp(EDITION + "-01")
+    cut = pd.Timestamp(M["cutoff"] + "-01")
+    nav = STRINGS["en"]
+    out = {}
+    out["me_kicker"] = f"Appendix · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["me_intro"] = "What each source measures and covers, and how each measure was checked."
+
+    # ── Sources
+    un = [r["src"].name() for r in F["unused"]]
+    out["me_s_h"] = (f"{_NUM_EN[len(F['used'])].capitalize()} of the {_NUM_EN[len(M['sources'])]} sources "
+                     f"feed the report's pages; {_and(un)} feed none")
+    out["me_s_e"] = (f"Report pages compute on data to {_MON_EN[cut.month]} {cut.year}, the "
+                     "edition's cut-off. A snapshot is dated by its newest record.")
+    out["me_s_cols"] = ["Source", "Measures", "Coverage", "Report pages"]
+    out["me_s_rows"] = [
+        [r["src"].name(), _me_measures(r, "en"), _me_coverage_en(r),
+         " · ".join(nav[f"nav_{p}"] for p in r["pages"]) if r["pages"]
+         else f"None: {_UNUSED[r['key']][0]}"]
+        for r in M["sources"]]
+
+    # ── Series breaks, with METI's yen per kg
+    P, T = M["price"], M["trade"]
+    y0 = P["year"]
+    tr = REG["trends"]
+    out["me_b_t"] = "Series breaks"
+    out["me_b_meti"] = (
+        f"METI 生産動態統計: shipped value and yen per kg for {_and(P['lines'])} step down at "
+        f"January {y0}. METI has published no change in coverage and no link coefficients for "
+        f"cosmetics, so skincare changes are measured within {P['pre'][0]}–{y0 - 1} or from {y0} on.")
+    out["me_b_trends"] = (
+        "Google Trends: each series is one request over its whole span, pulled in full on "
+        f"{date_label(tr.collected, 'day')}. スキンケア and 化粧品 share one request and one scale; "
+        "every other term is compared only with its own months.")
+    out["me_b_trade"] = (
+        f"財務省 貿易統計: from {T['first']} the import schedule carries 3304.99-011, -012 and -019 "
+        "as one code, 3304.99-010, which e-Stat's database does not hold. The import figures take it "
+        f"from e-Stat's CSV files: ¥{T['value']:,.0f}億 in {T['year']}, {T['share']:.0f}% of HS 3304 "
+        "imports. A test fails the build if a code change moves a trade group's total.")
+    d = P["drop"]
+    out["me_pk_h"] = (f"Yen per kg steps down at January {y0}: "
+                      f"{_and(f'{li} {_pct(d[li])}' for li in P['lines'])}, {y0 - 1} to {y0}")
+    out["me_pk_e"] = (f"METI shipped value divided by kilograms, by month; log scale. Grey: "
+                      f"{_and(P['controls'])}, for comparison.")
+    out["me_pk_y"] = "Yen per kg"
+    out["me_pk_hover"] = "%{x|%b %Y}: ¥%{y:,.0f}/kg"
+    out["me_pk_brk"] = f"Jan {y0}"
+
+    # ── The seasonal method and the launch test
+    Z = M["seasonal"]
+    w0, w1 = (pd.Timestamp(x) for x in Z["window"])
+    a, b = Z["sun_run"]
+    yrs = f"{Z['years'][0]}–{Z['years'][-1]}"
+    out["me_z_t"] = "Seasonal method"
+    out["me_z_ratio"] = (
+        "Seasonal ratio: a month's value divided by the centred 12-month moving average around it "
+        "(the mean of the two 12-month averages that straddle the month), × 100. Every series is "
+        f"averaged over {_MON_EN[w0.month]} {w0.year} – {_MON_EN[w1.month]} {w1.year}, so no METI "
+        f"skincare average crosses the January {y0} break.")
+    vals = ", ".join(f"{v:.0f}" for v in Z["sun_values"][:-1]) + f" and {Z['sun_values'][-1]:.0f}"
+    out["me_z_peak"] = (
+        f"Peak rule: a peak month is named only when each of {yrs} has its highest month within "
+        f"{_NUM_EN[Z['tolerance']]} month of the centre of the average's highest "
+        f"{_NUM_EN[Z['run']]}-month run. The anchor is the run's centre: months inside the spread "
+        f"between repeat Trends pulls cannot be ranked, and {Z['sun_term']}'s average reads {vals} "
+        f"across {_MON_EN[a]}–{_MON_EN[b]}.")
+    out["me_z_swing"] = (
+        f"Swing rule: a search term also needs a swing above {Z['swing']} index points from its "
+        f"average's peak to its trough. Repeat pulls of the same month differ by {F['spread']}–"
+        f"{Z['swing']} points.")
+    out["me_z_chi"] = (
+        "Launch releases: each side-year's monthly counts are tested against an even spread "
+        f"(chi-square, 11 degrees of freedom). Below {Z['crit']}, the 5% critical value, the "
+        "counts are consistent with an even spread.")
+    t, odd = F["t"], F["odd"]
+    exc = "; ".join(f"{r['side']} {r['year']} scores {r['chi2']:.1f}, with {r['top_n']} of "
+                    f"{r['n']} releases in {_MON_EN[r['top_month']]}" for _, r in odd.iterrows())
+    out["me_q_h"] = (f"{_NUM_EN[F['n_even']].capitalize()} of {_NUM_EN[len(t)]} side-years score "
+                     f"below the critical value of {Z['crit']}" + (f"; {exc}" if len(odd) else ""))
+    out["me_q_e"] = ("Core-panel launch releases by month of release, "
+                     f"{t['year'].min()}–{t['year'].max()}. Ink: a side-year above the critical value.")
+    out["me_q_cols"] = ["Side", "Year", "Releases", "Chi-square", "Largest month"]
+    out["me_q_month"] = "{m} ({n})"
+    out["me_months"] = _MON_ABBR[1:]
+
+    # ── Launch classifier and coverage
+    G = LAUNCH_GATE
+    asof = pd.Timestamp(G["asof"])
+    out["me_l_t"] = "Launch classifier"
+    out["me_l_b"] = (
+        f"Measured {date_label(asof, 'day')} on {G['n_holdout']} hand-labelled releases held out "
+        f"from the classifier's design, weighted to the {G['n_store']:,} stored releases: precision "
+        f"{G['precision']} (95% CI {G['p_lo']}–{G['p_hi']}), recall {G['recall']} "
+        f"({G['r_lo']}–{G['r_hi']}). The edition filter (limited and re-released products) finds "
+        f"{G['edition_found']} of {G['edition_n']} hand-labelled editions.")
+    out["me_c_t"] = "Coverage"
+    out["me_c_pr"] = (
+        f"PR TIMES: {G['prestige_unseen']} of {G['prestige_n']} prestige (デパコス) brands in the "
+        f"brand list appear in no stored release, against {G['other_unseen']} of {G['other_n']} "
+        f"brands in other tiers (measured {date_label(asof, 'day')}).")
+    c, to, y_lo, y_hi = F["cat"], M["cosme_to"], F["y_lo"], F["y_hi"]
+    out["me_c_cosme"] = (
+        "@cosme: reviews by year follow which products were collected. "
+        f"{REVIEW_CAT[COVERAGE_CATEGORY][0]} reviews dated {y_lo}: {c[y_lo]:,}; dated January – "
+        f"{date_label(to, 'day')}: {c[y_hi]:,}. {REVIEW_CAT[LATE_CATEGORY][0]} has no review "
+        f"before {F['late_first']}.")
+    yt = M["youtube"]
+    parts = [f"{int(yt[k])} {_YT_SIDE[k][0]}" for k in ("skincare", "cosmetics", "korean") if k in yt]
+    out["me_c_yt"] = (f"YouTube: the videos come from {int(yt.sum())} search categories: "
+                      f"{_and(parts)}. Comments are compared within a side.")
+
+    # ── The review-vocabulary record (Revision 20)
+    cv, ck, per = F["cv"], F["ck"], F["per"]
+    p0, p1 = cv["periods"]
+    cur = cv["curve"].set_index("sample_size")["cosine"]
+    out["me_v_t"] = f"Review vocabulary, {p0} against {p1}"
+    out["me_cv_line"] = ("The published vocabulary convergence between skincare and makeup reviews "
+                         "reflected product mix.")
+    out["me_v_h"] = (f"Cosine similarity of {p1} skincare and makeup reviews rises with sample size, "
+                     f"from {cur.iloc[0]:.2f} at {cur.index[0]} reviews per side to "
+                     f"{cur.iloc[-1]:.2f} at {cur.index[-1]:,}")
+    out["me_v_e"] = (
+        f"TF-IDF cosine between pooled skincare and pooled makeup @cosme reviews; the {p1} reviews "
+        f"drawn to the size on the axis, the {p0} reviews to {cv['n']}. Dotted: {p0} at {cv['n']} "
+        f"per side, {cv['early']:.3f}; at {cv['n']} the curve reads {cv['late']:.3f}.")
+    out["me_v_x"] = "Reviews per side (log scale)"
+    out["me_v_y"] = "Cosine similarity"
+    out["me_v_hover"] = "%{x:,} reviews per side: %{y:.3f}"
+    out["me_v_dot"] = f"{p0}, {cv['n']} per side: {cv['early']:.3f}"
+    pb = ck.loc["products_in_both"]
+    out["me_k_h"] = (f"Holding the products fixed, the change from {p0} to {p1} is "
+                     f"{pb['delta']:+.3f} (95% CI {pb['ci_lo']:+.3f} to {pb['ci_hi']:+.3f})")
+    out["me_k_e"] = ("Cosine similarity of skincare and makeup reviews, each period drawn to the same "
+                     "number of reviews per side.")
+    out["me_k_cols"] = ["", p0, p1, "Change (95% CI)"]
+    out["me_k_n"] = "{n} reviews per side"
+    out["me_k_ci"] = "{lo:+.3f} to {hi:+.3f}"
+    out["me_period"] = {p0: p0, p1: p1}
+    out["me_p_h"] = (
+        f"Makeup reviews of {p0} come from {per.loc[('makeup', p0), 'products']} products, against "
+        f"{per.loc[('makeup', p1), 'products']} in {p1}; skincare from "
+        f"{per.loc[('skincare', p0), 'products']} against {per.loc[('skincare', p1), 'products']}")
+    out["me_p_e"] = "@cosme products with at least one review in the period."
+    out["me_p_cols"] = ["", "Period", "Products", "Reviews"]
+
+    out["me_src_meti"] = source_line(["meti"], REG)
+    out["me_src_prtimes"] = source_line(["prtimes"], REG)
+    out["me_src_cosme"] = source_line(["cosme"], REG)
+    return out
+
+
+def _method_ja(M, REG):
+    """The Method page in Japanese: 産業調査体, である調, titles without a
+    closing 。."""
+    from .sources import date_label, source_line
+    F = _me_facts(M)
+    ed = pd.Timestamp(EDITION + "-01")
+    cut = pd.Timestamp(M["cutoff"] + "-01")
+    nav = STRINGS["jp"]
+    out = {}
+    out["me_kicker"] = f"付録 · {ed.year}年{ed.month}月版"
+    out["me_intro"] = "各ソースが測るものと収録範囲、および各指標の検証方法。"
+
+    un = [r["src"].name("ja") for r in F["unused"]]
+    out["me_s_h"] = (f"{len(M['sources'])}ソースのうち{len(F['used'])}ソースをレポートの各ページに用い、"
+                     f"{_and_ja(un)}はどのページにも用いない")
+    out["me_s_e"] = (f"レポートの各ページは、この版のデータの締め月である{cut.year}年{cut.month}月までの"
+                     "データで計算する。スナップショットは最新の記録の日付で示す。")
+    out["me_s_cols"] = ["ソース", "測るもの", "収録範囲", "掲載ページ"]
+    out["me_s_rows"] = [
+        [r["src"].name("ja"), _me_measures(r, "jp"), _me_coverage_ja(r),
+         "・".join(nav[f"nav_{p}"] for p in r["pages"]) if r["pages"]
+         else f"なし：{_UNUSED[r['key']][1]}"]
+        for r in M["sources"]]
+
+    P, T = M["price"], M["trade"]
+    y0 = P["year"]
+    tr = REG["trends"]
+    out["me_b_t"] = "系列の断層"
+    out["me_b_meti"] = (
+        f"経済産業省 生産動態統計：{'・'.join(P['lines'])}の出荷金額と1kgあたり金額は{y0}年1月に"
+        "段差をもって下がる。経産省は化粧品について集計範囲の変更もリンク係数も公表していないため、"
+        f"スキンケアの変化は{P['pre'][0]}〜{y0 - 1}年の間、または{y0}年以降の間で測る。")
+    out["me_b_trends"] = (
+        "Googleトレンド：各系列は全期間を1回のリクエストで取得したもので、"
+        f"{date_label(tr.collected, 'day', 'ja')}に全期間を取り直した。スキンケアと化粧品は同じ"
+        "リクエストで取得し、同じ尺度にある。それ以外の語は、その語自身の各月とのみ比べる。")
+    out["me_b_trade"] = (
+        f"財務省 貿易統計：{T['first']}年から輸入統計品目表は3304.99-011・-012・-019を"
+        "3304.99-010の1コードにまとめ、e-Statのデータベースはこのコードを持たない。輸入の数値は"
+        f"このコードをe-StatのCSVファイルから取る（{T['year']}年{T['value']:,.0f}億円、HS 3304の輸入の"
+        f"{T['share']:.0f}%）。コードの変更で品目群の合計が動けば、テストがビルドを止める。")
+    d = P["drop"]
+    out["me_pk_h"] = (f"1kgあたり金額は{y0}年1月に段差をもって下がり、{y0 - 1}→{y0}年で"
+                      + "、".join(f"{li}{_pct(d[li])}" for li in P["lines"]))
+    out["me_pk_e"] = (f"経産省の出荷金額を重量で割った月次の値、対数目盛。灰色：比較のための"
+                      f"{'・'.join(P['controls'])}。")
+    out["me_pk_y"] = "1kgあたり金額（円）"
+    out["me_pk_hover"] = "%{x|%Y年%-m月}：%{y:,.0f}円/kg"
+    out["me_pk_brk"] = f"{y0}年1月"
+
+    Z = M["seasonal"]
+    w0, w1 = (pd.Timestamp(x) for x in Z["window"])
+    a, b = Z["sun_run"]
+    yrs = f"{Z['years'][0]}〜{Z['years'][-1]}年"
+    out["me_z_t"] = "季節性の測り方"
+    out["me_z_ratio"] = (
+        "季節比率：各月の値を、その月を中心とする12カ月移動平均（その月をまたぐ二つの12カ月平均の平均）"
+        f"で割り、100を掛けたもの。どの系列も{w0.year}年{w0.month}月〜{w1.year}年{w1.month}月で平均する"
+        f"ため、経産省のスキンケアの平均が{y0}年1月の断層をまたぐことはない。")
+    vals = "・".join(f"{v:.0f}" for v in Z["sun_values"])
+    out["me_z_peak"] = (
+        f"ピークの基準：{yrs}の各年で最も高い月が、平均で最も高い{Z['run']}カ月の中央の月の前後"
+        f"{Z['tolerance']}カ月以内にある場合のみ、ピーク月を示す。基準を{Z['run']}カ月の中央に置くのは、"
+        f"Googleトレンドの再取得の差の範囲内にある月どうしは順位を付けられないためである。"
+        f"{Z['sun_term']}の平均は{a}〜{b}月に{vals}となる。")
+    out["me_z_swing"] = (
+        f"振れ幅の基準：検索語は、平均のピークから谷までの振れ幅が{Z['swing']}ポイントを超えることも"
+        f"要する。同じ月を再取得したときの差は{F['spread']}〜{Z['swing']}ポイントである。")
+    out["me_z_chi"] = (
+        "新商品リリース：区分・年ごとの月別件数を、均等な分布と比べる（カイ二乗、自由度11）。"
+        f"5%の臨界値{Z['crit']}を下回れば、件数は均等な分布と矛盾しない。")
+    t, odd = F["t"], F["odd"]
+    exc = "、".join(f"{_SIDE[r['side']][1]}の{r['year']}年は{r['chi2']:.1f}（{r['n']}件中"
+                    f"{r['top_n']}件が{r['top_month']}月）" for _, r in odd.iterrows())
+    out["me_q_h"] = (f"{len(t)}の区分・年のうち{F['n_even']}でカイ二乗が臨界値{Z['crit']}を下回"
+                     + (f"り、{exc}" if len(odd) else "る"))
+    out["me_q_e"] = (f"コアパネルの新商品リリースを公開月で数えた（{t['year'].min()}〜{t['year'].max()}年）。"
+                     "濃色：臨界値を上回る区分・年。")
+    out["me_q_cols"] = ["区分", "年", "リリース数", "カイ二乗", "最多の月"]
+    out["me_q_month"] = "{m}（{n}）"
+    out["me_months"] = [f"{m}月" for m in range(1, 13)]
+
+    G = LAUNCH_GATE
+    asof = pd.Timestamp(G["asof"])
+    out["me_l_t"] = "新商品リリースの判定"
+    out["me_l_b"] = (
+        f"{date_label(asof, 'day', 'ja')}測定。判定の設計に用いていない手作業ラベル{G['n_holdout']}件で"
+        f"測り、保存済み{G['n_store']:,}件に加重した：適合率{G['precision']}（95%信頼区間"
+        f"{G['p_lo']}〜{G['p_hi']}）、再現率{G['recall']}（同{G['r_lo']}〜{G['r_hi']}）。"
+        f"限定・再発売の除外判定は、手作業ラベルの{G['edition_n']}件中{G['edition_found']}件を検出する。")
+    out["me_c_t"] = "収録範囲"
+    out["me_c_pr"] = (
+        f"PR TIMES：ブランドリストのデパコス{G['prestige_n']}ブランドのうち{G['prestige_unseen']}"
+        f"ブランドは保存済みリリースに一度も現れない。その他の価格帯は{G['other_n']}ブランド中"
+        f"{G['other_unseen']}（{date_label(asof, 'day', 'ja')}測定）。")
+    c, to, y_lo, y_hi = F["cat"], M["cosme_to"], F["y_lo"], F["y_hi"]
+    out["me_c_cosme"] = (
+        f"@cosme：年ごとのレビュー数は、どの商品を収集したかに従う。{REVIEW_CAT[COVERAGE_CATEGORY][1]}の"
+        f"レビューは{y_lo}年の投稿が{c[y_lo]:,}件、{y_hi}年1月〜{date_label(to, 'day', 'ja')}の投稿が"
+        f"{c[y_hi]:,}件である。{REVIEW_CAT[LATE_CATEGORY][1]}のレビューは{F['late_first']}年より前にはない。")
+    yt = M["youtube"]
+    parts = [f"{_YT_SIDE[k][1]}{int(yt[k])}" for k in ("skincare", "cosmetics", "korean") if k in yt]
+    out["me_c_yt"] = (f"YouTube：動画は{int(yt.sum())}の検索カテゴリ（{'、'.join(parts)}）から集めた。"
+                      "コメントは同じ区分の中でのみ比べる。")
+
+    cv, ck, per = F["cv"], F["ck"], F["per"]
+    p0, p1 = cv["periods"]
+    j0, j1 = (p.replace("–", "〜") + "年" for p in (p0, p1))
+    cur = cv["curve"].set_index("sample_size")["cosine"]
+    out["me_v_t"] = f"レビュー語彙：{j0}と{j1}"
+    out["me_cv_line"] = "公表したスキンケアとメイクのレビュー語彙の収束は、商品構成を反映したものである。"
+    out["me_v_h"] = (f"{j1}のスキンケアとメイクのレビューのコサイン類似度は標本数とともに上がり、"
+                     f"1区分{cur.index[0]}件で{cur.iloc[0]:.2f}、{cur.index[-1]:,}件で{cur.iloc[-1]:.2f}")
+    out["me_v_e"] = (
+        f"スキンケアとメイクの@cosmeレビューをそれぞれまとめたTF-IDFのコサイン。{j1}のレビューを横軸の"
+        f"件数に、{j0}のレビューを{cv['n']}件に抽出した。点線：{j0}、1区分{cv['n']}件で"
+        f"{cv['early']:.3f}。{cv['n']}件では曲線は{cv['late']:.3f}となる。")
+    out["me_v_x"] = "1区分あたりのレビュー数（対数目盛）"
+    out["me_v_y"] = "コサイン類似度"
+    out["me_v_hover"] = "1区分%{x:,}件：%{y:.3f}"
+    out["me_v_dot"] = f"{j0}、1区分{cv['n']}件：{cv['early']:.3f}"
+    pb = ck.loc["products_in_both"]
+    out["me_k_h"] = (f"商品を固定すると、{j0}から{j1}への変化は{pb['delta']:+.3f}"
+                     f"（95%信頼区間{pb['ci_lo']:+.3f}〜{pb['ci_hi']:+.3f}）")
+    out["me_k_e"] = "スキンケアとメイクのレビューのコサイン類似度。各期間を1区分あたり同じレビュー数に抽出した。"
+    out["me_k_cols"] = ["", j0, j1, "変化（95%信頼区間）"]
+    out["me_k_n"] = "1区分{n}件"
+    out["me_k_ci"] = "{lo:+.3f}〜{hi:+.3f}"
+    out["me_period"] = {p0: j0, p1: j1}
+    out["me_p_h"] = (
+        f"メイクのレビューは{j0}が{per.loc[('makeup', p0), 'products']}商品、{j1}が"
+        f"{per.loc[('makeup', p1), 'products']}商品から、スキンケアは"
+        f"{per.loc[('skincare', p0), 'products']}商品と{per.loc[('skincare', p1), 'products']}商品から")
+    out["me_p_e"] = "期間内に1件以上のレビューがある@cosmeの商品。"
+    out["me_p_cols"] = ["", "期間", "商品数", "レビュー数"]
+
+    out["me_src_meti"] = source_line(["meti"], REG, "ja")
+    out["me_src_prtimes"] = source_line(["prtimes"], REG, "ja")
+    out["me_src_cosme"] = source_line(["cosme"], REG, "ja")
     return out
