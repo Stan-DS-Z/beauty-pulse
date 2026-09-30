@@ -90,8 +90,10 @@ SOURCE_COLS = ("ソース / Source", "測るもの / Measures", "収録範囲 / 
 
 
 def _md(text: str) -> str:
-    """Page text as markdown: the renderer's <b> as bold, <br> as a space."""
-    return re.sub(r"<b>(.*?)</b>", r"**\1**", text).replace("<br>", " ")
+    """Page text for markdown: <b> kept as HTML, which GitHub renders. "**"
+    does not open bold between two characters that are not spaces, such as
+    が**+11%, so Japanese would show the asterisks. <br> becomes a space."""
+    return text.replace("<br>", " ")
 
 
 def _cell(text: str) -> str:
