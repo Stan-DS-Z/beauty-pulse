@@ -530,3 +530,114 @@ def fig_consumer_map(M, S):
                       margin=dict(l=10, r=10, t=10, b=10),
                       xaxis=dict(visible=False), yaxis=dict(visible=False))
     return fig
+
+
+# ── Timing ──────────────────────────────────────────────────────────────────
+# Seasonal ratios (bp/seasonal.py) on one Jan-Dec axis. Lines in ink with the
+# years' range as a grey band; heatmaps on one grey-to-ink ramp; a row that
+# fails its test is labelled in grey.
+
+_RAMP = [[0, "#F4F2EE"], [0.5, _GREY], [1, C["ink"]]]
+
+
+def _month_axis(S, **kw):
+    return _xax(tickmode="array", tickvals=list(range(1, 13)), ticktext=S["tm_months"],
+                range=[0.5, 12.5], **kw)
+
+
+def fig_timing_sun(M, S):
+    """Sunscreen's seasonal ratio by stage, search then shipments, each with
+    its years' range and its 3-month peak run shaded."""
+    from plotly.subplots import make_subplots
+    stages = (("search", S["tm_s_search"]), ("ship", S["tm_s_ship"]))
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.12,
+                        subplot_titles=[name for _, name in stages])
+    months = list(range(1, 13))
+    for row, (key, name) in enumerate(stages, start=1):
+        st = M["sun"][key]
+        a, b = st["run"]
+        fig.add_trace(go.Scatter(x=months + months[::-1],
+                                 y=list(st["band"]["hi"]) + list(st["band"]["lo"])[::-1],
+                                 fill="toself", fillcolor="rgba(169,165,158,0.35)",
+                                 line=dict(width=0), hoverinfo="skip", showlegend=False),
+                      row=row, col=1)
+        fig.add_trace(go.Scatter(x=months, y=st["profile"].round(0), mode="lines+markers",
+                                 line=dict(color=C["ink"], width=2.5), marker=dict(size=5),
+                                 showlegend=False,
+                                 hovertemplate=f"{name} %{{x}}: %{{y:.0f}}<extra></extra>"),
+                      row=row, col=1)
+        fig.add_hline(y=100, line_width=1, line_dash="dot", line_color=C["border"], row=row, col=1)
+        # After the traces: add_vrect skips a subplot that has none yet.
+        fig.add_vrect(x0=a - 0.5, x1=b + 0.5, fillcolor="rgba(169,165,158,0.22)", opacity=1,
+                      layer="below", line_width=0, row=row, col=1)
+    fig.update_layout(**{**_base(460), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=20, t=30, b=30))
+    fig.update_annotations(font=dict(size=11, color=C["muted"]), x=0, xanchor="left")
+    for row in (1, 2):
+        fig.update_xaxes(**_month_axis(S), row=row, col=1)
+        fig.update_yaxes(**_yax(S["tm_y"], rangemode="tozero"), row=row, col=1)
+    return fig
+
+
+def _heatmap(grid, S, height):
+    """Rows by peak month (top first), values printed; a row that fails its
+    test is labelled in grey."""
+    z = grid[list(range(1, 13))].round(0)
+    labels = [name if ok else f"<span style='color:{C['muted']}'>{name}</span>"
+              for name, ok in zip(grid["name"], grid["passes"])]
+    fig = go.Figure(go.Heatmap(
+        z=z.values, x=S["tm_months"], y=labels, colorscale=_RAMP, showscale=False,
+        zmin=float(z.values.min()), zmax=float(z.values.max()),
+        texttemplate="%{z:.0f}", textfont=dict(size=10), xgap=1, ygap=1,
+        hovertemplate=S["tm_h_hover"] + "<extra></extra>"))
+    fig.update_layout(**{**_base(height), "hovermode": "closest"},
+                      margin=dict(l=10, r=10, t=30, b=10),
+                      xaxis=dict(side="top", showgrid=False),
+                      yaxis=dict(autorange="reversed", showgrid=False, automargin=True,
+                                 tickfont=dict(color=C["ink"])))
+    return fig
+
+
+def fig_timing_ship(M, S):
+    """The 16 METI lines' seasonal profiles."""
+    return _heatmap(M["ship"], S, 40 + 26 * len(M["ship"]))
+
+
+def fig_timing_search(M, S):
+    """The category words' and umbrella terms' seasonal profiles."""
+    return _heatmap(M["search"], S, 40 + 26 * len(M["search"]))
+
+
+def fig_timing_launch(M, S):
+    """Core launch releases by month, one line per year, skincare and makeup
+    panels; each year's count at the line's end."""
+    from plotly.subplots import make_subplots
+    from .timing import LAUNCH_SIDES
+    fig = make_subplots(rows=1, cols=2, shared_yaxes=True, horizontal_spacing=0.06,
+                        subplot_titles=[S["tm_l_side"][s] for s in LAUNCH_SIDES])
+    shades = ["#CFCBC4", _GREY, "#6B6862", C["ink"]]
+    tests = M["tests"].set_index(["side", "year"])
+    top = max(int(c.values.max()) for c in M["counts"].values())
+    for col, side in enumerate(LAUNCH_SIDES, start=1):
+        c = M["counts"][side]
+        ends = {}
+        for colour, (y, row) in zip(shades, c.iterrows()):
+            fig.add_trace(go.Scatter(
+                x=list(range(1, 13)), y=row.values, mode="lines", line=dict(color=colour, width=2),
+                hovertemplate=S["tm_l_hover"].format(y=y) + "<extra></extra>"), row=1, col=col)
+            ends[y] = (12, float(row.values[-1]))
+        names = {y: S["tm_l_end"].format(y=y, n=int(tests.loc[(side, y), "n"])) for y in ends}
+        gap, placed = 0.06 * top, {}
+        for y, (_, v) in sorted(ends.items(), key=lambda kv: kv[1][1]):
+            placed[y] = max(v, max(placed.values(), default=-gap) + gap)
+        for colour, y in zip(shades, ends):
+            fig.add_annotation(x=12, y=placed[y], text=names[y], showarrow=False, xanchor="left",
+                               xshift=6, font=dict(size=10, color=colour), row=1, col=col)
+    fig.update_layout(**{**_base(340), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=70, t=30, b=30))
+    fig.update_annotations(selector=dict(xanchor="center"), font=dict(size=11, color=C["muted"]))
+    for col in (1, 2):
+        fig.update_xaxes(**_month_axis(S), row=1, col=col)
+    fig.update_yaxes(**_yax(S["tm_l_y"], rangemode="tozero"), row=1, col=1)
+    fig.update_yaxes(rangemode="tozero", gridcolor=C["grid"], row=1, col=2)
+    return fig

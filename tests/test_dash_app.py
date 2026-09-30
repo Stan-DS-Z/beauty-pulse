@@ -11,7 +11,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/supply": "supply",
-         "/consumer": "consumer"}
+         "/consumer": "consumer", "/timing": "timing"}
 
 
 @pytest.fixture(scope="module")

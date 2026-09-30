@@ -17,6 +17,7 @@ from bp import demand as bp_demand
 from bp import market as bp_market
 from bp import sources, strings
 from bp import supply as bp_supply
+from bp import timing as bp_timing
 
 ASSETS = Path(__file__).parent / "assets"
 LANGS = ("en", "jp")
@@ -37,6 +38,7 @@ class Data:
     DEMAND: dict                   # demand.compute_demand at the cut-off
     SUPPLY: dict | None            # supply.compute_supply at the cut-off, None without the launch export
     CONSUMER: dict                 # consumer.compute_consumer on the frozen edition
+    TIMING: dict                   # timing.compute_timing at the cut-off
     REGISTRY: dict                 # sources.build_registry, the latest data (monitor)
     REPORT_REGISTRY: dict          # the same, on the frozen edition (report pages)
     S: dict                        # lang -> string table
@@ -61,7 +63,8 @@ def build_report(assets: Path, launch: bool = True):
     demand = bp_demand.compute_demand(frozen, sources.CUTOFF)
     supply = bp_supply.compute_supply(frozen, sources.CUTOFF) if launch else None
     consumer = bp_consumer.compute_consumer(frozen)
-    return (brief, market, demand, supply, consumer,
+    timing = bp_timing.compute_timing(frozen, sources.CUTOFF)
+    return (brief, market, demand, supply, consumer, timing,
             sources.build_registry(frozen, sources.CUTOFF))
 
 
@@ -70,14 +73,15 @@ def build_data(assets: Path, launch: bool = True) -> Data:
     launch export would see it."""
     headline = bp_data.compute_headline(assets)
     lau = bp_data.compute_launch_headline(assets) if launch else None
-    brief, market, demand, supply, consumer, report_registry = build_report(assets, launch)
+    brief, market, demand, supply, consumer, timing, report_registry = build_report(assets, launch)
     registry = sources.build_registry(assets)
     return Data(assets=assets, HEADLINE=headline, LAUNCH=lau, BRIEF=brief, MARKET=market,
-                DEMAND=demand, SUPPLY=supply, CONSUMER=consumer, REGISTRY=registry,
+                DEMAND=demand, SUPPLY=supply, CONSUMER=consumer, TIMING=timing,
+                REGISTRY=registry,
                 REPORT_REGISTRY=report_registry,
                 S={lang: strings.build_strings(lang, headline, lau, assets, brief,
                                                report_registry, market, demand, supply,
-                                               consumer)
+                                               consumer, timing)
                    for lang in LANGS})
 
 

@@ -33,7 +33,7 @@ def href(path, lang):
 # registry. A replaced page's path redirects (app.RETIRED).
 NAV = [("nav_report", [("/brief", "nav_brief"), ("/market", "nav_market"),
                        ("/demand", "nav_demand"), ("/supply", "nav_supply"),
-                       ("/consumer", "nav_consumer")])]
+                       ("/consumer", "nav_consumer"), ("/timing", "nav_timing")])]
 NAV_PATHS = [path for _, items in NAV for path, _ in items]
 
 GRAPH_CONFIG = {"displaylogo": False, "displayModeBar": False, "responsive": True}
@@ -217,6 +217,13 @@ def themed(figure):
     for the page trees, and each callback that returns a figure."""
     figure.layout.template = TEMPLATE
     return finish(figure)
+
+
+def wide_graph(id_, figure):
+    """A chart that keeps a minimum width and scrolls sideways inside its own
+    box on a narrow screen, as a wide table does: twelve printed month columns
+    do not fit 390 px."""
+    return html.Div(graph(id_, figure), className="bp-widewrap")
 
 
 def graph(id_, figure):
