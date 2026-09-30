@@ -1,6 +1,5 @@
 """The Dash app, through Flask's test client: routes, language, callbacks, the
-word-cloud route, the no-launch empty state, the stylesheet tokens and the text
-renderer. No browser; the charts' JSON is what bp/figures.py builds, which
+no-launch empty state, the stylesheet tokens and the text renderer. No browser; the charts' JSON is what bp/figures.py builds, which
 tests/test_figures.py covers, with bp.theme.TEMPLATE set, which is checked here.
 """
 
@@ -12,7 +11,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = {"/brief": "brief", "/market": "market", "/demand": "demand", "/supply": "supply",
-         "/language": "language", "/discovery": "discovery"}
+         "/consumer": "consumer"}
 
 
 @pytest.fixture(scope="module")
@@ -143,41 +142,23 @@ def test_no_page_uses_a_retired_phrase(pages, path, lang):
     assert not hits, hits
 
 
-def test_discovery_lists_both_top_terms_with_the_shared_ones_marked(pages):
+def test_consumer_lists_both_top_terms_with_the_shared_ones_marked(pages):
     import data_cache
     d = data_cache.load()
     df = d.frame("vocab_overlap")
-    tree = json.dumps(_tree(pages["/discovery"].TREES["en"]), ensure_ascii=False)
+    tree = json.dumps(_tree(pages["/consumer"].TREES["en"]), ensure_ascii=False)
     for _, r in df.iterrows():
         cls = "bp-vocab-shared" if r["in_both"] else "bp-vocab-own"
         assert f'"children": "{r["term"]}", "className": "{cls}"' in tree, r["term"]
-    assert d.S["en"]["t3_yttfe"].startswith(f"{int(df[df.source == 'cosme'].in_both.sum())} of")
-
-
-# ── One callback per control, with a non-default value ─────────────────────
-
-def test_wordcloud_pills_swap_the_image_and_note(client):
-    img = _post(client, "lg-wc-img.children", [_in("lg-wc-year", "value", 2020)],
-                [_in("lg-lang", "data", "en")],
-                outputs=["lg-wc-img.children", "lg-wc-note.children"])
-    assert img["props"]["src"] == "/wordcloud/2020.png"
-
-
-def test_umap_year_pills_filter_the_map_and_the_count(client):
-    fig = _post(client, "dc-fig-umap.figure", [_in("dc-umap-year", "value", 2023)],
-                [_in("dc-lang", "data", "en")])
-    assert "— 2023" in fig["layout"]["title"]["text"]
-    count = _post(client, "dc-umap-count.children", [_in("dc-umap-year", "value", 2023)])
-    assert re.search(r"[\d,]+ reviews", _text(count))
+    assert d.S["en"]["cs_v_h"].startswith(f"{int(df[df.source == 'cosme'].in_both.sum())} of")
 
 
 # ── Chart template ──────────────────────────────────────────────────────────
 
 # Each callback that returns a figure: graph -> (control, a non-default value,
 # the page's language store).
-FIGURE_CALLBACKS = {
-    "dc-fig-umap": ("dc-umap-year", 2023, "dc-lang"),
-}
+# The report pages have no controls, so none today.
+FIGURE_CALLBACKS = {}
 
 
 def _figures(node):
@@ -212,21 +193,10 @@ def test_every_figure_callback_returns_the_template(client, pages, graph):
 
 
 def test_the_template_cases_cover_every_figure_callback(client, dash_app):
-    client.get("/discovery")        # page callbacks register on the first request
+    for path in PAGES:              # page callbacks register on the first request
+        client.get(path)
     graphs = {k.split(".")[0] for k in dash_app.app.callback_map if k.endswith(".figure")}
     assert graphs == set(FIGURE_CALLBACKS)
-
-
-# ── Word clouds ─────────────────────────────────────────────────────────────
-
-def test_wordcloud_route_serves_listed_years_only(client):
-    from bp import figures
-    year = figures.wordcloud_years()[-2]
-    r = client.get(f"/wordcloud/{year}.png")
-    assert r.status_code == 200 and r.mimetype == "image/png"
-    assert client.get("/wordcloud/2018.png").status_code == 404
-    # a path that is not /wordcloud/<int>.png never reaches the file route
-    assert client.get("/wordcloud/..%2Fsecret.png").mimetype != "image/png"
 
 
 # ── Empty state, stylesheet, text ───────────────────────────────────────────

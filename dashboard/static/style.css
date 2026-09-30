@@ -97,7 +97,6 @@ p { margin:0; }
 .bp-note.tone-korean { background:var(--cosm-lt); border-color:var(--korean); }
 .bp-note.tone-skin { background:var(--skin-lt); border-color:var(--skin); }
 .bp-note.tone-muted { background:var(--grid); border-color:var(--muted); }
-.bp-wc-note { padding:8px 12px; color:var(--text); }
 
 /* ── legends ──────────────────────────────────────────────────────────── */
 .bp-legend { display:flex; flex-wrap:wrap; gap:6px 24px; margin-top:12px; font-size:12px; }
@@ -105,9 +104,6 @@ p { margin:0; }
 .bp-swatch { display:inline-block; width:12px; height:12px; border-radius:2px; }
 .bp-swatch.small { width:10px; height:10px; }
 .bp-swatch.dot { width:10px; height:10px; border-radius:50%; opacity:.8; }
-.bp-umap-key { margin-top:16px; }
-.bp-umap-key .bp-legend { flex-direction:column; gap:6px; margin:0 0 16px; }
-.bp-umap-note { font-size:11px; color:var(--muted); line-height:1.6; }
 
 /* ── controls ─────────────────────────────────────────────────────────── */
 .bp-control { margin:6px 0 8px; font-size:14px; }
@@ -122,7 +118,6 @@ p { margin:0; }
 .bp-pill:has(input:checked) { border-color:var(--cosm); color:var(--cosm); background:#FDF3F6; }
 .bp-pill-input { position:absolute; opacity:0; width:0; height:0; }
 .bp-pill:has(input:focus-visible) { outline:2px solid var(--skin); outline-offset:2px; }
-.bp-wordcloud { width:100%; height:auto; display:block; }
 
 /* ── detail panels ────────────────────────────────────────────────────── */
 .bp-detail-row { display:flex; gap:8px; align-items:flex-start; }

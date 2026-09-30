@@ -30,12 +30,10 @@ def href(path, lang):
 # The nav, in order: groups of (path, string-table key of its label), each
 # group under the label its key names. A static list, because
 # dash.page_registry is incomplete while pages import; a test pins it to the
-# registry. The Language and Discovery pages stay in the report group until
-# the report and monitor pages that replace them are built; a replaced page's
-# path redirects (app.RETIRED).
+# registry. A replaced page's path redirects (app.RETIRED).
 NAV = [("nav_report", [("/brief", "nav_brief"), ("/market", "nav_market"),
                        ("/demand", "nav_demand"), ("/supply", "nav_supply"),
-                       ("/language", "tab2"), ("/discovery", "tab3")])]
+                       ("/consumer", "nav_consumer")])]
 NAV_PATHS = [path for _, items in NAV for path, _ in items]
 
 GRAPH_CONFIG = {"displaylogo": False, "displayModeBar": False, "responsive": True}
@@ -120,30 +118,11 @@ def intro(text):
     return html.P(rich(text), className="bp-intro")
 
 
-def panel_header(title, note):
-    """Section rule inside a page — marks which measurement the panel below is."""
-    return html.Div(className="bp-panel-head", children=[
-        html.P(title, className="bp-panel-title"),
-        html.P(rich(note), className="bp-panel-note"),
-    ])
-
-
 def chart_head(h, e=None):
     kids = [html.H3(rich(h), className="bp-h3")]
     if e is not None:
         kids.append(html.P(rich(e), className="expl"))
     return html.Div(kids, className="bp-chart-head")
-
-
-def kpi_card(label, value, subtitle, arrow="up"):
-    """KPI card; the subtitle is truncated and shown whole in a tooltip."""
-    prefix, tone = {"up": ("↑ ", "up"), "down": ("↓ ", "down")}.get(arrow, ("", "flat"))
-    return html.Div(className="kpi-card", children=[
-        html.Div(label, className="kpi-label"),
-        html.Div(value, className="kpi-value"),
-        html.Div(prefix + subtitle, className=f"kpi-sub {tone}",
-                 **{"data-tooltip": subtitle}),
-    ])
 
 
 # ── Report front matter and exhibits ───────────────────────────────────────
@@ -216,27 +195,11 @@ def info(text):
     return html.Div(text, className="bp-info")
 
 
-def finding(title, body, tone):
-    """Finding box: tone is "skin" or "cosm"."""
-    return html.Div(className=f"bp-finding tone-{tone}", children=[
-        html.P(rich(title), className="bp-finding-title"),
-        html.P(rich(body), className="bp-finding-body"),
-    ])
-
-
 def footnote(title, body):
     return html.Div(className="bp-footnote", children=[
         html.P(rich(title), className="bp-footnote-title"),
         html.P(rich(body), className="bp-footnote-body"),
     ])
-
-
-def note(strong, text, tone):
-    """One-line callout: a bold lead and muted text. tone: korean, skin, muted,
-    or a wordcloud tone (see WC_TONES)."""
-    kids = [html.Span(rich(strong), className="bp-note-lead")] if strong else []
-    kids.append(html.Span(rich(text), className="bp-note-text"))
-    return html.Div(kids, className=f"bp-note tone-{tone}")
 
 
 def legend(items, shape="square"):

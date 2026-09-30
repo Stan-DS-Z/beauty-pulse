@@ -17,120 +17,15 @@ STRINGS = {
         "tagline":       "Japanese beauty market analytics",
         "subtitle":      "",   # rebuilt from the edition (sources.EDITION)
         "nav_report": "Report", "nav_brief": "Brief", "nav_market": "Market",
-        "nav_demand": "Demand", "nav_supply": "Supply",
+        "nav_demand": "Demand", "nav_supply": "Supply", "nav_consumer": "Consumer",
         "launch_empty": "Launch export not found: dashboard/assets/prtimes_launches.csv.",
-        "tab2": "The language", "tab3": "Discovery",
-
-        # ── TAB 2: The Language ───────────────────────────────────────────
-        "t2_intro": "",
-
-        "t2_m1": "Vocabulary convergence",  "t2_m1d": "change in size-matched cosine similarity · 95% CI excludes 0",
-        "t2_m2": "Size-matched cosine",     "t2_m2d": "",
-        "t2_m3": "Sample-size effect",       "t2_m3d": "same reviews: cosine rises as N grows from 150 to 6,000",
-
-        "t2_wch": "Most frequent review words by year",
-        "t2_wce": "Word size = frequency in that year's @cosme reviews. Brand names and generic sentiment words are removed.",
-        "t2_wc_early": "2019–2021: マスカラ (mascara), アイライナー (eyeliner), まつ毛 (eyelashes) and ブラシ (brush) are among the largest words",
-        "t2_wc_2022":  "2022: makeup and skincare words both appear among the largest",
-        "t2_wc_2023":  "2023: skincare words take more of the largest positions",
-        "t2_wc_late":  "2024–2026: 乾燥 (dryness), 保湿 (moisture), 香り (scent), クリーム (cream) and 洗顔 (face wash) are among the largest words · 2026: reviews to mid-year",
-
-        "t2_curveh": "Cosine similarity rises with sample size alone",
-        # t2_m2d / t2_curvee / t2_curvenote / f2_body carry live figures and are
-        # rebuilt from HEADLINE in the _h block below. Empty here on purpose: a
-        # missing rebuild then fails visibly instead of shipping a stale number.
-        "t2_curvee": "",
-        "t2_curvenote": "",
-
-        "f2_title": "Finding 2 — Review vocabulary converged slightly",
-        "f2_body": "",
-
-        # ── TAB 3: Discovery ──────────────────────────────────────────────
-        "t3_intro": "The largest YouTube beauty channels and their comments, and a map of @cosme reviews placed by vocabulary.",
-        "t3_p2": "Video and reviews",
-        "t3_p2d": "YouTube beauty channels and their comments, and @cosme reviews.",
-
-        "t3_m3": "Review map",                    "t3_m3d": "~69% of reviews fall in one central cluster",
-
-        "t3_ytch":  "Top 15 YouTube beauty channels by total views",
-        "t3_ytche": "Colour = skincare or cosmetics focus.",
-        "t3_ytgap":  "Korean beauty on YouTube — ",
-        "t3_ytgapb": "韓国コスメ: 16 videos and 4.4M views in this dataset. かずのすけ, a chemistry-focused creator: 71 videos and 43.4M views of ingredient content.",
-
-        "t3_yttfh": "YouTube commenters write about the video; @cosme reviewers write about the product",
-        "t3_yttfe": "",   # rebuilt from HEADLINE (vocab_shared, vocab_top)
-        "t3_vcols":  ["", "@cosme reviews", "YouTube comments"],
-        "t3_vkey":   "Bold: in both lists. Both lists come from one tokeniser (nouns and adjectives) and one TF-IDF, ranked by mean weight across skincare documents.",
-        "t3_ytdivtitle": "← More frequent in cosmetics comments  ·  More frequent in skincare comments →",
-        "t3_ytdivax":    "Term frequency, skincare comments minus cosmetics comments",
-
-        "t3_umaph": "Review map: @cosme reviews placed by vocabulary similarity",
-        "t3_umape": "Each dot is one review; reviews with similar words are placed closer together. Blue = skincare, rose = cosmetics.",
-        "t3_umap_yr": "Filter by year",
-        "t3_umap_sk": "Skincare", "t3_umap_co": "Cosmetics",
-        "t3_umap_note": "Labels show each region's most frequent words.\n\nSelect 2019 and 2025 to compare where rose (cosmetics) dots overlap blue (skincare) regions.",
-
-        "f3_title": "Finding 3 — Giveaway reviews form a separate cluster on the review map",
-        "f3_body":  "Northeast region: foundation reviews using skincare words, and cleansing reviews rated on moisture and texture.<br><br>Top cluster: influencer and giveaway reviews written with 「プレゼント」/「当選」 template phrases, placed apart from all other reviews. Sentiment measured on unfiltered @cosme data includes both groups.",
-
     },
     "jp": {
         "tagline":        "日本の美容市場分析",
         "subtitle":       "",  # rebuilt from the edition (sources.EDITION)
         "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要", "nav_supply": "供給",
+        "nav_consumer": "消費者",
         "launch_empty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
-        "tab2": "消費者の言語", "tab3": "発見",
-
-        "t2_intro":  "",
-
-        "t2_m1":     "語彙収束",  "t2_m1d": "サイズを揃えたコサイン類似度の変化 · 95%CIはゼロを含まない",
-        "t2_m2":     "サイズを揃えたコサイン", "t2_m2d": "",
-        "t2_m3":     "サンプルサイズ効果", "t2_m3d": "同一データ：Nが150→6,000と増えるとコサインが上昇",
-
-        "t2_wch":    "年別のレビュー頻出語",
-        "t2_wce":    "語の大きさ = その年の@cosmeレビューでの出現頻度。ブランド名と汎用的な感情語は除外。",
-        "t2_wc_early":  "2019–2021：マスカラ、アイライナー、まつ毛、ブラシが上位に入る",
-        "t2_wc_2022":   "2022：メイクとスキンケアの語が共に上位に入る",
-        "t2_wc_2023":   "2023：上位に占めるスキンケアの語が増える",
-        "t2_wc_late":   "2024–2026：乾燥、保湿、香り、クリーム、洗顔が上位に入る · 2026年は年央までのレビュー",
-
-        "t2_curveh": "コサイン類似度はサンプル数だけで上昇する",
-        # t2_m2d / t2_curvee / t2_curvenote / f2_body carry live figures and are
-        # rebuilt from HEADLINE in the _h block below. Empty here on purpose: a
-        # missing rebuild then fails visibly instead of shipping a stale number.
-        "t2_curvee": "",
-        "t2_curvenote": "",
-
-        "f2_title":  "発見2 — レビュー語彙はわずかに収束した",
-        "f2_body": "",
-
-        "t3_intro":  "美容YouTubeの上位チャンネルとそのコメント、語彙で配置した@cosmeレビューのマップ。",
-        "t3_p2": "動画・レビュー",
-        "t3_p2d": "美容YouTubeのチャンネルとコメント、@cosmeレビュー。",
-
-        "t3_m3":     "レビューマップ",  "t3_m3d": "レビューの約69%が中央の一つのクラスタに入る",
-
-        "t3_ytch":   "総視聴数上位15の美容YouTubeチャンネル",
-        "t3_ytche":  "色 = スキンケア／コスメのどちらを主に扱うか。",
-        "t3_ytgap":  "YouTube上の韓国コスメ — ",
-        "t3_ytgapb": "韓国コスメ：本データセットで16本・440万回視聴。化学系クリエイターのかずのすけ：成分コンテンツ71本・4,340万回視聴。",
-
-        "t3_yttfh":  "YouTubeのコメントは動画について、@cosmeのレビューは商品について書かれている",
-        "t3_yttfe":  "",  # rebuilt from HEADLINE (vocab_shared, vocab_top)
-        "t3_vcols":  ["", "@cosmeレビュー", "YouTubeコメント"],
-        "t3_vkey":   "太字は両方のリストにある語。両リストとも同じトークナイザー（名詞と形容詞）とTF-IDFで作り、スキンケア文書での平均重みで順位を付けた。",
-        "t3_ytdivtitle": "← コスメのコメントで多い  ·  スキンケアのコメントで多い →",
-        "t3_ytdivax":    "語の出現頻度、スキンケアのコメント − コスメのコメント",
-
-        "t3_umaph":  "レビューマップ：語彙の類似度で配置した@cosmeレビュー",
-        "t3_umape":  "各点がレビュー1件。似た語を使うレビューほど近くに配置される。青 = スキンケア、ローズ = コスメ。",
-        "t3_umap_yr":   "年でフィルタ",
-        "t3_umap_sk":   "スキンケア", "t3_umap_co": "コスメ",
-        "t3_umap_note": "ラベルは各領域の頻出語。\n\n2019年と2025年を選び、コスメ（ローズ）の点がスキンケア（青）の領域と重なる位置を比較できる。",
-
-        "f3_title":  "発見3 — モニター・プレゼント当選レビューはレビューマップ上で別のクラスタを形成する",
-        "f3_body":   "北東の領域：スキンケアの語で書かれたファンデーションのレビューと、保湿と質感で評価されたクレンジングのレビュー。<br><br>上部のクラスタ：「プレゼント」「当選」の定型句で書かれたインフルエンサー・モニターレビューで、他の全てのレビューから離れて配置される。未フィルタの@cosmeデータで測ったセンチメントは両方の集団を含む。",
-
     },
 }
 
@@ -167,7 +62,7 @@ def _ym(ym, lang):
 
 
 def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MARKET=None,
-                  DEMAND=None, SUPPLY=None):
+                  DEMAND=None, SUPPLY=None, CONSUMER=None):
     """STRINGS[lang] with the live figures written in, and each report page's
     copy when its figures (brief.compute_brief, market.compute_market) and the
     source registry are given."""
@@ -175,48 +70,6 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
     _ed = pd.Timestamp(EDITION + "-01")
     S["subtitle"] = (f"Report: {_MON_EN[_ed.month]} {_ed.year} edition" if lang == "en"
                      else f"レポート：{_ed.year}年{_ed.month}月版")
-    # ── Convergence copy is rebuilt from live figures ─────────────────────────
-    # These numbers recompute whenever NB06 re-runs (corpus growth, re-scrape),
-    # so the prose is generated from HEADLINE rather than hardcoded — it can never
-    # drift out of sync with the KPI cards or the size-curve chart.
-    _h = HEADLINE
-    if lang == "en":
-        S["t2_intro"] = (
-            f"Measured at equal sample sizes, skincare and cosmetics reviews shared more vocabulary "
-            f"in {_h['conv_p1']} than in {_h['conv_p0']}.")
-        S["t2_m2d"] = f"each period set to {_h['matched_n']} reviews · {_h['conv_ci']}"
-        S["t3_yttfe"] = (f"{_h['vocab_shared']} of the top {_h['vocab_top']} skincare terms "
-                         "appear on both platforms.")
-        S["t2_curvee"] = (
-            f"The same {_h['conv_p1']} reviews, subsampled to different sizes: cosine similarity "
-            f"between pooled skincare and cosmetics reviews rises from ~{_h['size_lo_cos']} to "
-            f"~{_h['size_hi_cos']}. Convergence on this tab is measured at equal sample sizes.")
-        S["t2_curvenote"] = (
-            f"At {_h['matched_n']} reviews per period: {_h['conv_lo']} → {_h['conv_hi']}, "
-            f"Δ +{_h['conv_delta']} (bootstrap {_h['conv_ci']}).")
-        S["f2_body"] = (
-            f"With each period set to {_h['matched_n']} reviews, cosine similarity between skincare "
-            f"and cosmetics review language rose from {_h['conv_lo']} ({_h['conv_p0']}) to "
-            f"{_h['conv_hi']} ({_h['conv_p1']}), Δ +{_h['conv_delta']} ({_h['conv_ci']}).")
-    else:
-        S["t2_intro"] = (
-            f"サンプル数を揃えて測ると、スキンケアとコスメのレビューが共有する語彙は、"
-            f"{_h['conv_p0']}年より{_h['conv_p1']}年のほうが多い。")
-        S["t2_m2d"] = f"各期間を{_h['matched_n']}件に均一化 · {_h['conv_ci_jp']}"
-        S["t3_yttfe"] = (f"スキンケア上位{_h['vocab_top']}語のうち、"
-                         f"両プラットフォームに共通するのは{_h['vocab_shared']}語。")
-        S["t2_curvee"] = (
-            f"同一の{_h['conv_p1']}年レビューを異なるサイズにサブサンプルすると、プールしたスキンケアとコスメの"
-            f"レビュー間のコサイン類似度は約{_h['size_lo_cos']}から約{_h['size_hi_cos']}へ上昇する。"
-            "このタブの収束はサンプル数を揃えて測っている。")
-        S["t2_curvenote"] = (
-            f"各期間{_h['matched_n']}件：{_h['conv_lo']} → {_h['conv_hi']}、"
-            f"Δ +{_h['conv_delta']}（ブートストラップ{_h['conv_ci_jp']}）。")
-        S["f2_body"] = (
-            f"各期間を{_h['matched_n']}件に揃えると、スキンケアとコスメのレビュー言語のコサイン類似度は"
-            f"{_h['conv_lo']}（{_h['conv_p0']}年）から{_h['conv_hi']}（{_h['conv_p1']}年）へ上昇した。"
-            f"Δ +{_h['conv_delta']}（{_h['conv_ci_jp']}）。")
-
     if BRIEF is not None and REGISTRY is not None:
         S.update(brief_strings(lang, BRIEF, BRIEF["H"], REGISTRY))
     if MARKET is not None and REGISTRY is not None:
@@ -225,6 +78,8 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
         S.update(demand_strings(lang, DEMAND, REGISTRY))
     if SUPPLY is not None and REGISTRY is not None:
         S.update(supply_strings(lang, SUPPLY, REGISTRY))
+    if CONSUMER is not None and REGISTRY is not None:
+        S.update(consumer_strings(lang, CONSUMER, REGISTRY))
     return S
 
 
@@ -243,7 +98,7 @@ _MON_ABBR = [None, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"
 # Where each key finding's page lives until the report pages are built: the
 # page that carries that layer today, or None.
 BRIEF_LINKS = {"market": ("/market", "nav_market"), "demand": ("/demand", "nav_demand"),
-               "supply": ("/supply", "nav_supply"), "consumer": ("/language", "tab2"),
+               "supply": ("/supply", "nav_supply"), "consumer": ("/consumer", "nav_consumer"),
                "timing": None}
 
 
@@ -1294,4 +1149,138 @@ def _supply_ja(M, REG):
         f"現れない。その他の価格帯は{_G['other_n']}ブランド中{_G['other_unseen']}。"
         f"限定・再発売の除外判定は手作業ラベルの{_G['edition_n']}件中{_G['edition_found']}件を検出する。")
     out["sp_src_prtimes"] = source_line(["prtimes"], REG, "ja")
+    return out
+
+
+# ── Consumer ────────────────────────────────────────────────────────────────
+# Every figure comes from consumer.compute_consumer. @cosme and YouTube are
+# read within one side (METHODOLOGY, Source roles): the copy compares
+# vocabulary at equal sample sizes and states no count, share or volume
+# across sides or years.
+
+# The @cosme categories in review_map.csv (categories.normalized_name) → names.
+REVIEW_CAT = {
+    "cleansing": ("Cleansing", "クレンジング"), "face_wash": ("Face wash", "洗顔料"),
+    "toner_lotion": ("Toner", "化粧水"), "serum_essence": ("Serum", "美容液"),
+    "emulsion": ("Emulsion", "乳液"), "face_cream": ("Face cream", "フェイスクリーム"),
+    "sun_protection": ("Sunscreen", "日焼け止め"), "foundation": ("Foundation", "ファンデーション"),
+    "lip_colour": ("Lipstick and gloss", "口紅・グロス"), "eye_shadow": ("Eyeshadow", "アイシャドウ"),
+}
+
+
+def consumer_strings(lang, M, REG):
+    """The Consumer page's copy in one language, and the lookups its figures
+    use: the language (cs_en), category names (cs_cat) and hover text."""
+    out = _consumer_en(M, REG) if lang == "en" else _consumer_ja(M, REG)
+    out["cs_en"] = lang == "en"
+    out["cs_cat"] = {k: v[_li(lang)] for k, v in REVIEW_CAT.items()}
+    return out
+
+
+def _consumer_en(M, REG):
+    from .sources import source_line
+    cv, sz, vc, ph = M["conv"], M["size"], M["vocab"], M["phrase"]
+    ed = pd.Timestamp(EDITION + "-01")
+    ci = f"95% CI [+{cv['ci_lo']:.3f}, +{cv['ci_hi']:.3f}]"
+    out = {}
+    out["cs_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["cs_intro"] = (f"At {cv['n']} reviews per period, skincare and makeup reviews on @cosme "
+                       f"share more vocabulary in {cv['p1']} than in {cv['p0']}.")
+    out["cs_figs"] = [
+        ("Vocabulary convergence", f"+{cv['delta']:.3f}",
+         f"change in cosine similarity, {cv['p0']} → {cv['p1']}, {ci}"),
+        ("Size-matched cosine", f"{cv['lo']:.3f} → {cv['hi']:.3f}",
+         f"each period set to {cv['n']} reviews"),
+        ("Sample-size effect", f"{sz['c0']:.2f} → {sz['c1']:.2f}",
+         f"the same reviews, as N grows from {sz['n0']:,} to {sz['n1']:,}"),
+    ]
+
+    out["cs_c_h"] = (f"On the same reviews, cosine similarity rises from {sz['c0']:.2f} to "
+                     f"{sz['c1']:.2f} as the sample grows from {sz['n0']:,} to {sz['n1']:,}")
+    out["cs_c_e"] = (
+        f"The {cv['p1']} reviews, subsampled to each size; cosine similarity between the pooled "
+        "skincare reviews and the pooled makeup reviews, on TF-IDF vocabulary. The convergence "
+        f"figures above subsample every period, on both sides, to {cv['n']} reviews.")
+    out["cs_c_x"] = "Reviews in the sample"
+    out["cs_c_y"] = "Cosine similarity, skincare and makeup reviews"
+    out["cs_c_hover"] = "N = %{x:,} reviews: %{y:.3f}"
+
+    out["cs_v_h"] = (f"{vc['shared']} of the top {vc['top']} skincare terms appear in both "
+                     "@cosme reviews and YouTube comments")
+    out["cs_v_e"] = (
+        "@cosme skincare reviews, and comments on YouTube videos from the skincare search categories. One "
+        "tokeniser (nouns and adjectives) and one TF-IDF for both; terms ranked by mean weight "
+        "across skincare documents. In ink: terms in both lists.")
+    out["cs_vcols"] = ["", "@cosme reviews", "YouTube comments"]
+
+    out["cs_m_h"] = (
+        f"Reviews that contain プレゼント or 当選 sit together on the review map: on average "
+        f"{ph['nn_phrase']:.1f} of their {ph['k']} nearest reviews contain one too, against "
+        f"{ph['nn_other']:.1f} for other reviews")
+    cats = (f"all {_NUM_EN[ph['n_cats']]}" if ph["cats"] == ph["n_cats"]
+            else f"{_NUM_EN[ph['cats']]} of {_NUM_EN[ph['n_cats']]}")
+    out["cs_m_e"] = (
+        f"Each dot is one of {ph['total']:,} @cosme reviews, placed by vocabulary (UMAP): "
+        f"reviews that use similar words sit closer together. In ink: the {ph['n']:,} reviews "
+        f"that contain プレゼント (present) or 当選 (won a draw), from {cats} product categories.")
+    out["cs_m_label"] = "プレゼント / 当選"
+    out["cs_m_hover"] = {0: "%{customdata}", 1: "%{customdata} · プレゼント / 当選"}
+
+    out["cs_src_cosme"] = source_line(["cosme"], REG)
+    out["cs_src_both"] = source_line(["cosme", "youtube"], REG)
+    return out
+
+
+def _consumer_ja(M, REG):
+    """The Consumer page in Japanese: 産業調査体, である調, titles without a
+    closing 。, the site's terms (スキンケアとメイク)."""
+    from .sources import source_line
+    cv, sz, vc, ph = M["conv"], M["size"], M["vocab"], M["phrase"]
+    ed = pd.Timestamp(EDITION + "-01")
+    ci = f"95%CI [+{cv['ci_lo']:.3f}, +{cv['ci_hi']:.3f}]"
+    out = {}
+    out["cs_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["cs_intro"] = (f"各期間を{cv['n']}件に揃えると、@cosmeのスキンケアとメイクのレビューが共有する"
+                       f"語彙は{cv['p0']}年より{cv['p1']}年のほうが多い。")
+    out["cs_figs"] = [
+        ("語彙の収束", f"+{cv['delta']:.3f}",
+         f"コサイン類似度の変化、{cv['p0']}年→{cv['p1']}年、{ci}"),
+        ("件数を揃えたコサイン類似度", f"{cv['lo']:.3f} → {cv['hi']:.3f}",
+         f"各期間{cv['n']}件"),
+        ("サンプル数の影響", f"{sz['c0']:.2f} → {sz['c1']:.2f}",
+         f"同じレビューで、Nを{sz['n0']:,}件から{sz['n1']:,}件に増やした場合"),
+    ]
+
+    out["cs_c_h"] = (f"同じレビューでも、サンプルを{sz['n0']:,}件から{sz['n1']:,}件に増やすと"
+                     f"コサイン類似度は{sz['c0']:.2f}から{sz['c1']:.2f}へ上昇する")
+    out["cs_c_e"] = (
+        f"{cv['p1']}年のレビューを各件数にサブサンプルし、スキンケアとメイクのレビューをそれぞれ"
+        "プールして、TF-IDF語彙のコサイン類似度を測った。上の語彙の収束の数値は、両側の各期間を"
+        f"{cv['n']}件にサブサンプルしたものである。")
+    out["cs_c_x"] = "サンプルのレビュー件数"
+    out["cs_c_y"] = "コサイン類似度（スキンケアとメイクのレビュー）"
+    out["cs_c_hover"] = "%{x:,}件：%{y:.3f}"
+
+    out["cs_v_h"] = (f"スキンケアの上位{vc['top']}語のうち{vc['shared']}語が、@cosmeレビューと"
+                     "YouTubeコメントの両方に入る")
+    out["cs_v_e"] = (
+        "@cosmeのスキンケアレビューと、スキンケアの検索カテゴリで集めたYouTube動画へのコメント。両者に同じ"
+        "トークナイザー（名詞と形容詞）とTF-IDFを用い、スキンケア文書での平均重みで順位を付けた。"
+        "濃色は両方のリストにある語。")
+    out["cs_vcols"] = ["", "@cosmeレビュー", "YouTubeコメント"]
+
+    cats = (f"{ph['n_cats']}の商品カテゴリすべて" if ph["cats"] == ph["n_cats"]
+            else f"{ph['n_cats']}の商品カテゴリのうち{ph['cats']}")
+    out["cs_m_h"] = (
+        f"「プレゼント」「当選」を含むレビューはレビューマップ上でまとまり、最も近い{ph['k']}件のうち"
+        f"平均{ph['nn_phrase']:.1f}件が同じ語を含む（他のレビューは{ph['nn_other']:.1f}件）")
+    out["cs_m_e"] = (
+        f"各点は@cosmeレビュー{ph['total']:,}件のうちの1件で、語彙によって配置した（UMAP）。"
+        f"似た語を使うレビューほど近くに置かれる。濃色は「プレゼント」または「当選」を含む"
+        f"{ph['n']:,}件で、{cats}にわたる。")
+    out["cs_m_label"] = "プレゼント／当選"
+    out["cs_m_hover"] = {0: "%{customdata}", 1: "%{customdata} · プレゼント／当選"}
+
+    out["cs_src_cosme"] = source_line(["cosme"], REG, "ja")
+    out["cs_src_both"] = source_line(["cosme", "youtube"], REG, "ja")
     return out

@@ -25,6 +25,7 @@
   "prtimes_feeds.csv": "488774444bfd7ebba88f4c8aa98b9f7aec192c03dd5e4b483e32839a48fdafe6",
   "prtimes_ingredient_terms.csv": "ddf3edd6242d2de5a6dbaf2cb69d60d5a9d8fb8971bd25bb13d58153ae1446db",
   "prtimes_launches.csv": "1ecbecf9cbf722826bdc70725c95ffdb1833d138db69c4cdb1e573eaa38b86e5",
+  "review_map.csv": "22b71e5c0f12e0dda692619e6a92c4abbecacfd9f3fffc5bfdfedd3fd434f50f",
   "source_dates.csv": "7fbe703615713bb776ce78a1a52debe1e7cd322117a883002ae6bb08378d740d",
   "umap_embedding.csv": "fc059d488685e02bcacbd1499233dcc90a3ca8adb9f98c2a62768d6433b9fe1c",
   "vocab_overlap.csv": "590882c6c5cfb843d6779a8aaf00673dcf5d983444d6470b31a5db6504ec108f",
@@ -36,5 +37,14 @@
   "wordcloud_2024.png": "e650f4423cf57e9defce1fe273d45f6ffdac02b4041a3e6bf66d4799a59152e0",
   "wordcloud_2025.png": "df77e93a9bd12bf206c53ad951aa5143a3fbdb4eac4fe6a16ea9e46f6308c139",
   "wordcloud_2026.png": "e8a1792ca849de0adb41ecc5f5511bc945c80d122d35f4dc913d9084c0d2e4f7"
- }
+ },
+ "amended": [
+  {
+   "date": "2026-09-30",
+   "added": [
+    "review_map.csv"
+   ],
+   "why": "The review map's labels need each review's category and phrase flag, which no frozen file carries. Added on Stan's ruling; no existing file changed."
+  }
+ ]
 }

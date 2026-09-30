@@ -276,6 +276,6 @@ def test_the_nav_has_no_emoji(headline, launch, B):
     for lang in ("en", "jp"):
         S = strings.build_strings(lang, headline, launch, A, B,
                                   sources.build_registry(E, sources.CUTOFF))
-        for key in ("nav_report", "nav_brief", "nav_market", "nav_demand", "nav_supply", "tab2",
-                    "tab3"):
+        for key in ("nav_report", "nav_brief", "nav_market", "nav_demand", "nav_supply",
+                    "nav_consumer"):
             assert not EMOJI.search(S[key]), (lang, key)

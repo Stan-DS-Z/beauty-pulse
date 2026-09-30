@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import pytest
 
-from bp import brief, data, demand, figures, market, sources, strings, supply
+from bp import brief, consumer, data, demand, figures, market, sources, strings, supply
 
 A = data.ASSETS
 BUILDERS = sorted(n for n in vars(figures) if n.startswith("fig_"))
@@ -27,17 +27,13 @@ def launch():
 @pytest.fixture(scope="module")
 def frames():
     df_grp, _ = data.load_meti_monthly(A)
-    return dict(grp=df_grp, curve=data.load_cosine_sizecurve(A), ch=data.load_yt_channels(A),
-                umap=data.load_umap(A))
+    return dict(grp=df_grp)
 
 
-def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None):
+def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None, CS=None):
     """Builder name -> the figures it draws with default controls."""
     return {
         "fig_meti_groups": lambda: [figures.fig_meti_groups(f["grp"], H, lang)],
-        "fig_cosine_sizecurve": lambda: [figures.fig_cosine_sizecurve(f["curve"], H)],
-        "fig_yt_channels": lambda: [figures.fig_yt_channels(f["ch"])],
-        "fig_umap": lambda: [figures.fig_umap(f["umap"], figures.umap_year_options()[0], S)],
         "fig_brief_portfolio": lambda: [figures.fig_brief_portfolio(B, S)],
         "fig_brief_actives": lambda: [figures.fig_brief_actives(B, S)],
         "fig_market_lines": lambda: [figures.fig_market_lines(M, S)],
@@ -51,6 +47,8 @@ def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None):
         "fig_supply_origin": lambda: [figures.fig_supply_origin(SP, S)],
         "fig_supply_groups": lambda: [figures.fig_supply_groups(SP, S)],
         "fig_supply_ingredients": lambda: [figures.fig_supply_ingredients(SP, S)],
+        "fig_consumer_curve": lambda: [figures.fig_consumer_curve(CS, S)],
+        "fig_consumer_map": lambda: [figures.fig_consumer_map(CS, S)],
     }
 
 
@@ -63,8 +61,10 @@ def test_builder_returns_a_figure_that_round_trips(name, lang, headline, launch,
     M = market.compute_market(A, sources.CUTOFF)
     DM = demand.compute_demand(A, sources.CUTOFF)
     SP = supply.compute_supply(A, sources.CUTOFF)
-    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M, DM, SP)
-    table = cases(frames, headline, launch, lang, S, B, M, DM, SP)
+    CS = consumer.compute_consumer(A)
+    S = strings.build_strings(lang, headline, launch, A, B, sources.build_registry(A), M, DM, SP,
+                              CS)
+    table = cases(frames, headline, launch, lang, S, B, M, DM, SP, CS)
     assert name in table, f"{name} has no case in tests/test_figures.py"
     for fig in table[name]():
         assert isinstance(fig, go.Figure)
@@ -83,7 +83,9 @@ def test_builder_leaves_the_template_to_the_frontend(name, headline, launch, fra
     M = market.compute_market(A, sources.CUTOFF)
     DM = demand.compute_demand(A, sources.CUTOFF)
     SP = supply.compute_supply(A, sources.CUTOFF)
-    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M, DM, SP)
+    CS = consumer.compute_consumer(A)
+    S = strings.build_strings("en", headline, launch, A, B, sources.build_registry(A), M, DM, SP,
+                              CS)
     default = pio.templates[pio.templates.default].to_plotly_json()
-    for fig in cases(frames, headline, launch, "en", S, B, M, DM, SP)[name]():
+    for fig in cases(frames, headline, launch, "en", S, B, M, DM, SP, CS)[name]():
         assert fig.layout.template.to_plotly_json() == default

@@ -435,20 +435,16 @@ def load_makeup_rebound(ASSETS: Path):
     df["year"] = df["week_start"].dt.year
     return df
 
-def load_review_slope(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb07_review_slope.csv")
-
 def load_umap(ASSETS: Path):
     return pd.read_csv(ASSETS / "umap_embedding.csv")
 
+def load_review_map(ASSETS: Path):
+    """Per embedded review: category, phrase flag and how many of its nearest
+    reviews carry the phrase (build_review_map.py)."""
+    return pd.read_csv(ASSETS / "review_map.csv")
+
 def load_cosine_sizecurve(ASSETS: Path):
     return pd.read_csv(ASSETS / "nb06_cosine_sizecurve.csv")
-
-def load_yt_volume(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb07_yt_volume.csv")
-
-def load_yt_channels(ASSETS: Path):
-    return pd.read_csv(ASSETS / "nb07_yt_channels.csv")
 
 def load_meti_annual(ASSETS: Path, cutoff=None):
     """METI shipments, annual, by product line. 販売金額 in 億円, 販売個数 in 十個.

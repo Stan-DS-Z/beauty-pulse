@@ -148,6 +148,15 @@ The Shift page leaves the site, and its address goes to the Demand page. Its exh
 - **検索と出荷金額の組 / Search against shipped value.** 6カテゴリの検索と出荷金額を断層の前後で並べた図は外した。ファネルの表が各カテゴリの検索と出荷金額を1つの期間（2022→2025年）で測る（`bp/funnel.py`）。 / The six categories' search and shipped value, paired before and after the break, are dropped. The funnel matrix measures each category's search and shipped value over one window, 2022→2025 (`bp/funnel.py`).
 - **楽天 / Rakuten.** 各ジャンルの評価と価格中央値の図は、2026年9月版のどのページにもない。凍結したスナップショットは2026年9月20日付で版の締め（2026年8月）より後であり、上位ジャンルと下位ジャンルが混在する。楽天はモニターで扱う。 / The chart of each genre's rating and median price is on no page of the September 2026 edition. The frozen snapshot is dated 20 September 2026, after the edition's cut-off (August 2026), and it mixes a parent genre with its subgenres. Rakuten returns on the monitor.
 
+**改訂19 — 言語と発見のページを消費者のページにまとめる（2026年9月30日）/ Revision 19 — the Language and Discovery pages become the Consumer page (30 September 2026)**  
+2つのページをサイトから外し、どちらのアドレスも消費者のページへ移る。図の行き先は次のとおり。  
+Both pages leave the site, and both addresses go to the Consumer page. Their exhibits went as follows.
+- **語彙の収束 / Vocabulary convergence.** 件数を揃えたコサイン類似度とサンプル数の曲線は消費者のページにある。 / The size-matched cosine figures and the sample-size curve are on the Consumer page.
+- **上位30語 / The two top-30 lists.** @cosmeレビューとYouTubeコメントのスキンケア上位30語は消費者のページにある。 / The two top-30 skincare term lists, @cosme reviews and YouTube comments, are on the Consumer page.
+- **レビューマップ / Review map.** トピックのラベルはトピックモデル（NB06）の以前の実行に基づいており、現在の埋め込みでは別の領域を指していた。「フットケア」と表示したトピックの4,169件のうち3,718件はファンデーションのレビューで、プレゼントレビューの注記はそれらのレビューから離れた位置にあった。マップはトピックのラベルを持たず、「プレゼント」または「当選」を含むレビューを示す。各レビューのカテゴリと語の有無は`build_review_map.py`が非公開のデータベースから作り（本文は含まない）、`review_map.csv`として2026年9月版に加えた（マニフェストの`amended`）。版の他のファイルは変わらない。 / The topic labels came from an earlier run of the topic model (NB06) and named other regions on the current embedding: of the 4,169 reviews in the topic labelled "Foot care", 3,718 are foundation reviews, and the giveaway callout pointed away from those reviews. The map carries no topic labels. It marks the reviews that contain プレゼント or 当選. `build_review_map.py` derives each review's category and phrase flag from the private database, without the text, and `review_map.csv` was added to the 2026-09 edition (the manifest's `amended` entry). No other file in the edition changed.
+- **ワードクラウド / Word clouds.** どのページにもない。年ごとの図と注記は、収集が件数を決めるコーパス（2019年は89件、2026年は18,920件）の語の構成を年どうしで比べていた（情報源の役割）。 / On no page. The yearly clouds and their notes compared the corpus's word make-up across years, in a corpus whose size per year the collection sets (89 reviews in 2019, 18,920 in 2026) (Source roles).
+- **YouTubeチャンネル / YouTube channels.** 総視聴数上位15チャンネルの図と韓国コスメの注記は、どのページにもない。視聴数は収集した動画の合計であり、その順位とスキンケア・メイクの内訳は検索カテゴリの数（スキンケア10、メイク4）で決まる（情報源の役割）。 / The top-15 channels by total views and the Korean-beauty note are on no page. The views are summed over the videos collected, so the ranking and its skincare/makeup split follow the search categories (ten skincare, four makeup) (Source roles).
+
 ---
 
 ## 情報源の役割 / Source roles

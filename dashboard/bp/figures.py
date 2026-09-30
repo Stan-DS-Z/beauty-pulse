@@ -52,295 +52,6 @@ def fig_meti_groups(df_grp, HEADLINE, lang):
     return figM1
 
 
-# ── Tab 2 ─────────────────────────────────────────────────────────────────
-
-def fig_cosine_sizecurve(df_curve, HEADLINE):
-    """Cross-tier cosine against subsample size."""
-    fig_cv = go.Figure()
-    fig_cv.add_trace(go.Scatter(
-        x=df_curve["sample_size"], y=df_curve["cross_tier_cosine"],
-        mode="lines+markers",
-        line=dict(color=C["cosm"], width=2.5),
-        marker=dict(size=8, color=C["cosm"]),
-        hovertemplate="N=%{x:,} reviews<br>cosine = %{y:.2f}<extra></extra>",
-    ))
-    fig_cv.add_hline(
-        y=HEADLINE["conv_lo"], line_dash="dot", line_color=C["skin"],
-        annotation_text=f"size-matched ≈ {HEADLINE['conv_lo']:.2f}",
-        annotation_position="bottom left",
-        annotation_font=dict(size=9, color=C["skin"]),
-    )
-    fig_cv.update_layout(**_base(height=380))
-    fig_cv.update_layout(
-        margin=dict(l=20, r=20, t=20, b=50),
-        showlegend=False,
-        xaxis=_xax(title=dict(text="Reviews per slice (subsample size)",
-                              font=dict(size=11))),
-        yaxis=_yax(title="Skincare ↔ cosmetics cosine",
-                   range=[0, 0.8]),
-    )
-    return fig_cv
-
-
-def wordcloud_years():
-    """The years a word cloud is drawn for, oldest first."""
-    return [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
-
-
-def wordcloud_note(year):
-    """The note under a year's word cloud: its string key, and the colour keys
-    of its background and left rule."""
-    if year <= 2021:
-        return "t2_wc_early", "cosm_lt", "cosm"
-    if year == 2022:
-        return "t2_wc_2022", "grid", "muted"
-    if year == 2023:
-        return "t2_wc_2023", "grid", "gold"
-    return "t2_wc_late", "skin_lt", "skin"
-
-
-# ── Tab 3 · search, video and reviews ────────────────────────────────────
-
-def fig_yt_channels(df_ch):
-    """The 15 YouTube beauty channels with the most views."""
-    TIER_COLOURS = {
-        "skincare":  C["skin"],
-        "cosmetics": C["cosm"],
-        "korean":    C["korean"],
-        "other":     C["muted"],
-    }
-    # Aggregate by channel — primary tier = category with highest total_views
-    df_agg = (df_ch.groupby("channel_name")
-              .agg(total_views=("total_views", "sum"),
-                   video_count=("video_count", "sum"),
-                   total_comments=("total_comments", "sum"))
-              .reset_index())
-    primary = (df_ch.sort_values("total_views", ascending=False)
-               .groupby("channel_name").first()[["tier_group", "search_category"]]
-               .reset_index())
-    df_agg = df_agg.merge(primary, on="channel_name")
-    df_agg = df_agg.sort_values("total_views", ascending=True).tail(15).copy()
-    df_agg["colour"]  = df_agg["tier_group"].map(TIER_COLOURS).fillna(C["muted"])
-    df_agg["views_M"] = (df_agg["total_views"] / 1_000_000).round(1)
-
-    fig_yt_ch = go.Figure()
-    fig_yt_ch.add_trace(go.Bar(
-        x=df_agg["total_views"],
-        y=df_agg["channel_name"],
-        orientation="h",
-        marker_color=df_agg["colour"].tolist(),
-        marker_line=dict(width=0),
-        customdata=np.stack([
-            df_agg["views_M"],
-            df_agg["video_count"],
-            df_agg["total_comments"],
-            df_agg["search_category"],
-        ], axis=-1),
-        hovertemplate=(
-            "<b>%{y}</b><br>"
-            "%{customdata[0]:.1f}M views · "
-            "%{customdata[1]:.0f} videos · "
-            "%{customdata[2]:,.0f} comments<br>"
-            "Category: %{customdata[3]}"
-            "<extra></extra>"
-        ),
-    ))
-    fig_yt_ch.update_layout(**_base(height=380))
-    fig_yt_ch.update_layout(
-        margin=dict(l=10, r=20, t=10, b=50),
-        xaxis=dict(
-            title=dict(text="Total views", font=dict(size=10)),
-            gridcolor=C["grid"], linecolor=C["border"],
-            zerolinecolor=C["border"], tickformat=".2s",
-        ),
-        yaxis=dict(
-            autorange=True,
-            tickfont=dict(size=10),
-            gridcolor="rgba(0,0,0,0)",
-            linecolor="rgba(0,0,0,0)",
-        ),
-    )
-    return fig_yt_ch
-
-
-def umap_year_options():
-    """The year pills: "all", then each year, newest first."""
-    return ["all", 2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019]
-
-
-def umap_year_label(value, lang):
-    """What a year pill shows."""
-    if value == "all":
-        return "全" if lang == "jp" else "All"
-    return str(value)
-
-
-def umap_count(df_umap, year_filter):
-    """Reviews shown for a year pill."""
-    n_shown = len(df_umap) if year_filter == "all" else \
-              len(df_umap[df_umap.review_year == int(year_filter)])
-    return n_shown
-
-
-def fig_umap(df_umap, year_filter, S):
-    """Reviews placed by vocabulary; year_filter is "all" or a year."""
-    df_umap = df_umap.copy()
-    # Topic labels mapped from NB06 Cell 13
-    TOPIC_LABELS = {
-        "Skin T1": "Cleansing & face wash",
-        "Skin T2": "Moisturising routine",
-        "Skin T3": "Makeup (miscategorised)",
-        "Skin T4": "Eye makeup & liner",
-        "Skin T5": "Sun protection & base",
-        "Cosm T1": "Foot care (off-topic)",
-        "Cosm T2": "Foundation, skincare words ★",
-        "Cosm T3": "Eyebrow pencil",
-        "Cosm T4": "Powder & colour",
-    }
-    df_umap["topic_label"] = df_umap["dominant_topic"].map(TOPIC_LABELS).fillna("Unknown")
-    n_shown = umap_count(df_umap, year_filter)
-
-    # Vocabulary centroid keywords — always visible regardless of year
-    TOPIC_KEYWORDS = {
-        "Cleansing & face wash":     "洗顔 · 洗い上がり · 毛穴",
-        "Moisturising routine":      "香り · 乾燥 · 保湿 · 化粧水",
-        "Makeup (miscategorised)":   "メイク · 描く · 発色",
-        "Eye makeup & liner":        "アイライナー · ライン · コットン",
-        "Sun protection & base":     "日焼け止め · トーンアップ · 下地",
-        "Foot care (off-topic)":         "⚠ 靴下 · 暖かい",
-        "Foundation, skincare words ★": "乾燥 · しっとり · 毛穴 · ツヤ ★",
-        "Eyebrow pencil":            "細い · 眉毛 · コスパ",
-        "Powder & colour":           "パウダー · 香り · 発色",
-    }
-    TOPIC_ANNOT_COLORS = {
-        "Cleansing & face wash":     "#4A90B8",
-        "Moisturising routine":      "#5B8C6E",
-        "Makeup (miscategorised)":   "#78909C",
-        "Eye makeup & liner":        "#C4627A",
-        "Sun protection & base":     "#B8965A",
-        "Foot care (off-topic)":         "#B0BEC5",
-        "Foundation, skincare words ★": "#D4785C",
-        "Eyebrow pencil":            "#9C4E8A",
-        "Powder & colour":           "#C4627A",
-    }
-
-    # Filter by year only
-    df_u = df_umap.copy()
-    if year_filter != "all":
-        df_u = df_u[df_u["review_year"] == int(year_filter)]
-
-    fig_umap = go.Figure()
-
-    # Plot Tier — skincare and cosmetics always coloured the same
-    for tier, color, name in [
-        ("skincare",  C["skin"], S["t3_umap_sk"]),
-        ("cosmetics", C["cosm"], S["t3_umap_co"]),
-    ]:
-        d = df_u[df_u["tier_group"] == tier]
-        if len(d) == 0:
-            continue
-        # Scattergl: 21k points render via WebGL — SVG Scatter is sluggish here
-        fig_umap.add_trace(go.Scattergl(
-            x=d["umap_x"], y=d["umap_y"],
-            mode="markers", name=S["t3_umap_sk"] if tier=="skincare" else S["t3_umap_co"],
-            marker=dict(color=color, size=3, opacity=0.5,
-                        line=dict(width=0)),
-            customdata=np.stack([
-                d["review_year"].astype(int),
-                d["topic_label"],
-            ], axis=-1),
-            hovertemplate=(
-                f"<b>{name}</b><br>"
-                "Year: %{customdata[0]}<br>"
-                "Topic: %{customdata[1]}"
-                "<extra></extra>"
-            ),
-        ))
-
-    # Centroid annotations — fixed coordinates from NB06 corpus analysis
-    # Positions computed from full corpus so labels stay stable across year filters
-    # Standard topic centroids from corpus median positions
-    for topic, kw in TOPIC_KEYWORDS.items():
-        color = TOPIC_ANNOT_COLORS.get(topic, C["muted"])
-        d_full = df_umap[df_umap["topic_label"] == topic]
-        if len(d_full) < 10:
-            continue
-        cx = d_full["umap_x"].median()
-        cy = d_full["umap_y"].median()
-        fig_umap.add_annotation(
-            x=cx, y=cy,
-            text=f"<b>{kw}</b>",
-            showarrow=False,
-            font=dict(size=9.5, color=color, family="sans-serif"),
-            bgcolor="rgba(255,255,255,0.82)",
-            borderpad=3,
-            bordercolor=color,
-            borderwidth=1,
-        )
-
-    # ── Manual island annotations ─────────────────────────────────────
-    # Top island: influencer/monitor reviews — template vocabulary
-    fig_umap.add_annotation(
-        x=-1.72, y=9.47,
-        text="<b>⚠ インフルエンサー · モニター</b><br>giveaway reviews",
-        showarrow=True, arrowhead=2, arrowcolor=C["gold"],
-        ax=60, ay=30,
-        font=dict(size=9, color=C["gold"], family="sans-serif"),
-        bgcolor="rgba(255,255,255,0.88)",
-        borderpad=4,
-        bordercolor=C["gold"],
-        borderwidth=1.5,
-    )
-
-    # Right satellite: tone-up SPF — cosmetic SPF sub-category
-    fig_umap.add_annotation(
-        x=8.60, y=2.38,
-        text="<b>トーンアップ · ファンデ · 伸び</b><br>Tone-up SPF as base makeup",
-        showarrow=True, arrowhead=2, arrowcolor=C["ingr"],
-        ax=-70, ay=-30,
-        font=dict(size=9, color=C["ingr"], family="sans-serif"),
-        bgcolor="rgba(255,255,255,0.88)",
-        borderpad=4,
-        bordercolor=C["ingr"],
-        borderwidth=1.5,
-    )
-
-    # Northeast convergence zone
-    fig_umap.add_annotation(
-        x=3.41, y=7.22,
-        text="<b>保湿 · 洗顔 · 乾燥</b><br>★ skincare and makeup words overlap",
-        showarrow=True, arrowhead=2, arrowcolor=C["skin"],
-        ax=-80, ay=20,
-        font=dict(size=9, color=C["skin"], family="sans-serif"),
-        bgcolor="rgba(255,255,255,0.88)",
-        borderpad=4,
-        bordercolor=C["skin"],
-        borderwidth=1.5,
-    )
-
-    suffix = f" — {year_filter}" if year_filter != "all" else " — all years"
-    fig_umap.update_layout(**_base(height=520))
-    fig_umap.update_layout(
-        margin=dict(l=10, r=10, t=30, b=20),
-        title=dict(
-            text=f"UMAP embedding{suffix} · {n_shown:,} reviews",
-            font=dict(size=12, color=C["muted"]),
-            x=0,
-        ),
-        legend=dict(
-            orientation="v", yanchor="top", y=1,
-            xanchor="left", x=1.01,
-            bgcolor="rgba(0,0,0,0)",
-            font=dict(size=10),
-        ),
-        xaxis=dict(showgrid=False, showticklabels=False,
-                   linecolor="rgba(0,0,0,0)", zeroline=False),
-        yaxis=dict(showgrid=False, showticklabels=False,
-                   linecolor="rgba(0,0,0,0)", zeroline=False),
-    )
-    return fig_umap
-
-
 # ── Brief ───────────────────────────────────────────────────────────────────
 # Colour: the skincare/makeup pair is the only categorical set; anything else
 # is grey, and the one accent on an exhibit whose title is not about skincare
@@ -789,4 +500,52 @@ def fig_supply_ingredients(M, S):
                       xaxis=_xax(title=dict(text=S["sp_i_x"], font=dict(size=11)),
                                  ticksuffix="%", rangemode="tozero"),
                       yaxis=_yax(automargin=True))
+    return fig
+
+
+# ── Consumer ────────────────────────────────────────────────────────────────
+# Grey, with the one accent in ink on what each title names: the size curve,
+# and the reviews that contain the two phrases.
+
+def fig_consumer_curve(M, S):
+    """Cosine similarity between pooled skincare and cosmetics reviews, the
+    same reviews subsampled to growing sizes. The size-matched figures are not
+    drawn on it: NB06 fits them with all four period slices subsampled, and
+    the curve with only the two 2023-26 slices subsampled, so the two sit on
+    different scales (0.317 at 249 reviews against 0.352 at 250)."""
+    cv = M["curve"]
+    fig = go.Figure(go.Scatter(
+        x=cv["sample_size"], y=cv["cross_tier_cosine"], mode="lines+markers",
+        line=dict(color=C["ink"], width=2.5), marker=dict(size=7, color=C["ink"]),
+        hovertemplate=S["cs_c_hover"] + "<extra></extra>"))
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=20, r=20, t=20, b=50),
+                      xaxis=_xax(title=dict(text=S["cs_c_x"], font=dict(size=11)),
+                                 tickformat=",", rangemode="tozero"),
+                      yaxis=_yax(S["cs_c_y"], range=[0, 0.8]))
+    return fig
+
+
+def fig_consumer_map(M, S):
+    """The @cosme reviews placed by vocabulary; the reviews that contain the
+    two phrases in ink, labelled once where most of them sit."""
+    pts = M["points"]
+    fig = go.Figure()
+    for flag, colour, size, opacity in ((0, _GREY_LIGHT, 3, 0.45), (1, C["ink"], 3, 0.6)):
+        d = pts[pts["phrase"] == flag]
+        # Scattergl: 40k points render via WebGL; SVG Scatter is sluggish here.
+        fig.add_trace(go.Scattergl(
+            x=d["umap_x"], y=d["umap_y"], mode="markers",
+            marker=dict(color=colour, size=size, opacity=opacity, line=dict(width=0)),
+            customdata=d["category"].map(S["cs_cat"]),
+            hovertemplate=S["cs_m_hover"][flag] + "<extra></extra>"))
+    # The label points at the middle of the reviews most of whose neighbours
+    # carry the phrases too, from the empty space to their left.
+    core = pts[(pts["phrase"] == 1) & (pts["nn_phrase"] >= 8)]
+    fig.add_annotation(x=core["umap_x"].median(), y=core["umap_y"].median(), text=S["cs_m_label"],
+                       showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=C["ink"],
+                       ax=-90, ay=-30, xanchor="right", font=dict(size=11, color=C["ink"]))
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=False,
+                      margin=dict(l=10, r=10, t=10, b=10),
+                      xaxis=dict(visible=False), yaxis=dict(visible=False))
     return fig

@@ -9,8 +9,7 @@ Deploy: Dockerfile and cloudbuild.yaml at the repo root; see DEPLOY.md.
 
 The pages are in dash_pages/ (not pages/: a pages/ folder next to
 streamlit_app.py would switch the Streamlit app into multipage mode): the Brief,
-then the three pages carried over from the Streamlit tabs until the report and
-monitor pages replace them.
+then the report pages built so far; the monitor pages follow.
 The language is the URL's ?lang=ja; anything else is English. Each page builds
 its English and Japanese trees once at import and its layout() hands back the
 one the URL asks for. Numbers, copy, theme and figures come from bp/.
@@ -20,7 +19,7 @@ import os
 from pathlib import Path
 
 from dash import Dash, Input, Output, clientside_callback, dcc, html, page_container
-from flask import abort, jsonify, redirect, request, send_file
+from flask import jsonify, redirect, request
 from flask_compress import Compress
 
 import data_cache
@@ -30,7 +29,7 @@ HERE = Path(__file__).parent
 ASSETS = HERE / "assets"          # the CSV data; Dash's own assets folder is static/
 HOME = "/brief"
 # Pages the report replaced -> the page that carries their exhibits now.
-RETIRED = {"/shift": "/demand"}
+RETIRED = {"/shift": "/demand", "/language": "/consumer", "/discovery": "/consumer"}
 
 app = Dash(
     __name__,
@@ -72,15 +71,6 @@ def _version():
     })
     resp.headers["Cache-Control"] = "no-store"
     return resp
-
-
-@server.route("/wordcloud/<int:year>.png")
-def _wordcloud(year):
-    """The review word cloud for one year; any year bp does not list is a 404."""
-    path = ASSETS / f"wordcloud_{year}.png"
-    if year not in figures.wordcloud_years() or not path.exists():
-        abort(404)
-    return send_file(path, mimetype="image/png", max_age=86400)
 
 
 app.layout = html.Div(className="bp-shell", children=[
