@@ -9,10 +9,13 @@ looks highest in January. Ratios are taken from July 2022 to January 2026
 across the January 2022 break and every stage averages the same months.
 
 A series has a seasonal peak only when its highest month in every full year
-of the window (2023-2025) is within one month of the peak of its average
-profile. A search term must also swing more than brief.SEARCH_SWING index
-points from its profile's peak to its trough, the top of the spread between
-repeat Google Trends pulls. Launch releases are tested for an even spread across
+of the window (2023-2025) is within one month of the centre of its average
+profile's 3-month peak run. The anchor is the run's centre, not the
+profile's single highest month, because months inside the spread between
+repeat Trends pulls cannot be ranked: 日焼け止め's profile reads 177, 180 and
+181 across May-July. The peak month shown is still the profile's highest.
+A search term must also swing more than SEARCH_SWING index points from its
+profile's peak to its trough, the top of that spread. Launch releases are tested for an even spread across
 the months of each year (chi-square, 11 degrees of freedom, 5%).
 
 Nothing here reads a file: callers pass monthly series indexed by the first
@@ -29,6 +32,10 @@ FULL_YEARS = (2023, 2024, 2025)
 # A stable peak: the year's highest month within this many months of the
 # profile's peak, in every full year.
 PEAK_TOLERANCE = 1
+# Repeat Trends pulls differ by 5-20 index points on the same month
+# (brief.TRENDS_PULL_SPREAD is the low end); a search term's seasonal swing
+# must exceed the top of that spread.
+SEARCH_SWING = 20
 # Chi-square critical value, 11 degrees of freedom, 5%.
 CHI2_11_05 = 19.675
 PEAK_RUN = 3
@@ -80,14 +87,17 @@ def assess(series: pd.Series) -> dict:
     range times the series' mean over the window, / 100."""
     prof = profile(series)
     peak = int(prof.idxmax())
+    run = peak_run(prof)
+    centre = run[0] % 12 + 1              # the middle month of the 3-month run
     yp = year_peaks(series)
     lo, hi = (pd.Timestamp(t) for t in RATIO_WINDOW)
     level = series[(series.index >= lo) & (series.index <= hi)].mean()
     return dict(profile=prof, peak=peak, peak_ratio=float(prof.max()),
                 trough_ratio=float(prof.min()), year_peaks=yp,
-                stable=all(_gap(m, peak) <= PEAK_TOLERANCE for m in yp.values()),
+                centre=centre,
+                stable=all(_gap(m, centre) <= PEAK_TOLERANCE for m in yp.values()),
                 swing=float((prof.max() - prof.min()) * level / 100),
-                run=peak_run(prof))
+                run=run)
 
 
 def year_runs(series: pd.Series, run: int = PEAK_RUN) -> dict:

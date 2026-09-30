@@ -532,8 +532,10 @@ def _market_en(M, REG):
     out["mk_b_x"] = f"Change {y1} vs {y0} (%)"
 
     first = M["monthly"].index.min()
-    pk = {g: _and(f"{_MON_EN[m]} ({_years_en(ys)})" for m, ys in M["peaks"][g].items())
-          for g in ("skincare", "makeup")}
+    pk = {g: (f"{name} {_MON_EN[p['month']]} ({_years_en(p['years'])})" if p["month"]
+              else f"{name}'s differs by year")
+          for g, name in (("makeup", "makeup"), ("skincare", "skincare"))
+          for p in [M["peaks"][g]]}
     out["mk_g_h"] = f"Shipped value by group, with the January {y0} break marked"
     out["mk_g_e"] = (
         "Shipped value for skincare (皮膚用) and makeup (仕上用), summed from METI's "
@@ -543,7 +545,7 @@ def _market_en(M, REG):
     out["mk_g_cap"] = (
         f"Monthly, {_MON_EN[first.month]} {first.year} – {_MON_EN[lm]} {ly} · shaded from January "
         f"{y0} = after the break · highest month against its centred 12-month average: "
-        f"skincare {pk['skincare']}; makeup {pk['makeup']}")
+        f"{pk['makeup']}; {pk['skincare']}")
 
     lead, run = _origin(I["leader"], "en"), _origin(I["runner"], "en")
     since = (f"since {I['since']}" if I["since"] < I["y1"] else f"in {I['y1']}")
@@ -614,8 +616,10 @@ def _market_ja(M, REG):
     out["mk_b_x"] = f"{y0}→{y1}年の変化（%）"
 
     first = M["monthly"].index.min()
-    pk = {g: "、".join(f"{m}月（{_years_ja(ys)}）" for m, ys in M["peaks"][g].items())
-          for g in ("skincare", "makeup")}
+    pk = {g: (f"{name}は{p['month']}月（{_years_ja(p['years'])}）" if p["month"]
+              else f"{name}は年により異なる")
+          for g, name in (("makeup", "仕上用"), ("skincare", "皮膚用"))
+          for p in [M["peaks"][g]]}
     out["mk_g_h"] = f"区分別の出荷金額と{y0}年1月の断層"
     out["mk_g_e"] = (
         f"経産省の{K['n_items']}品目を合算した、皮膚用と仕上用の出荷金額。この区分は2019年と2020年の"
@@ -623,7 +627,7 @@ def _market_ja(M, REG):
         f"縦線は{y0}年1月。")
     out["mk_g_cap"] = (
         f"月次、{first.year}年{first.month}月〜{ly}年{lm}月 · {y0}年1月以降の網掛け＝断層後 · "
-        f"中心化12カ月移動平均に対して最も高い月は、皮膚用が{pk['skincare']}、仕上用が{pk['makeup']}")
+        f"中心化12カ月移動平均に対して最も高い月：{pk['makeup']}、{pk['skincare']}")
 
     lead, run = _origin(I["leader"], "jp"), _origin(I["runner"], "jp")
     out["mk_i_h"] = (f"HS 3304の輸入元は{I['since']}年以降{lead}が最大で、{I['y1']}年は"

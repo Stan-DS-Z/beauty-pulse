@@ -53,13 +53,12 @@ def _yen_per_kg(ASSETS: Path, cutoff) -> pd.DataFrame:
     return (g["販売金額"] * 1000 / g["販売数量"]).unstack()
 
 
-def _peak_months(series: pd.Series) -> dict:
-    """The highest-ratio month of each full year of the seasonal window
-    (bp/seasonal.py): {month: [years]}, in the order the months first peak."""
-    out = {}
-    for y, m in seasonal.year_peaks(series).items():
-        out.setdefault(m, []).append(y)
-    return out
+def _peak(series: pd.Series) -> dict:
+    """A group's peak month on the seasonal method (bp/seasonal.py), named only
+    when stable: {"month": the profile's highest month or None, "years": the
+    full years of the window}."""
+    a = seasonal.assess(series)
+    return dict(month=a["peak"] if a["stable"] else None, years=list(seasonal.FULL_YEARS))
 
 
 def compute_market(ASSETS: Path, cutoff: str) -> dict:
@@ -112,7 +111,7 @@ def compute_market(ASSETS: Path, cutoff: str) -> dict:
     # ── Groups by month, and each group's peak month in each full year of the
     # seasonal window
     monthly, _ = load_meti_monthly(ASSETS, cutoff)
-    peaks = {g: _peak_months(monthly[g]) for g in ("skincare", "makeup")}
+    peaks = {g: _peak(monthly[g]) for g in ("skincare", "makeup")}
     last = monthly.index.max()
 
     # ── The January 2022 break

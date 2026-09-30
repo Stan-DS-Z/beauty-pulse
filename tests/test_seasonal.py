@@ -70,9 +70,18 @@ def test_sunscreen_search_swings_far_more_than_the_other_words(search):
     sw = {t: seasonal.assess(search[t]) for t in words}
     sun = CATEGORIES["sunscreen"][2]
     assert (round(sw[sun]["trough_ratio"]), round(sw[sun]["peak_ratio"])) == (32, 181)
-    assert sw[sun]["swing"] > brief.SEARCH_SWING
+    assert sw[sun]["swing"] > seasonal.SEARCH_SWING
     others = [a for t, a in sw.items() if t != sun]
     assert min(a["trough_ratio"] for a in others) > 80 and max(a["peak_ratio"] for a in others) < 120
+
+
+def test_two_search_terms_have_a_season(search):
+    """Stable (anchored on the centre of the 3-month peak run) and swinging
+    more than SEARCH_SWING: 日焼け止め and 乳液, and no other tracked word."""
+    words = [t for _, _, t, _ in CATEGORIES.values() if t] + list(UMBRELLA)
+    got = {t: round(a["swing"], 1) for t in words for a in [seasonal.assess(search[t])]
+           if a["stable"] and a["swing"] > seasonal.SEARCH_SWING}
+    assert got == {"日焼け止め": 63.7, "乳液": 23.8}
 
 
 def test_sunscreen_ships_feb_to_apr_and_is_searched_may_to_jul_every_year(meti, search):

@@ -23,9 +23,6 @@ from .funnel import CATEGORIES, compute_funnel_matrix
 # (recon/2026-09-27_report_trends-s1-block-a.md). A change smaller than the low
 # end is inside that spread, and is counted as neither a rise nor a fall.
 TRENDS_PULL_SPREAD = 5
-# The top of that spread. A search term's seasonal swing (bp/seasonal.py,
-# profile peak to trough in index points) must exceed it to count as a season.
-SEARCH_SWING = 20
 
 # The governing thought names the categories whose shipped value rose this
 # much or more over the category window.

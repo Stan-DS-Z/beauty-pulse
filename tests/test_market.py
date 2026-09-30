@@ -88,10 +88,12 @@ def test_the_break_footnote_holds(M):
         assert not r["above"], li                                       # no line is above its range
 
 
-def test_the_peak_caption_names_every_full_year_of_the_seasonal_window(M):
+def test_the_peak_caption_names_a_month_only_where_it_is_stable(M):
+    """Makeup peaks in November in every full year of the seasonal window;
+    skincare's highest month differs by year, so none is named."""
     from bp.seasonal import FULL_YEARS
-    for g, peaks in M["peaks"].items():
-        assert sorted(y for ys in peaks.values() for y in ys) == list(FULL_YEARS), g
+    assert M["peaks"]["makeup"] == dict(month=11, years=list(FULL_YEARS))
+    assert M["peaks"]["skincare"]["month"] is None
 
 
 def test_no_skincare_yen_change_crosses_the_break(M, headline, REG):
