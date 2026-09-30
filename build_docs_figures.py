@@ -122,8 +122,10 @@ def site_text() -> dict:
     out = {
         "lead_search_en": _md(en["dm_p_h"]),
         "lead_search_ja": _md(ja["dm_p_h"]),
-        "lead_actives_en": _md(en["b_kf_demand"]),
-        "lead_actives_ja": _md(ja["b_kf_demand"]),
+        # スキンケア search over the same years, as the Demand page's note has it
+        "skin_search_d": f"{abs(d.DEMAND['pair']['skin_d']):.0f}",
+        "skin_search_dir_en": "rose" if d.DEMAND["pair"]["skin_d"] >= 0 else "fell",
+        "skin_search_dir_ja": "上昇" if d.DEMAND["pair"]["skin_d"] >= 0 else "低下",
         "lead_mask_en": _md(en["dm_m_h"]),
         "lead_mask_ja": _md(ja["dm_m_h"]),
         "edition_en": _md(en["b_kicker"].split(" · ")[1]),
