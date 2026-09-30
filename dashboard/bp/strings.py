@@ -8,6 +8,7 @@ import pandas as pd
 
 from .brief import TRENDS_PULL_SPREAD
 from .demand import MASK_YEARS
+from .funnel import CATEGORIES
 from .method import COVERAGE_CATEGORY, LATE_CATEGORY
 from .seasonal import FULL_YEARS
 from .supply import HELD_PCT, KEY_CATEGORY
@@ -1482,7 +1483,9 @@ def _timing_page_ja(M, REG):
 # Why a source feeds no report page, stated as it is now.
 _UNUSED = {
     "trends_related": ("its pull records no date or window", "取得の日付と期間が記録されていない"),
-    "rakuten": ("its snapshot postdates the cut-off", "取得がデータの締め月より後である"),
+    "rakuten": ("its frozen snapshot is dated after the cut-off, and its genres mix a parent "
+                "genre with its subgenres",
+                "凍結したスナップショットがデータの締め月より後の日付であり、上位ジャンルと下位ジャンルが混在する"),
     "amazon": ("its products carry no category", "商品にカテゴリがない"),
 }
 # The YouTube search sides, as the coverage note names them.
@@ -1494,6 +1497,9 @@ _CHECK = {"baseline": ("All reviews", "全レビュー"),
           "products_in_both": ("(b) Products reviewed in both periods", "(b) 両期間にレビューのある商品のみ"),
           "both": ("(a) and (b)", "(a)と(b)")}
 _SIDE = {"skincare": ("Skincare", "スキンケア"), "makeup": ("Makeup", "メイク")}
+# A METI product line by its category name in English, as Timing names its rows;
+# the Japanese page keeps METI's own line names.
+_LINE_EN = {li: LAUNCH_CAT[k][0] for k, (li, *_) in CATEGORIES.items()}
 
 
 def method_strings(lang, M, REG):
@@ -1502,6 +1508,7 @@ def method_strings(lang, M, REG):
     out = _method_en(M, REG) if lang == "en" else _method_ja(M, REG)
     li = _li(lang)
     out["me_check"] = {k: v[li] for k, v in _CHECK.items()}
+    out["me_pk_names"] = {k: _LINE_EN[k] if lang == "en" else k for k in M["price"]["frame"]}
     out["me_side"] = {k: v[li] for k, v in _SIDE.items()}
     return out
 
@@ -1514,7 +1521,9 @@ def _me_facts(M):
     rv = M["reviews"]
     late = rv.loc[LATE_CATEGORY]
     cat = rv.loc[COVERAGE_CATEGORY]
+    per_side = t.groupby("side")["even"].agg(["sum", "size"]).sort_values("sum", ascending=False)
     return dict(t=t, odd=odd, n_even=int(t["even"].sum()), spread=TRENDS_PULL_SPREAD,
+                per_side=per_side,
                 cv=M["convergence"], ck=M["convergence"]["checks"], per=per,
                 rv=rv, cat=cat, y_lo=int(M["convergence"]["periods"][0][:4]),
                 y_hi=int(cat.index.max()), late_first=int(late[late > 0].index.min()),
@@ -1626,12 +1635,14 @@ def _method_en(M, REG):
     tr = REG["trends"]
     out["me_b_t"] = "Series breaks"
     out["me_b_meti"] = (
-        f"METI 生産動態統計: shipped value and yen per kg for {_and(P['lines'])} step down at "
+        f"METI 生産動態統計: shipped value and yen per kg for "
+        f"{_and(_LINE_EN[li].lower() for li in P['lines'])} step down at "
         f"January {y0}. METI has published no change in coverage and no link coefficients for "
         f"cosmetics, so skincare changes are measured within {P['pre'][0]}–{y0 - 1} or from {y0} on.")
     out["me_b_trends"] = (
         "Google Trends: each series is one request over its whole span, pulled in full on "
-        f"{date_label(tr.collected, 'day')}. スキンケア and 化粧品 share one request and one scale; "
+        f"{date_label(tr.collected, 'day')}. The terms スキンケア (skincare) and 化粧品 (cosmetics) "
+        "share one request and one scale; "
         "every other term is compared only with its own months.")
     out["me_b_trade"] = (
         f"財務省 貿易統計: from {T['first']} the import schedule carries 3304.99-011, -012 and -019 "
@@ -1640,9 +1651,10 @@ def _method_en(M, REG):
         "imports. A test fails the build if a code change moves a trade group's total.")
     d = P["drop"]
     out["me_pk_h"] = (f"Yen per kg steps down at January {y0}: "
-                      f"{_and(f'{li} {_pct(d[li])}' for li in P['lines'])}, {y0 - 1} to {y0}")
+                      f"{_and(f'{_LINE_EN[li].lower()} {_pct(d[li])}' for li in P['lines'])}, "
+                      f"{y0 - 1} to {y0}")
     out["me_pk_e"] = (f"METI shipped value divided by kilograms, by month; log scale. Grey: "
-                      f"{_and(P['controls'])}, for comparison.")
+                      f"{_and(_LINE_EN[li].lower() for li in P['controls'])}, for comparison.")
     out["me_pk_y"] = "Yen per kg"
     out["me_pk_hover"] = "%{x|%b %Y}: ¥%{y:,.0f}/kg"
     out["me_pk_brk"] = f"Jan {y0}"
@@ -1663,23 +1675,27 @@ def _method_en(M, REG):
         f"Peak rule: a peak month is named only when each of {yrs} has its highest month within "
         f"{_NUM_EN[Z['tolerance']]} month of the centre of the average's highest "
         f"{_NUM_EN[Z['run']]}-month run. The anchor is the run's centre: months inside the spread "
-        f"between repeat Trends pulls cannot be ranked, and {Z['sun_term']}'s average reads {vals} "
+        f"between repeat Trends pulls cannot be ranked, and "
+        f"{SEARCH_TERM[Z['sun_term']][0].lower()} search's average reads {vals} "
         f"across {_MON_EN[a]}–{_MON_EN[b]}.")
     out["me_z_swing"] = (
         f"Swing rule: a search term also needs a swing above {Z['swing']} index points from its "
         f"average's peak to its trough. Repeat pulls of the same month differ by {F['spread']}–"
         f"{Z['swing']} points.")
     out["me_z_chi"] = (
-        "Launch releases: each side-year's monthly counts are tested against an even spread "
-        f"(chi-square, 11 degrees of freedom). Below {Z['crit']}, the 5% critical value, the "
-        "counts are consistent with an even spread.")
+        "Launch releases: each year's counts by month, skincare and makeup separately, are tested "
+        f"against an even spread (chi-square, 11 degrees of freedom). Below {Z['crit']}, the 5% "
+        "critical value, the counts are consistent with an even spread.")
     t, odd = F["t"], F["odd"]
     exc = "; ".join(f"{r['side']} {r['year']} scores {r['chi2']:.1f}, with {r['top_n']} of "
                     f"{r['n']} releases in {_MON_EN[r['top_month']]}" for _, r in odd.iterrows())
-    out["me_q_h"] = (f"{_NUM_EN[F['n_even']].capitalize()} of {_NUM_EN[len(t)]} side-years score "
-                     f"below the critical value of {Z['crit']}" + (f"; {exc}" if len(odd) else ""))
+    sides = _and((f"all {_NUM_EN[n]} {side} years" if e == n
+                  else f"{_NUM_EN[e]} of {_NUM_EN[n]} {side} years")
+                 for side, (e, n) in F["per_side"].iterrows())
+    out["me_q_h"] = (f"Chi-square is below the critical value of {Z['crit']} in {sides}"
+                     + (f"; {exc}" if len(odd) else ""))
     out["me_q_e"] = ("Core-panel launch releases by month of release, "
-                     f"{t['year'].min()}–{t['year'].max()}. Ink: a side-year above the critical value.")
+                     f"{t['year'].min()}–{t['year'].max()}. Ink: a year above the critical value.")
     out["me_q_cols"] = ["Side", "Year", "Releases", "Chi-square", "Largest month"]
     out["me_q_month"] = "{m} ({n})"
     out["me_months"] = _MON_ABBR[1:]
@@ -1819,15 +1835,17 @@ def _method_ja(M, REG):
         f"振れ幅の基準：検索語は、平均のピークから谷までの振れ幅が{Z['swing']}ポイントを超えることも"
         f"要する。同じ月を再取得したときの差は{F['spread']}〜{Z['swing']}ポイントである。")
     out["me_z_chi"] = (
-        "新商品リリース：区分・年ごとの月別件数を、均等な分布と比べる（カイ二乗、自由度11）。"
+        "新商品リリース：スキンケアとメイクそれぞれについて、各年の月別件数を均等な分布と比べる（カイ二乗、自由度11）。"
         f"5%の臨界値{Z['crit']}を下回れば、件数は均等な分布と矛盾しない。")
     t, odd = F["t"], F["odd"]
     exc = "、".join(f"{_SIDE[r['side']][1]}の{r['year']}年は{r['chi2']:.1f}（{r['n']}件中"
                     f"{r['top_n']}件が{r['top_month']}月）" for _, r in odd.iterrows())
-    out["me_q_h"] = (f"{len(t)}の区分・年のうち{F['n_even']}でカイ二乗が臨界値{Z['crit']}を下回"
+    sides = "、".join((f"{_SIDE[sd][1]}は{n}年すべて" if e == n else f"{_SIDE[sd][1]}は{n}年中{e}年")
+                     for sd, (e, n) in F["per_side"].iterrows())
+    out["me_q_h"] = (f"カイ二乗は、{sides}で臨界値{Z['crit']}を下回"
                      + (f"り、{exc}" if len(odd) else "る"))
     out["me_q_e"] = (f"コアパネルの新商品リリースを公開月で数えた（{t['year'].min()}〜{t['year'].max()}年）。"
-                     "濃色：臨界値を上回る区分・年。")
+                     "濃色：臨界値を上回る年。")
     out["me_q_cols"] = ["区分", "年", "リリース数", "カイ二乗", "最多の月"]
     out["me_q_month"] = "{m}（{n}）"
     out["me_months"] = [f"{m}月" for m in range(1, 13)]

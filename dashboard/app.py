@@ -76,6 +76,7 @@ def _version():
 app.layout = html.Div(className="bp-shell", children=[
     dcc.Location(id="shell-url"),
     dcc.Store(id="shell-lang-sink"),
+    dcc.Store(id="shell-nav-sink"),
     page_container,
 ])
 
@@ -88,6 +89,28 @@ clientside_callback(
     }""",
     Output("shell-lang-sink", "data"),
     Input("shell-url", "search"),
+)
+
+# On a phone the nav scrolls sideways inside its own strip (the one element
+# allowed to: no content scrolls sideways at 390 px). Once the page for this
+# path has rendered, centre its entry in the strip, so a page far along the
+# nav (Method) is not off-screen.
+clientside_callback(
+    """function (path) {
+        var tries = 0;
+        (function centre() {
+            var a = document.querySelector(".bp-nav .bp-navlink.active");
+            if (!a || (a.getAttribute("href") || "").split("?")[0] !== path) {
+                if (tries++ < 120) { window.requestAnimationFrame(centre); }
+                return;
+            }
+            var nav = a.parentElement, n = nav.getBoundingClientRect(), r = a.getBoundingClientRect();
+            nav.scrollLeft += r.left - n.left - (n.width - r.width) / 2;
+        })();
+        return path;
+    }""",
+    Output("shell-nav-sink", "data"),
+    Input("shell-url", "pathname"),
 )
 
 # Dash sets itself up on a process's first request, and marks that done before

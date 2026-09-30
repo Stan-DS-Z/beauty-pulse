@@ -46,8 +46,9 @@ def _sources(ASSETS: Path, registry: dict, market: dict) -> list:
     rows = []
     for key in DECLARED:
         src = registry[key]
+        # The table lists the report's other pages: Method does not list itself.
         rows.append(dict(key=key, src=src, counts=counts.get(key, {}),
-                         pages=[p for p in REPORT_PAGES if p in src.used_on]))
+                         pages=[p for p in REPORT_PAGES if p in src.used_on and p != "method"]))
     return rows
 
 

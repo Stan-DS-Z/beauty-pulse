@@ -689,7 +689,8 @@ def fig_method_price_kg(M, S):
     for k, (_, y) in sorted(ends.items(), key=lambda kv: kv[1][1]):
         placed[k] = max(y, max(placed.values(), default=-np.inf) + gap)
     for k, y in placed.items():
-        fig.add_annotation(x=last, y=y, text=k, showarrow=False, xanchor="left", xshift=6,
+        fig.add_annotation(x=last, y=y, text=S["me_pk_names"][k], showarrow=False, xanchor="left",
+                           xshift=6,
                            font=dict(size=11, color=C["ink"] if k in P["lines"] else C["muted"]))
     fig.add_vline(x=brk, line_width=1, line_dash="dot", line_color=C["muted"])
     fig.add_annotation(x=brk, y=1, yref="paper", text=S["me_pk_brk"], showarrow=False,

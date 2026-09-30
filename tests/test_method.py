@@ -52,9 +52,12 @@ def test_every_declared_source_has_one_row_in_order(M):
 
 
 def test_report_pages_are_the_registry_pages_in_report_order(M, REG):
+    """The registry names Method where it draws on a source; the table lists
+    the other report pages, so Method never lists itself."""
     for r in M["sources"]:
         used = REG[r["key"]].used_on
-        assert r["pages"] == [p for p in sources.REPORT_PAGES if p in used], r["key"]
+        assert r["pages"] == [p for p in sources.REPORT_PAGES if p in used and p != "method"], r["key"]
+    assert any("method" in s.used_on for s in REG.values())
 
 
 @pytest.mark.parametrize("lang", ["en", "jp"])
@@ -219,7 +222,7 @@ def test_the_withdrawal_line_is_the_one_the_exemption_covers(M, headline, REG):
 
 # ── The copy ────────────────────────────────────────────────────────────────
 
-_LOOKUPS = ("me_kicker", "me_check", "me_side", "me_months", "me_q_month", "me_k_n", "me_k_ci",
+_LOOKUPS = ("me_kicker", "me_check", "me_side", "me_pk_names", "me_months", "me_q_month", "me_k_n", "me_k_ci",
             "me_period", "me_pk_hover", "me_v_hover", "me_src_meti", "me_src_prtimes",
             "me_src_cosme", "me_s_cols", "me_q_cols", "me_p_cols", "me_k_cols")
 
@@ -267,8 +270,26 @@ def test_the_copy_names_no_page_and_no_removal_outside_the_record(M, headline, R
     text = " ".join(_flat(S[k]) for k in S if k.startswith("me_") and k not in _LOOKUPS
                     and k != "me_cv_line")
     for tell in ("this page", "this tab", "here", "withdrawn", "no longer", "previously",
-                 "retired", " pp", "このページ", "撤回", "以前"):
+                 "retired", "side-year", "このページ", "撤回", "以前", "区分・年"):
         assert tell not in text.lower(), tell
+
+
+def test_the_english_page_names_product_lines_in_english(M, headline, REG):
+    """METI's line names appear on the English page only in the hover."""
+    from bp.funnel import CATEGORIES
+    S = _S("en", headline, M, REG)
+    lines = [li for li, *_ in CATEGORIES.values()]
+    for k in ("me_pk_h", "me_pk_e", "me_b_meti"):
+        assert not [li for li in lines if li in S[k]], k
+    assert set(S["me_pk_names"].values()).isdisjoint(lines)
+
+
+def test_rakutens_reason_names_both_grounds(M, headline, REG):
+    for lang, (a, b) in (("en", ("after the cut-off", "subgenres")),
+                         ("jp", ("締め月より後", "下位ジャンル"))):
+        row = next(c for r, c in zip(M["sources"], _S(lang, headline, M, REG)["me_s_rows"])
+                   if r["key"] == "rakuten")
+        assert a in row[3] and b in row[3], lang
 
 
 # ── The page ────────────────────────────────────────────────────────────────
