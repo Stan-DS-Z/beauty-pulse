@@ -16,6 +16,12 @@ from pathlib import Path
 
 from .data import load_review_map, load_umap, load_vocab_overlap
 
+# Each review category's side, for the map's colours.
+REVIEW_SIDE = {"toner_lotion": "skincare", "emulsion": "skincare", "serum_essence": "skincare",
+               "face_cream": "skincare", "face_wash": "skincare", "cleansing": "skincare",
+               "foundation": "makeup", "lip_colour": "makeup", "eye_shadow": "makeup",
+               "sun_protection": "sunscreen"}
+
 
 def compute_consumer(ASSETS: Path) -> dict:
     """The Consumer page's figures. The @cosme and YouTube collections are

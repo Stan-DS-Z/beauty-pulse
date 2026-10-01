@@ -113,15 +113,18 @@ def market_figures(M, S):
             "imports": figures.fig_market_imports(M, S)}
 
 
-def test_each_exhibit_spends_its_one_accent_on_what_its_title_names(M, headline, REG):
-    from bp.theme import C
+def test_each_line_and_origin_is_drawn_in_its_own_colour_with_a_legend(M, headline, REG):
+    """Product lines in their side's colour, Korea in its orange, each origin
+    its own colour; every chart carries a legend."""
+    from bp.theme import C, SIDE
     figs = market_figures(M, _S("en", headline, M, REG))
     bars = figs["lines"].data[0]
-    ink = {li for li, col in zip(bars.customdata[:, 0], bars.marker.color) if col == C["ink"]}
-    assert ink == set(M["lead"])
+    for li, col in zip(bars.customdata[:, 0], bars.marker.color):
+        assert col == SIDE[M["rows"].loc[li, "group"]], li
     lines = {t.name: t.line.color for t in figs["imports"].data}
-    lead = strings.ORIGIN[M["imports"]["leader"]][0]
-    assert [n for n, col in lines.items() if col == C["ink"]] == [lead]
+    assert lines[strings.ORIGIN["大韓民国"][0]] == C["korean"]
+    assert len(set(lines.values())) == len(lines)
+    assert all(f.layout.showlegend for f in figs.values())
 
 
 # ── The edition cut-off ─────────────────────────────────────────────────────

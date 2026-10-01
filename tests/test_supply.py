@@ -103,28 +103,41 @@ def test_the_japanese_ingredient_order_reads_pdrn_as_katakana(M, headline, REG):
     assert order.index("アスコルビン酸") < order.index("DNA-Na") < order.index("ペプチド")
 
 
-def test_each_exhibit_spends_its_accent_on_what_its_title_names(M, headline, REG):
+def _filled(fig):
+    """A dumbbell chart's later-year marks: the second marker trace that
+    carries data (the first is the hollow earlier-year marks)."""
+    return [t for t in fig.data if t.mode == "markers" and t.x[0] is not None][1]
+
+
+def test_each_category_origin_and_ingredient_is_drawn_in_its_colour(M, headline, REG):
+    """Categories in their side's colour, origins in theme.ORIGIN, the other
+    launch groups grey, ingredients green; every chart carries a legend."""
     from bp import figures
-    from bp.theme import C
+    from bp.theme import C, CONTEXT, ORIGIN, SIDE
     S = _S("en", headline, M, REG)
     SH = M["share"]
-
     fig = figures.fig_supply_share(M, S)
-    inked = {y for y, col in zip(fig.data[1].y, fig.data[1].marker.color) if col == C["ink"]}
-    assert inked == {S["sp_cat"][k] for k in SH["gainers"] + [SH["loser"]]}
+    name_side = {S["sp_cat"][k]: g for k, g in SH["rows"]["group"].items()}
+    filled = _filled(fig)
+    for y, col in zip(filled.y, filled.marker.color):
+        assert col == SIDE[name_side[y]], y
+    assert fig.layout.showlegend
 
     fig = figures.fig_supply_origin(M, S)
-    assert [t.name for t in fig.data if t.marker.color == C["ink"]] == [S["sp_origin"]["KR"]]
+    assert {t.name: t.marker.color for t in fig.data} == {
+        S["sp_origin"][o]: ORIGIN[o] for o in M["origin"]["counts"].columns}
+    assert fig.layout.showlegend
 
     fig = figures.fig_supply_groups(M, S)
     colours = {t.name: t.line.color for t in fig.data}
     assert colours[S["sp_group"]["skincare"]] == C["skin"]
     assert colours[S["sp_group"]["makeup"]] == C["cosm"]
-    assert {colours[S["sp_group"][g]] for g in ("other", "none")} <= {figures._GREY}
+    assert {colours[S["sp_group"][g]] for g in ("other", "none")} == {CONTEXT}
+    assert fig.layout.showlegend
 
     fig = figures.fig_supply_ingredients(M, S)
-    inked = {y for y, col in zip(fig.data[1].y, fig.data[1].marker.color) if col == C["ink"]}
-    assert inked == {S["sp_ing"][M["ingredients"]["top"]]}
+    assert set(_filled(fig).marker.color) == {C["ingr"]}
+    assert fig.layout.showlegend
 
 
 # ── The edition cut-off ─────────────────────────────────────────────────────

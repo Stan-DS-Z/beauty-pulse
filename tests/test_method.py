@@ -313,11 +313,24 @@ def test_the_page_has_no_emoji_tile_rimmed_card_or_control(page_json):
         assert "bp-widewrap" not in js, lang
 
 
-def test_the_page_uses_no_side_colour(page_json):
-    """No title on the page sets skincare against makeup: grey and ink only."""
-    from bp.theme import C
-    for lang, js in page_json.items():
-        assert C["skin"] not in js and C["cosm"] not in js, lang
+def test_the_step_lines_are_skincare_blues_and_the_comparisons_dashed():
+    """The three lines with the January 2022 step are skincare lines, in the
+    skincare blues; the comparison lines are grey, each with its own dash; a
+    legend names them."""
+    import data_cache
+    from bp import figures
+    from bp.theme import CONTEXT
+    D = data_cache.load()
+    P = D.METHOD["price"]
+    fig = figures.fig_method_price_kg(D.METHOD, D.S["en"])
+    lines = {t.name: t.line for t in fig.data}
+    names = D.S["en"]["me_pk_names"]
+    assert lines[names["化粧水"]].color == figures.C["skin"]
+    assert len({lines[names[li]].color for li in P["lines"]}) == len(P["lines"])
+    for li in P["controls"]:
+        assert lines[names[li]].color == CONTEXT and lines[names[li]].dash in ("dash", "dot"), li
+    assert len({lines[names[li]].dash for li in P["controls"]}) == len(P["controls"])
+    assert fig.layout.showlegend
 
 
 def test_method_is_the_last_report_page_in_the_nav():

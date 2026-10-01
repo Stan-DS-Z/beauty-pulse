@@ -171,20 +171,24 @@ def source(text):
     return html.P(text, className="bp-source")
 
 
-def cell_bar(share, text):
+def cell_bar(share, text, colour=None):
     """An in-cell bar on the column's shared scale: share of the column's
-    largest value, 0-1."""
-    return [html.Span(html.Span(className="cellbar-fill", style={"width": f"{100 * share:.0f}%"}),
-                      className="cellbar"),
+    largest value, 0-1; colour, when given, is the row's (its side's)."""
+    style = {"width": f"{100 * share:.0f}%", **({"background": colour} if colour else {})}
+    return [html.Span(html.Span(className="cellbar-fill", style=style), className="cellbar"),
             html.Span(text, className="cellnum")]
 
 
-def div_bar(share, text):
+def div_bar(share, text, colour=None):
     """A diverging in-cell bar around a centre line: share is signed, -1-1, of
-    the column's largest absolute change. Direction is --pos or --neg."""
+    the column's largest absolute change. The side of the centre line and the
+    sign on the number carry the direction; colour, when given, is the row's,
+    and without it the bar takes --pos or --neg."""
     half = 50 * min(abs(share), 1)
     style = ({"left": "50%", "width": f"{half:.0f}%"} if share >= 0
              else {"left": f"{50 - half:.0f}%", "width": f"{half:.0f}%"})
+    if colour:
+        style["background"] = colour
     return [html.Span([html.Span(className="divbar-mid"),
                        html.Span(className="divbar-fill " + ("pos" if share >= 0 else "neg"),
                                  style=style)], className="divbar"),
@@ -217,6 +221,17 @@ def legend(items, shape="square"):
             html.Span(className=f"bp-swatch {shape}", style={"background": colour}),
             html.Span(label),
         ]) for label, colour in items])
+
+
+def scale_key(title, scale, ticks):
+    """A heatmap's colour key: the scale as a gradient strip with its ticks
+    under it, the title beside it. scale is Plotly's [[position, colour]]."""
+    grad = "linear-gradient(to right, " + ", ".join(f"{c} {100 * p:.0f}%" for p, c in scale) + ")"
+    return html.Div(className="bp-scalekey", children=[
+        html.Span(title, className="bp-scalekey-title"),
+        html.Div(className="bp-scalekey-scale", children=[
+            html.Span(className="bp-scalekey-bar", style={"background": grad}),
+            html.Div([html.Span(t) for t in ticks], className="bp-scalekey-ticks")])])
 
 
 def themed(figure):

@@ -23,6 +23,8 @@ STRINGS = {
         "nav_demand": "Demand", "nav_supply": "Supply", "nav_consumer": "Consumer",
         "nav_timing": "Timing", "nav_method": "Method",
         "launch_empty": "Launch export not found: dashboard/assets/prtimes_launches.csv.",
+        # chart legends
+        "ch_side": {"skincare": "Skincare", "makeup": "Makeup", "sunscreen": "Sunscreen"},
     },
     "jp": {
         "tagline":        "日本の美容市場分析",
@@ -30,6 +32,8 @@ STRINGS = {
         "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要", "nav_supply": "供給",
         "nav_consumer": "消費者", "nav_timing": "季節性", "nav_method": "手法",
         "launch_empty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
+        # chart legends
+        "ch_side": {"skincare": "スキンケア", "makeup": "メイク", "sunscreen": "日焼け止め"},
     },
 }
 
@@ -821,8 +825,8 @@ def _demand_en(M, REG):
         f"{_NUM_EN[C['n_actives']]} tracked actives, {y0}→{y1}; {_NUM_EN[len(C['words_down'])]} "
         f"of {_NUM_EN[C['n_words']]} category words fell")
     out["dm_c_e"] = (
-        f"Annual mean, {y1} minus {y0}, in points of each term's own peak. Ink: the "
-        f"{_NUM_EN[C['n_rose']]} actives that rose. The shaded band is ±{TRENDS_PULL_SPREAD} "
+        f"Annual mean, {y1} minus {y0}, in points of each term's own peak. "
+        f"The shaded band is ±{TRENDS_PULL_SPREAD} "
         f"points, the spread between two downloads of the same series; {within} moved less than "
         f"that. {up}. Terms are alphabetical within each group.")
     out["dm_c_x"] = f"Change, {y1} minus {y0} (points)"
@@ -903,8 +907,8 @@ def _demand_ja(M, REG):
         f"{C['rose_lo']:.0f}〜{C['rose_hi']:.0f}ポイント上昇し、カテゴリ語は{C['n_words']}語中"
         f"{len(C['words_down'])}語が低下した")
     out["dm_c_e"] = (
-        f"年平均の差（{y1}年−{y0}年）、各語のピーク＝100に対するポイント。濃色は上昇した"
-        f"{C['n_rose']}成分。網掛けは±{TRENDS_PULL_SPREAD}ポイントで、同じ系列を2回取得したときの差の"
+        f"年平均の差（{y1}年−{y0}年）、各語のピーク＝100に対するポイント。"
+        f"網掛けは±{TRENDS_PULL_SPREAD}ポイントで、同じ系列を2回取得したときの差の"
         f"幅である。{within}の変化はこの幅に収まる。{up}。各グループ内は五十音順。")
     out["dm_c_x"] = f"変化、{y1}年−{y0}年（ポイント）"
     out["dm_c_groups"] = {"active": "成分", "category": "カテゴリ語", "umbrella": "総称"}
@@ -1039,7 +1043,7 @@ def _supply_en(M, REG):
     out["sp_s_e"] = (
         f"Share of the categorised core launch releases that name each category: {y0} ({n0} "
         f"releases, hollow) and {y1} ({n1}, filled). A release naming two categories counts in "
-        f"each. Ink: {_cat(a)}, {_cat(b)} and {_cat(SH['loser'])}.")
+        "each.")
     out["sp_s_x"] = "Share of categorised core launch releases (%)"
 
     iss = O["issuers"]
@@ -1136,8 +1140,7 @@ def _supply_ja(M, REG):
         f"{abs(SH['loss']):.0f}ポイント低下した（同{rows.loc[SH['loser'], 'launch_n1']}件）")
     out["sp_s_e"] = (
         f"カテゴリ付きのコア新商品リリースのうち、各カテゴリを記載したものの比率。{y0}年（{n0}件、"
-        f"白抜き）と{y1}年（{n1}件、塗り）。2つのカテゴリを記載したリリースはそれぞれに数える。"
-        f"濃色は{cj(a)}・{cj(b)}・{cj(SH['loser'])}。")
+        f"白抜き）と{y1}年（{n1}件、塗り）。2つのカテゴリを記載したリリースはそれぞれに数える。")
     out["sp_s_x"] = "カテゴリ付きコア新商品リリースに占める比率（%）"
 
     iss = O["issuers"]
@@ -1228,7 +1231,7 @@ def _consumer_en(M, REG):
     out["cs_v_e"] = (
         "@cosme skincare reviews, and comments on YouTube videos from the skincare search "
         "categories. One tokeniser (nouns and adjectives) and one TF-IDF for both; terms ranked "
-        "by mean weight across skincare documents. In ink: terms in both lists.")
+        "by mean weight across skincare documents. In bold: terms in both lists.")
     out["cs_vcols"] = ["", "@cosme reviews", "YouTube comments"]
 
     out["cs_m_h"] = (
@@ -1239,9 +1242,13 @@ def _consumer_en(M, REG):
             else f"{_NUM_EN[ph['cats']]} of {_NUM_EN[ph['n_cats']]}")
     out["cs_m_e"] = (
         f"Each dot is one of {ph['total']:,} @cosme reviews, placed by vocabulary (UMAP): "
-        f"reviews that use similar words sit closer together. In ink: the {ph['n']:,} reviews "
-        f"that contain プレゼント (present) or 当選 (won a draw), from {cats} product categories.")
+        f"reviews that use similar words sit closer together, each in its side's colour. Purple: "
+        f"the {ph['n']:,} reviews that contain プレゼント (present) or 当選 (won a draw), from "
+        f"{cats} product categories.")
     out["cs_m_label"] = "プレゼント / 当選"
+    out["cs_m_sides"] = {"skincare": "Skincare reviews", "makeup": "Makeup reviews",
+                         "sunscreen": "Sunscreen reviews"}
+    out["cs_m_leg"] = "Contains プレゼント or 当選"
     out["cs_m_hover"] = {0: "%{customdata}", 1: "%{customdata} · プレゼント / 当選"}
 
     out["cs_src_cosme"] = source_line(["cosme"], REG)
@@ -1264,7 +1271,7 @@ def _consumer_ja(M, REG):
     out["cs_v_e"] = (
         "@cosmeのスキンケアレビューと、スキンケアの検索カテゴリで集めたYouTube動画へのコメント。両者に同じ"
         "トークナイザー（名詞と形容詞）とTF-IDFを用い、スキンケア文書での平均重みで順位を付けた。"
-        "濃色は両方のリストにある語。")
+        "太字は両方のリストにある語。")
     out["cs_vcols"] = ["", "@cosmeレビュー", "YouTubeコメント"]
 
     cats = (f"{ph['n_cats']}の商品カテゴリすべて" if ph["cats"] == ph["n_cats"]
@@ -1274,9 +1281,12 @@ def _consumer_ja(M, REG):
         f"平均{ph['nn_phrase']:.1f}件が同じ語を含む（他のレビューは{ph['nn_other']:.1f}件）")
     out["cs_m_e"] = (
         f"各点は@cosmeレビュー{ph['total']:,}件のうちの1件で、語彙によって配置した（UMAP）。"
-        f"似た語を使うレビューほど近くに置かれる。濃色は「プレゼント」または「当選」を含む"
+        f"似た語を使うレビューほど近くに置かれ、色は区分を示す。紫は「プレゼント」または「当選」を含む"
         f"{ph['n']:,}件で、{cats}にわたる。")
     out["cs_m_label"] = "プレゼント／当選"
+    out["cs_m_sides"] = {"skincare": "スキンケアのレビュー", "makeup": "メイクのレビュー",
+                         "sunscreen": "日焼け止めのレビュー"}
+    out["cs_m_leg"] = "「プレゼント」「当選」を含む"
     out["cs_m_hover"] = {0: "%{customdata}", 1: "%{customdata} · プレゼント／当選"}
 
     out["cs_src_cosme"] = source_line(["cosme"], REG, "ja")
@@ -1348,8 +1358,9 @@ def _timing_page_en(M, REG):
                      f"{_NUM_EN[off[F['y0']]]} months apart in every year from {F['y0']} to {F['y1']}"
                      if same else f"Sunscreen search peaks {rng(sa, sb)} and shipments {rng(ha, hb)}")
     out["tm_s_e"] = (
-        f"Seasonal ratio by month. Line: the average over {win}. Grey band: the lowest and "
+        f"Seasonal ratio by month. Line: the average over {win}. Band: the lowest and "
         "highest year for each month. Shaded: the three months with the highest average.")
+    out["tm_s_leg"] = ["Average", "Lowest to highest year", "Highest three months"]
     out["tm_s_search"] = "Search: 日焼け止め (Google Trends)"
     out["tm_s_ship"] = "Shipped value: 日やけ止め及び日やけ用化粧品 (METI)"
     out["tm_y"] = "Seasonal ratio (trend = 100)"
@@ -1387,7 +1398,8 @@ def _timing_page_en(M, REG):
     out["tm_l_e"] = (
         f"Core-panel launch releases by month of release, {t['year'].min()}–{t['year'].max()}; "
         f"each year tested against an even spread across the months (chi-square, 11 degrees of "
-        "freedom, 5%). Ink: the year that departs from an even spread.")
+        "freedom, 5%). Later years are darker. Thick line: the year that departs from an even "
+        "spread.")
     out["tm_l_side"] = {"skincare": "Skincare", "makeup": "Makeup"}
     out["tm_l_hover"] = "{y}, month %{{x}}: %{{y}} releases"
     out["tm_l_end"] = "{y}: {n}"
@@ -1426,8 +1438,9 @@ def _timing_page_ja(M, REG):
     out["tm_s_h"] = (f"日焼け止めの検索は{sa}〜{sb}月、出荷金額は{ha}〜{hb}月にピークとなり、"
                      f"{F['y0']}〜{F['y1']}年の各年で{off[F['y0']]}カ月の差がある"
                      if same else f"日焼け止めの検索は{sa}〜{sb}月、出荷金額は{ha}〜{hb}月にピークとなる")
-    out["tm_s_e"] = (f"月別の季節比率。線：{win}の平均。灰色の帯：各月の最も低い年と最も高い年。"
+    out["tm_s_e"] = (f"月別の季節比率。線：{win}の平均。帯：各月の最も低い年と最も高い年。"
                      "網掛け：平均が最も高い3カ月。")
+    out["tm_s_leg"] = ["平均", "最も低い年〜最も高い年", "平均が最も高い3カ月"]
     out["tm_s_search"] = "検索：日焼け止め（Googleトレンド）"
     out["tm_s_ship"] = "出荷金額：日やけ止め及び日やけ用化粧品（経産省）"
     out["tm_y"] = "季節比率（トレンド＝100）"
@@ -1460,7 +1473,7 @@ def _timing_page_ja(M, REG):
     t = F["t"]
     out["tm_l_e"] = (
         f"コアパネルの新商品リリースを公開月で数えた（{t['year'].min()}〜{t['year'].max()}年）。各年を"
-        "月ごとに均等な分布と比べた（カイ二乗、自由度11、5%）。濃色：均等な分布から外れた年。")
+        "月ごとに均等な分布と比べた（カイ二乗、自由度11、5%）。後の年ほど濃い色。太線：均等な分布から外れた年。")
     out["tm_l_side"] = {"skincare": "スキンケア", "makeup": "メイク"}
     out["tm_l_hover"] = "{y}年%{{x}}月：%{{y}}件"
     out["tm_l_end"] = "{y}年：{n}"
@@ -1653,7 +1666,7 @@ def _method_en(M, REG):
     out["me_pk_h"] = (f"Yen per kg steps down at January {y0}: "
                       f"{_and(f'{_LINE_EN[li].lower()} {_pct(d[li])}' for li in P['lines'])}, "
                       f"{y0 - 1} to {y0}")
-    out["me_pk_e"] = (f"METI shipped value divided by kilograms, by month; log scale. Grey: "
+    out["me_pk_e"] = (f"METI shipped value divided by kilograms, by month; log scale. Dashed and dotted: "
                       f"{_and(_LINE_EN[li].lower() for li in P['controls'])}, for comparison.")
     out["me_pk_y"] = "Yen per kg"
     out["me_pk_hover"] = "%{x|%b %Y}: ¥%{y:,.0f}/kg"
@@ -1695,7 +1708,7 @@ def _method_en(M, REG):
     out["me_q_h"] = (f"Chi-square is below the critical value of {Z['crit']} in {sides}"
                      + (f"; {exc}" if len(odd) else ""))
     out["me_q_e"] = ("Core-panel launch releases by month of release, "
-                     f"{t['year'].min()}–{t['year'].max()}. Ink: a year above the critical value.")
+                     f"{t['year'].min()}–{t['year'].max()}. In bold: a year above the critical value.")
     out["me_q_cols"] = ["Side", "Year", "Releases", "Chi-square", "Largest month"]
     out["me_q_month"] = "{m} ({n})"
     out["me_months"] = _MON_ABBR[1:]
@@ -1810,7 +1823,7 @@ def _method_ja(M, REG):
     d = P["drop"]
     out["me_pk_h"] = (f"1kgあたり金額は{y0}年1月に段差をもって下がり、{y0 - 1}→{y0}年で"
                       + "、".join(f"{li}{_pct(d[li])}" for li in P["lines"]))
-    out["me_pk_e"] = (f"経産省の出荷金額を重量で割った月次の値、対数目盛。灰色：比較のための"
+    out["me_pk_e"] = (f"経産省の出荷金額を重量で割った月次の値、対数目盛。破線と点線：比較のための"
                       f"{'・'.join(P['controls'])}。")
     out["me_pk_y"] = "1kgあたり金額（円）"
     out["me_pk_hover"] = "%{x|%Y年%-m月}：%{y:,.0f}円/kg"
@@ -1845,7 +1858,7 @@ def _method_ja(M, REG):
     out["me_q_h"] = (f"カイ二乗は、{sides}で臨界値{Z['crit']}を下回"
                      + (f"り、{exc}" if len(odd) else "る"))
     out["me_q_e"] = (f"コアパネルの新商品リリースを公開月で数えた（{t['year'].min()}〜{t['year'].max()}年）。"
-                     "濃色：臨界値を上回る年。")
+                     "太字：臨界値を上回る年。")
     out["me_q_cols"] = ["区分", "年", "リリース数", "カイ二乗", "最多の月"]
     out["me_q_month"] = "{m}（{n}）"
     out["me_months"] = [f"{m}月" for m in range(1, 13)]

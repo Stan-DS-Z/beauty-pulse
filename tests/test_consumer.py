@@ -166,9 +166,20 @@ def test_the_page_has_no_emoji_tile_rimmed_card_or_control(page_json):
         assert "borderLeft" not in js and "bp-pill" not in js, lang
 
 
-def test_the_map_uses_no_side_colour(page_json):
-    """The map's title is about the phrases, not skincare against makeup: grey
-    and ink only (the colour ruling)."""
-    from bp.theme import C
-    for lang, js in page_json.items():
-        assert C["skin"] not in js and C["cosm"] not in js, lang
+def test_the_map_colours_each_review_by_its_side_and_the_phrases_on_top():
+    """Each review in its side's colour, the reviews with the phrases drawn
+    last in their own colour, and a legend that names all four."""
+    import data_cache
+    from bp import figures
+    from bp.consumer import REVIEW_SIDE
+    from bp.theme import SIDE
+    D = data_cache.load()
+    pts = D.CONSUMER["points"]
+    assert set(pts["category"]) <= set(REVIEW_SIDE)
+    fig = figures.fig_consumer_map(D.CONSUMER, D.S["en"])
+    drawn = [t for t in fig.data if t.type == "scattergl"]
+    assert [t.marker.color for t in drawn] == [SIDE["skincare"], SIDE["makeup"],
+                                               SIDE["sunscreen"], figures.PHRASE]
+    assert sum(len(t.x) for t in drawn) == len(pts)
+    assert len(drawn[-1].x) == int(pts["phrase"].sum())
+    assert fig.layout.showlegend

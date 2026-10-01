@@ -27,6 +27,21 @@ C = {
     "neg":     "#C4843A",
 }
 
+# ── Chart colours ───────────────────────────────────────────────────────────
+# The category colours are the Streamlit app's, and each one belongs to its
+# entity on every chart: skincare blue, makeup rose, sunscreen gold, actives
+# green, Korea orange. Actives green and makeup rose are hard to tell apart
+# with red-green colour blindness, and green sits close to skincare blue, so
+# green marks the actives only in a block of their own.
+SIDE = {"skincare": C["skin"], "makeup": C["cosm"], "sunscreen": C["gold"]}
+# Series that are not a category take these. Every set drawn together was
+# checked with the dataviz validator: each pair at least 15 apart for normal
+# vision and 8 for colour-blind readers, or told apart by a dash and a label.
+PURPLE, CHARCOAL, TEAL, AMBER = "#7B5EA7", "#37474F", "#4DB6AC", "#E0A93B"
+SKIN_DEEP, SKIN_LIGHT = "#1F4E79", "#9CC3DC"
+CONTEXT = C["muted"]          # context series: grey, and dashed where it sits beside a colour
+ORIGIN = {"KR": C["korean"], "JP": CHARCOAL, "global": PURPLE, "CN": TEAL}
+
 
 def _base(height=420):
     return dict(

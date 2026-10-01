@@ -129,10 +129,36 @@ def page_json():
             for lang, tree in mod.TREES.items()}
 
 
-def test_the_page_has_no_emoji_tile_or_side_colour(page_json):
-    from bp.theme import C
+def test_the_page_has_no_emoji_or_tile(page_json):
     for lang, js in page_json.items():
         assert not EMOJI.search(js), lang
         assert "kpi-card" not in js and "bp-finding" not in js and "bp-note" not in js, lang
-        assert C["skin"] not in js and C["cosm"] not in js, lang
         assert "bp-figs" in js, lang
+
+
+def test_each_chart_carries_its_colours_and_a_key():
+    """Sunscreen in its gold; each launch year in its side's colour, a
+    different shade per year, with a legend; each heatmap on the blue scale."""
+    import data_cache
+    from bp import figures
+    from bp.theme import C, _SEQ
+    D = data_cache.load()
+    S, T = D.S["en"], D.TIMING
+    sun = figures.fig_timing_sun(T, S)
+    assert {t.line.color for t in sun.data if t.mode == "lines+markers"} == {C["gold"]}
+    assert sun.layout.showlegend
+    launch = figures.fig_timing_launch(T, S)
+    for side, axis in (("skincare", "y"), ("makeup", "y2")):
+        shades = [t.line.color for t in launch.data if t.yaxis == axis]
+        assert len(set(shades)) == len(shades) == len(T["counts"][side]), side
+        assert C["skin" if side == "skincare" else "cosm"] in shades, side
+    assert launch.layout.showlegend
+    for fig in (figures.fig_timing_ship(T, S), figures.fig_timing_search(T, S)):
+        heat = fig.data[0]
+        assert [list(c) for c in heat.colorscale] == [list(c) for c in _SEQ]
+
+
+def test_each_heatmap_has_its_colour_key_under_it(page_json):
+    for lang, js in page_json.items():
+        n = js.count("bp-scalekey-bar")
+        assert n == 2, (lang, n)

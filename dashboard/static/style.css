@@ -104,6 +104,13 @@ p { margin:0; }
 .bp-swatch { display:inline-block; width:12px; height:12px; border-radius:2px; }
 .bp-swatch.small { width:10px; height:10px; }
 .bp-swatch.dot { width:10px; height:10px; border-radius:50%; opacity:.8; }
+/* a heatmap's colour key, under the chart */
+.bp-scalekey { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; margin:2px 0 6px;
+               font-size:11px; color:var(--muted); }
+.bp-scalekey-scale { width:180px; }
+.bp-scalekey-bar { display:block; height:10px; border-radius:2px; }
+.bp-scalekey-ticks { display:flex; justify-content:space-between; margin-top:2px;
+                     font-variant-numeric:tabular-nums; }
 
 /* ── controls ─────────────────────────────────────────────────────────── */
 .bp-control { margin:6px 0 8px; font-size:14px; }

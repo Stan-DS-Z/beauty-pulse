@@ -14,7 +14,22 @@ import plotly.graph_objects as go
 
 from .data import LAUNCH_GROUPS
 from .strings import LAUNCH_CAT
-from .theme import C, _base, _xax, _yax
+from .theme import (AMBER, C, CHARCOAL, CONTEXT, ORIGIN, PURPLE, SIDE, SKIN_DEEP, SKIN_LIGHT,
+                    TEAL, _SEQ, _base, _xax, _yax)
+
+
+def _legend(**kw):
+    """A horizontal legend above the plot; Plotly widens the top margin for it."""
+    d = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0,
+             bgcolor="rgba(0,0,0,0)", font=dict(size=11))
+    d.update(kw)
+    return d
+
+
+def _key(fig, name, marker=None, line=None, mode="markers"):
+    """A legend entry with no data: names a colour or a mark the traces use."""
+    fig.add_trace(go.Scatter(x=[None], y=[None], mode=mode, name=name, marker=marker or {},
+                             line=line or {}, hoverinfo="skip", showlegend=True))
 
 
 # ── Market · shipped value by group ───────────────────────────────────────
@@ -53,11 +68,7 @@ def fig_meti_groups(df_grp, HEADLINE, lang):
 
 
 # ── Brief ───────────────────────────────────────────────────────────────────
-# Colour: the skincare/makeup pair is the only categorical set; anything else
-# is grey, and the one accent on an exhibit whose title is not about skincare
-# against makeup is ink.
-_GREY = "#A9A59E"
-GROUP_COLOUR = {"skincare": C["skin"], "makeup": C["cosm"], "sunscreen": _GREY}
+# Colour: each category in its own colour (theme.SIDE); the actives in green.
 # Label placement for the portfolio's bubbles, so no two labels overlap on the
 # September 2026 figures; an unlisted category takes "top center".
 _PORTFOLIO_TEXT = {"serum": "bottom center", "emulsion": "middle left", "mask": "top right",
@@ -84,7 +95,7 @@ def fig_brief_portfolio(BRIEF, S):
             text=[LAUNCH_CAT[k][ix] for k in g.index],
             textposition=[_PORTFOLIO_TEXT.get(k, "top center") for k in g.index],
             textfont=dict(size=11, color=C["ink"]),
-            marker=dict(size=1.1 * np.sqrt(g["value_y1"]), color=GROUP_COLOUR[group],
+            marker=dict(size=1.1 * np.sqrt(g["value_y1"]), color=SIDE[group],
                         opacity=0.75, line=dict(color="#fff", width=2)),
             customdata=np.stack([[LAUNCH_CAT[k][1] for k in g.index], g["value_y1"].round(),
                                  g["launch_n0"], g["launch_n1"], g["launch_s0"].round(1),
@@ -117,14 +128,15 @@ def fig_brief_actives(BRIEF, S):
              if S["b_namecol"] == "en" else
              f"<b>%{{customdata[0]}}</b><br>検索 %{{customdata[1]}} → %{{customdata[2]}}"
              f"（{y0}→{y1}年）<br>新商品リリース{den:,}件中%{{customdata[3]}}件<extra></extra>")
-    colours = [C["ink"] if k in named else _GREY for k in A.index]
+    # The actives the title names in full green, the rest lighter.
+    opacity = [1.0 if k in named else 0.45 for k in A.index]
     fig = go.Figure(go.Scatter(
         x=A["d"], y=A["share"], mode="markers+text",
         text=[f"{name} ({n})" if S["b_namecol"] == "en" else f"{name}（{n}）"
               for name, n in zip(A[S["b_namecol"]], A["n"])],
         textposition="top center",
         textfont=dict(size=11, color=C["ink"]),
-        marker=dict(size=14, color=colours, line=dict(color="#fff", width=2)),
+        marker=dict(size=14, color=C["ingr"], opacity=opacity, line=dict(color="#fff", width=2)),
         customdata=np.stack([A["ja"], A["s0"].round(), A["s1"].round(), A["n"]], axis=-1),
         hovertemplate=hover))
     fig.add_vline(x=float(A["d"].median()), line_width=1, line_dash="dot", line_color=C["border"])
@@ -141,15 +153,21 @@ def fig_brief_actives(BRIEF, S):
 
 
 # ── Market ──────────────────────────────────────────────────────────────────
-# No title here is about skincare against makeup, so each exhibit is grey with
-# its one accent in ink; the group chart (fig_meti_groups) is the one that
-# sets skincare against makeup, in the pair's colours.
-_GREY_DARK = "#6B6862"
+# Product lines in their side's colour; import origins in theme's origin set.
+IMPORT_COLOUR = {"大韓民国": C["korean"], "フランス": PURPLE, "アメリカ合衆国": CHARCOAL,
+                 "中華人民共和国": TEAL}
+
+
+def _side_keys(fig, S, groups):
+    """One legend entry per side drawn, in the site's order."""
+    for g in ("skincare", "makeup", "sunscreen"):
+        if g in set(groups):
+            _key(fig, S["ch_side"][g], marker=dict(color=SIDE[g], size=10, symbol="square"))
 
 
 def fig_market_lines(M, S):
-    """Each METI product line's shipped value in the last full year, the
-    lines the title names in ink; label: the change since the break year."""
+    """Each METI product line's shipped value in the last full year, in its
+    side's colour; label: the change since the break year."""
     rows = M["rows"].sort_values("value_y1")
     y0, y1 = M["window"]
     names = S["mk_line"]
@@ -158,13 +176,14 @@ def fig_market_lines(M, S):
                  if r["group"] == "makeup" else "") for v, (_, r) in zip(vs, rows.iterrows())]
     fig = go.Figure(go.Bar(
         x=rows["value_y1"], y=[names[li] for li in rows.index], orientation="h",
-        marker=dict(color=[C["ink"] if li in M["lead"] else _GREY for li in rows.index]),
+        marker=dict(color=[SIDE[g] for g in rows["group"]]),
         text=[f"{d:+.0f}%" for d in rows["value_d"]], textposition="outside", cliponaxis=False,
-        textfont=dict(size=11, color=C["muted"]),
+        textfont=dict(size=11, color=C["muted"]), showlegend=False,
         customdata=np.stack([list(rows.index), more], axis=-1),
         hovertemplate=(f"<b>%{{y}}</b> %{{customdata[0]}}<br>{S['mk_l_hover']} · "
                        "%{customdata[1]}<extra></extra>")))
-    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
+    _side_keys(fig, S, rows["group"])
+    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=10, t=10, b=40),
                       xaxis=_xax(title=dict(text=S["mk_l_x"], font=dict(size=11)),
                                  range=[0, 1.2 * rows["value_y1"].max()]),
@@ -174,26 +193,27 @@ def fig_market_lines(M, S):
 
 def fig_market_bridge(M, S):
     """Each line's change since the break year in units, value per unit and
-    shipped value, largest value change at the top."""
+    shipped value, largest value change at the top. Colour is the line's
+    side; the mark's shape is the measure, and the legend names both."""
     rows = M["rows"].sort_values("value_d")
     y = [S["mk_line"][li] for li in rows.index]
+    col = [SIDE[g] for g in rows["group"]]
     fig = go.Figure()
-    marks = (("units_d", dict(color="rgba(0,0,0,0)", size=10, symbol="circle",
-                              line=dict(color=C["muted"], width=1.5))),
-             ("vpu_d", dict(color=_GREY_DARK, size=10, symbol="diamond",
-                            line=dict(color=_GREY_DARK, width=1))),
-             ("value_d", dict(color=C["ink"], size=16, symbol="line-ns",
-                              line=dict(color=C["ink"], width=2.5))))
-    for (col, marker), name in zip(marks, S["mk_b_names"]):
+    shapes = (("units_d", "circle-open", 10, 1.5), ("vpu_d", "diamond", 10, 1),
+              ("value_d", "line-ns", 16, 2.5))
+    for (field, symbol, size, width), name in zip(shapes, S["mk_b_names"]):
         fig.add_trace(go.Scatter(
-            x=rows[col], y=y, mode="markers", name=name, marker=marker,
+            x=rows[field], y=y, mode="markers", name=name, showlegend=False,
+            marker=dict(color=col, size=size, symbol=symbol, line=dict(color=col, width=width)),
             hovertemplate=f"<b>%{{y}}</b><br>{name}: %{{x:+.0f}}%<extra></extra>"
             if S["mk_en"] else
             f"<b>%{{y}}</b><br>{name}：%{{x:+.0f}}%<extra></extra>"))
+    for (_, symbol, size, width), name in zip(shapes, S["mk_b_names"]):
+        _key(fig, name, marker=dict(color=CONTEXT, size=size, symbol=symbol,
+                                    line=dict(color=CONTEXT, width=width)))
+    _side_keys(fig, S, rows["group"])
     fig.add_vline(x=0, line_width=1, line_color=C["border"])
-    # The exhibit note names the three markers: a legend wraps over the rows
-    # at phone width.
-    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=10, t=10, b=40),
                       xaxis=_xax(title=dict(text=S["mk_b_x"], font=dict(size=11)),
                                  ticksuffix="%", zeroline=False),
@@ -202,8 +222,8 @@ def fig_market_bridge(M, S):
 
 
 def fig_market_imports(M, S):
-    """HS 3304 imports by origin, the largest origins in the last year; the
-    leading origin in ink, each line labelled at its end."""
+    """HS 3304 imports by origin, the largest origins in the last year, each
+    in its own colour and labelled at its end; the leading origin thicker."""
     I = M["imports"]
     f = I["frame"]
     en = S["mk_en"]
@@ -215,16 +235,16 @@ def fig_market_imports(M, S):
     for c, row in f.iterrows():
         name = S["mk_origin"][c]
         lead = c == I["leader"]
-        colour = C["ink"] if lead else _GREY
+        colour = IMPORT_COLOUR.get(c, CONTEXT)
         fig.add_trace(go.Scatter(
             x=list(f.columns), y=row.values, mode="lines+markers", name=name,
-            line=dict(color=colour, width=2.5 if lead else 1.5), marker=dict(size=5),
+            line=dict(color=colour, width=3 if lead else 2), marker=dict(size=5),
             hovertemplate=(f"{name} %{{x}}: ¥%{{y:,.0f}}億<extra></extra>" if en else
                            f"{name} %{{x}}年：%{{y:,.0f}}億円<extra></extra>")))
         fig.add_annotation(x=f.columns[-1], y=label_y[c], text=name, showarrow=False,
                            xanchor="left", xshift=8,
                            font=dict(size=11, color=C["ink"] if lead else C["muted"]))
-    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=100, t=20, b=30),
                       xaxis=_xax(tickformat="d", tickangle=0,
                                  range=[f.columns[0] - 0.4, f.columns[-1] + 0.4]),
@@ -233,15 +253,27 @@ def fig_market_imports(M, S):
 
 
 # ── Demand ──────────────────────────────────────────────────────────────────
-# Grey, with the one accent in ink on what each title names. Actives are
-# never ranked against each other: the change chart lists each group of terms
-# alphabetically (五十音 in Japanese), top to bottom.
+# Category words in their side's colour, actives green, the umbrella terms
+# charcoal. Actives are never ranked against each other: the change chart
+# lists each group of terms alphabetically (五十音 in Japanese), top to bottom.
+def _term_colour(term, kind):
+    """A search term's colour: actives green, umbrella terms charcoal, a
+    category word its side's (funnel.CATEGORIES records each word's side)."""
+    from .funnel import CATEGORIES
+    if kind == "active":
+        return C["ingr"]
+    if kind == "umbrella":
+        return CHARCOAL
+    side = {t: g for _, _, t, g in CATEGORIES.values() if t}
+    return SIDE[side[term]]
+
 
 def _end_labels(fig, series, names, accent, top, gap_frac=0.045):
     """A label at the end of each line, moved apart where lines end close
     together; `series` maps key -> (x, y) of the line's last point, and `top`
     is the highest value drawn, so the gap is a share of the axis. `accent` is
-    the key whose label is set in ink, or a tuple of them. Labels sit in the
+    the key whose label is set in ink, or a tuple of them; the others are
+    muted, and the line's colour beside each label names it. Labels sit in the
     right margin; a data-placed annotation widens Plotly's autorange, so each
     chart that uses these fixes its x range."""
     inks = accent if isinstance(accent, tuple) else (accent,)
@@ -259,11 +291,10 @@ def fig_demand_change(M, S):
     from .brief import TRENDS_PULL_SPREAD
     ch = M["change"]
     order = S["dm_order"][::-1]                   # Plotly draws the first category at the bottom
-    rose = set(M["changes"]["rose"])
     names = [S["dm_term"][t] for t in order]
     fig = go.Figure(go.Bar(
-        x=ch.loc[order, "d"], y=names, orientation="h",
-        marker=dict(color=[C["ink"] if t in rose else _GREY for t in order]),
+        x=ch.loc[order, "d"], y=names, orientation="h", showlegend=False,
+        marker=dict(color=[_term_colour(t, ch.loc[t, "kind"]) for t in order]),
         customdata=np.stack([order, ch.loc[order, "s0"], ch.loc[order, "s1"]], axis=-1),
         hovertemplate=f"<b>%{{y}}</b> %{{customdata[0]}}<br>{S['dm_c_hover']}<extra></extra>"))
     fig.add_vrect(x0=-TRENDS_PULL_SPREAD, x1=TRENDS_PULL_SPREAD, fillcolor=C["grid"], opacity=0.8,
@@ -279,7 +310,12 @@ def fig_demand_change(M, S):
     for i in range(1, len(order)):
         if kinds[i] != kinds[i - 1]:
             fig.add_hline(y=i - 0.5, line_width=1, line_color=C["rule"])
-    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=False,
+    sq = dict(size=10, symbol="square")
+    _key(fig, S["dm_c_groups"]["active"], marker=dict(color=C["ingr"], **sq))
+    for g in ("skincare", "makeup", "sunscreen"):
+        _key(fig, S["ch_side"][g], marker=dict(color=SIDE[g], **sq))
+    _key(fig, S["dm_c_groups"]["umbrella"], marker=dict(color=CHARCOAL, **sq))
+    fig.update_layout(**{**_base(560), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=10, t=10, b=40),
                       xaxis=_xax(title=dict(text=S["dm_c_x"], font=dict(size=11)),
                                  zeroline=False,
@@ -296,15 +332,14 @@ def fig_demand_pair(M, S):
     ends = {}
     for term in ("スキンケア", "化粧品"):
         d = cross[cross["term"] == term].sort_values("week_start")
-        accent = term == "化粧品"
         fig.add_trace(go.Scatter(
             x=d["week_start"], y=d["interest"], mode="lines", name=S["dm_p_names"][term],
-            line=dict(color=C["ink"] if accent else _GREY, width=2.5 if accent else 2),
+            line=dict(color=C["skin"] if term == "スキンケア" else CHARCOAL, width=2.5),
             hovertemplate=f"{S['dm_p_names'][term]} %{{x|%Y-%m}}: %{{y:.0f}}<extra></extra>"))
         ends[term] = (d["week_start"].iloc[-1], d["interest"].iloc[-1])
     _end_labels(fig, ends, S["dm_p_names"], "化粧品", cross["interest"].max())
     x0, x1 = cross["week_start"].min(), cross["week_start"].max()
-    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=20, r=110, t=20, b=40),
                       xaxis=_xax(tickformat="%Y", tickangle=0,
                                  range=[x0 - pd.Timedelta(days=20), x1 + pd.Timedelta(days=20)]),
@@ -314,9 +349,12 @@ def fig_demand_pair(M, S):
 
 def fig_demand_ingredients(M, S):
     """Annual mean search for the ingredient lines, full years; the line the
-    title names in ink."""
+    title names in the actives' green, the others in purple, charcoal and
+    amber (a set checked to tell apart)."""
     from .demand import LONG_ACTIVE
     ing = M["ing"]
+    others = iter((PURPLE, CHARCOAL, AMBER))
+    colour = {t: C["ingr"] if t == LONG_ACTIVE else next(others, CONTEXT) for t in ing.columns}
     fig = go.Figure()
     ends = {}
     for term in ing.columns:
@@ -324,12 +362,12 @@ def fig_demand_ingredients(M, S):
         name = S["dm_term"][term]
         fig.add_trace(go.Scatter(
             x=list(ing.index), y=ing[term].round(1), mode="lines+markers", name=name,
-            line=dict(color=C["ink"] if accent else _GREY, width=2.5 if accent else 1.5),
+            line=dict(color=colour[term], width=3 if accent else 2),
             marker=dict(size=5),
             hovertemplate=f"{name} %{{x}}: %{{y:.1f}}<extra></extra>"))
         ends[term] = (ing.index[-1], ing[term].iloc[-1])
     _end_labels(fig, ends, S["dm_term"], LONG_ACTIVE, float(ing.max().max()))
-    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=20, r=120, t=20, b=40),
                       xaxis=_xax(tickformat="d", range=[ing.index[0] - 0.3, ing.index[-1] + 0.3]),
                       yaxis=_yax(S["dm_i_y"], rangemode="tozero"))
@@ -338,7 +376,7 @@ def fig_demand_ingredients(M, S):
 
 def fig_demand_makeup(M, S):
     """Three makeup terms by month against each term's own 2019 mean; the
-    term the title names in ink."""
+    term the title names in makeup rose, the others purple and charcoal."""
     MK = M["makeup"]
     mk = MK["frame"]
     fig = go.Figure()
@@ -354,14 +392,15 @@ def fig_demand_makeup(M, S):
         d = mk[mk["term"] == term]
         accent = term == "口紅"
         name = S["dm_m_names"][term]
+        colour = {"口紅": C["cosm"], "アイシャドウ": PURPLE, "ファンデーション": CHARCOAL}[term]
         fig.add_trace(go.Scatter(
             x=d["week_start"], y=d["smooth"], mode="lines", name=name,
-            line=dict(color=C["ink"] if accent else _GREY, width=2.5 if accent else 1.5),
+            line=dict(color=colour, width=3 if accent else 2),
             hovertemplate=f"{name} %{{x|%Y-%m}}: %{{y:.0f}}<extra></extra>"))
         ends[term] = (d["week_start"].iloc[-1], d["smooth"].iloc[-1])
     _end_labels(fig, ends, {t: S["dm_term"].get(t, t) for t in ends}, "口紅", mk["smooth"].max())
     x0, x1 = mk["week_start"].min(), mk["week_start"].max()
-    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=20, r=110, t=20, b=40),
                       xaxis=_xax(tickformat="%Y", tickangle=0,
                                  range=[x0 - pd.Timedelta(days=20), x1 + pd.Timedelta(days=20)]),
@@ -370,48 +409,57 @@ def fig_demand_makeup(M, S):
 
 
 # ── Supply ──────────────────────────────────────────────────────────────────
-# The launch-total chart sets skincare against makeup, in the pair's colours;
-# every other exhibit is grey with its accent in ink on what its title names.
-# Hollow marks are the earlier year or window, filled marks the later one.
-# Ingredients are never ranked: they are listed alphabetically (五十音 in
-# Japanese), top to bottom.
-_GREY_LIGHT = "#CFCBC4"
-_ORIGIN_COLOUR = {"KR": C["ink"], "JP": _GREY, "global": _GREY_LIGHT, "CN": _GREY_DARK}
+# Categories in their side's colour, ingredients in the actives' green, issuer
+# origins in theme.ORIGIN. Hollow marks are the earlier year or window, filled
+# marks the later one, and the legend says which. Ingredients are never
+# ranked: they are listed alphabetically (五十音 in Japanese), top to bottom.
 
 
-def _dumbbell(fig, names, x0, x1, n0, n1, inked, hover0, hover1):
+def _dumbbell(fig, names, x0, x1, n0, n1, colour, hover0, hover1, label0, label1):
     """One row per name: a rule from x0 to x1, a hollow mark at x0 and a filled
-    mark at x1, in ink where `inked` is true and grey otherwise."""
-    colour = [C["ink"] if i else _GREY for i in inked]
-    for name, a, b, i in zip(names, x0, x1, inked):
-        fig.add_shape(type="line", x0=a, x1=b, y0=name, y1=name, layer="below",
-                      line=dict(color=C["ink"] if i else C["border"], width=2))
+    mark at x1, each row in its colour; label0 and label1 name the two marks
+    in the legend."""
+    # The rules are line traces, one per colour with a break between rows: a
+    # shape is drawn under the gridline that runs along its row.
+    rules = {}
+    for name, a, b, c in zip(names, x0, x1, colour):
+        xs, ys = rules.setdefault(c, ([], []))
+        xs += [a, b, None]
+        ys += [name, name, None]
+    for c, (xs, ys) in rules.items():
+        fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=c, width=2),
+                                 hoverinfo="skip", showlegend=False))
     fig.add_trace(go.Scatter(x=list(x0), y=names, mode="markers", customdata=list(n0),
                              marker=dict(size=9, color=C["card"], line=dict(color=colour, width=2)),
-                             cliponaxis=False, hovertemplate=hover0))
+                             cliponaxis=False, hovertemplate=hover0, showlegend=False))
     fig.add_trace(go.Scatter(x=list(x1), y=names, mode="markers", customdata=list(n1),
                              marker=dict(size=10, color=colour, line=dict(color=colour, width=1)),
-                             cliponaxis=False, hovertemplate=hover1))
+                             cliponaxis=False, hovertemplate=hover1, showlegend=False))
+    _key(fig, label0, marker=dict(size=9, color=C["card"], line=dict(color=CONTEXT, width=2)))
+    _key(fig, label1, marker=dict(size=10, color=CONTEXT))
+    # A category axis takes its order from the first trace, here the rules,
+    # which are grouped by colour: hold the rows in the order given.
+    fig.update_yaxes(categoryorder="array", categoryarray=list(names))
 
 
 def fig_supply_share(M, S):
     """Each category's share of categorised core launch releases in the first
-    and last year of the window, largest last-year share at the top; the
-    categories the title names in ink."""
+    and last year of the window, largest last-year share at the top, each row
+    in its side's colour."""
     SH = M["share"]
     y0, y1 = M["window"]
     n0, n1 = SH["den"]
     rows = SH["rows"].sort_values(["launch_s1", "launch_s0"])
-    named = set(SH["gainers"]) | {SH["loser"]}
     en = S["sp_en"]
     hover = ((lambda y, n: f"<b>%{{y}}</b> {y}: %{{x:.1f}}% (%{{customdata}} of {n})<extra></extra>")
              if en else
              (lambda y, n: f"<b>%{{y}}</b> {y}年：%{{x:.1f}}%（{n}件中%{{customdata}}件）<extra></extra>"))
     fig = go.Figure()
     _dumbbell(fig, [S["sp_cat"][k] for k in rows.index], rows["launch_s0"], rows["launch_s1"],
-              rows["launch_n0"], rows["launch_n1"], [k in named for k in rows.index],
-              hover(y0, n0), hover(y1, n1))
-    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=False,
+              rows["launch_n0"], rows["launch_n1"], [SIDE[g] for g in rows["group"]],
+              hover(y0, n0), hover(y1, n1), str(y0), str(y1))
+    _side_keys(fig, S, rows["group"])
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=10, t=10, b=40),
                       xaxis=_xax(title=dict(text=S["sp_s_x"], font=dict(size=11)),
                                  ticksuffix="%", rangemode="tozero"),
@@ -421,7 +469,8 @@ def fig_supply_share(M, S):
 
 def fig_supply_origin(M, S):
     """Share of core launch releases by issuer origin, each complete half-year;
-    Korea in ink at the base, each origin labelled beside the last bar. A
+    Korea at the base, each origin in its colour and labelled beside the last
+    bar. A
     year's two halves stand side by side over one year label, which fits at
     phone width where nine half-year labels do not; hover names the half."""
     O = M["origin"]
@@ -435,7 +484,7 @@ def fig_supply_origin(M, S):
         name = S["sp_origin"][o]
         fig.add_trace(go.Bar(
             x=x, y=sh[o], name=name, width=0.4,
-            marker=dict(color=_ORIGIN_COLOUR[o], line=dict(width=0)),
+            marker=dict(color=ORIGIN[o], line=dict(color=C["bg"], width=1)),
             customdata=list(zip(ct[o], tot, label)),
             hovertemplate=(f"{name} %{{customdata[2]}}: %{{y:.0f}}% (%{{customdata[0]}} of "
                            "%{customdata[1]})<extra></extra>" if S["sp_en"] else
@@ -448,7 +497,8 @@ def fig_supply_origin(M, S):
                            font=dict(size=11, color=C["ink"] if o == "KR" else C["muted"]))
         base += last[o]
     fig.update_layout(**{**_base(380), "hovermode": "closest"}, barmode="stack",
-                      showlegend=False, margin=dict(l=10, r=100, t=10, b=40),
+                      showlegend=True, legend=_legend(traceorder="normal"),
+                      margin=dict(l=10, r=100, t=10, b=40),
                       xaxis=_xax(tickangle=0, tickvals=ticks, showgrid=False,
                                  ticktext=[str(y) if S["sp_en"] else f"{y}年" for y in years],
                                  range=[min(x) - 0.3, max(ticks) + 0.3]),
@@ -458,10 +508,11 @@ def fig_supply_origin(M, S):
 
 def fig_supply_groups(M, S):
     """12-month launch-release totals by category group; skincare and makeup in
-    the pair's colours, the rest grey, each line labelled at its end."""
+    their colours, the other two grey (one dashed), each line labelled at its
+    end."""
     roll = M["groups"]["roll"]
     x = pd.to_datetime(roll.index + "-01")
-    colour = {"skincare": C["skin"], "makeup": C["cosm"], "other": _GREY, "none": _GREY}
+    colour = {"skincare": C["skin"], "makeup": C["cosm"], "other": CONTEXT, "none": CONTEXT}
     fig = go.Figure()
     ends = {}
     for g in LAUNCH_GROUPS:
@@ -473,7 +524,7 @@ def fig_supply_groups(M, S):
             hovertemplate=f"{name} %{{x|%Y-%m}}: %{{y:.0f}}<extra></extra>"))
         ends[g] = (x[-1], float(roll[g].iloc[-1]))
     _end_labels(fig, ends, S["sp_group"], ("skincare", "makeup"), float(roll.values.max()))
-    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=20, r=150, t=20, b=40),
                       xaxis=_xax(tickformat="%Y", tickangle=0,
                                  range=[x[0] - pd.Timedelta(days=20), x[-1] + pd.Timedelta(days=20)]),
@@ -483,8 +534,8 @@ def fig_supply_groups(M, S):
 
 def fig_supply_ingredients(M, S):
     """Share of launch releases naming each tracked ingredient, the 12 months
-    before and the latest 12, alphabetical top to bottom; the ingredient the
-    title names in ink."""
+    before and the latest 12, alphabetical top to bottom, in the actives'
+    green."""
     I = M["ingredients"]
     f = I["frame"]
     order = S["sp_ing_order"][::-1]               # Plotly draws the first category at the bottom
@@ -493,9 +544,9 @@ def fig_supply_ingredients(M, S):
              else (lambda w: f"<b>%{{y}}</b> {w}：%{{x:.1f}}%（%{{customdata}}件）<extra></extra>"))
     fig = go.Figure()
     _dumbbell(fig, [S["sp_ing"][k] for k in order], f.loc[order, "s_p12"], f.loc[order, "s_l12"],
-              f.loc[order, "n_p12"], f.loc[order, "n_l12"], [k == I["top"] for k in order],
-              hover(S["sp_win_p12"]), hover(S["sp_win_l12"]))
-    fig.update_layout(**{**_base(460), "hovermode": "closest"}, showlegend=False,
+              f.loc[order, "n_p12"], f.loc[order, "n_l12"], [C["ingr"]] * len(order),
+              hover(S["sp_win_p12"]), hover(S["sp_win_l12"]), S["sp_win_p12"], S["sp_win_l12"])
+    fig.update_layout(**{**_base(460), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=10, t=10, b=40),
                       xaxis=_xax(title=dict(text=S["sp_i_x"], font=dict(size=11)),
                                  ticksuffix="%", rangemode="tozero"),
@@ -504,40 +555,51 @@ def fig_supply_ingredients(M, S):
 
 
 # ── Consumer ────────────────────────────────────────────────────────────────
-# Grey, with the one accent in ink on what the title names: the reviews that
-# contain the two phrases.
+# Each review in its side's colour; the reviews that contain the two phrases
+# drawn over them in a dark purple that none of the side colours is near.
+PHRASE = "#4B1F6F"
+
 
 def fig_consumer_map(M, S):
-    """The @cosme reviews placed by vocabulary; the reviews that contain the
-    two phrases in ink, labelled once where most of them sit."""
+    """The @cosme reviews placed by vocabulary, each in its side's colour; the
+    reviews that contain the two phrases drawn on top, labelled once where
+    most of them sit."""
+    from .consumer import REVIEW_SIDE
     pts = M["points"]
+    side = pts["category"].map(REVIEW_SIDE)
     fig = go.Figure()
-    for flag, colour, size, opacity in ((0, _GREY_LIGHT, 3, 0.45), (1, C["ink"], 3, 0.6)):
-        d = pts[pts["phrase"] == flag]
+    layers = [(pts[(pts["phrase"] == 0) & (side == g)], SIDE[g], 0.35, S["cs_m_sides"][g], 0)
+              for g in ("skincare", "makeup", "sunscreen")]
+    layers.append((pts[pts["phrase"] == 1], PHRASE, 0.75, S["cs_m_leg"], 1))
+    for d, colour, opacity, name, flag in layers:
         # Scattergl: 40k points render via WebGL; SVG Scatter is sluggish here.
         fig.add_trace(go.Scattergl(
-            x=d["umap_x"], y=d["umap_y"], mode="markers",
-            marker=dict(color=colour, size=size, opacity=opacity, line=dict(width=0)),
+            x=d["umap_x"], y=d["umap_y"], mode="markers", name=name, showlegend=False,
+            marker=dict(color=colour, size=3, opacity=opacity, line=dict(width=0)),
             customdata=d["category"].map(S["cs_cat"]),
             hovertemplate=S["cs_m_hover"][flag] + "<extra></extra>"))
+        # The legend swatch at full size and strength; a 3px dot at 35% is unreadable there.
+        _key(fig, name, marker=dict(color=colour, size=10))
     # The label points at the middle of the reviews most of whose neighbours
     # carry the phrases too, from the empty space to their left.
     core = pts[(pts["phrase"] == 1) & (pts["nn_phrase"] >= 8)]
     fig.add_annotation(x=core["umap_x"].median(), y=core["umap_y"].median(), text=S["cs_m_label"],
                        showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor=C["ink"],
                        ax=-90, ay=-30, xanchor="right", font=dict(size=11, color=C["ink"]))
-    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=10, t=10, b=10),
                       xaxis=dict(visible=False), yaxis=dict(visible=False))
     return fig
 
 
 # ── Timing ──────────────────────────────────────────────────────────────────
-# Seasonal ratios (bp/seasonal.py) on one Jan-Dec axis. Lines in ink with the
-# years' range as a grey band; heatmaps on one grey-to-ink ramp; a row that
-# fails its test is labelled in grey.
-
-_RAMP = [[0, "#F4F2EE"], [0.5, _GREY], [1, C["ink"]]]
+# Seasonal ratios (bp/seasonal.py) on one Jan-Dec axis. Sunscreen in its gold,
+# with the years' range as a band; heatmaps on the Streamlit app's blue scale,
+# with its key; a row that fails its test is labelled in grey. Launch years in
+# their side's colour, lighter for earlier years.
+_GOLD_BAND, _GOLD_PEAK = "rgba(184,150,90,0.25)", "rgba(184,150,90,0.18)"
+_YEAR_SHADES = {"skincare": [SKIN_LIGHT, "#6FA6CB", C["skin"], SKIN_DEEP],
+                "makeup": ["#E9B3C1", "#D88BA0", C["cosm"], "#8A3550"]}
 
 
 def _month_axis(S, **kw):
@@ -558,20 +620,25 @@ def fig_timing_sun(M, S):
         a, b = st["run"]
         fig.add_trace(go.Scatter(x=months + months[::-1],
                                  y=list(st["band"]["hi"]) + list(st["band"]["lo"])[::-1],
-                                 fill="toself", fillcolor="rgba(169,165,158,0.35)",
+                                 fill="toself", fillcolor=_GOLD_BAND,
                                  line=dict(width=0), hoverinfo="skip", showlegend=False),
                       row=row, col=1)
         fig.add_trace(go.Scatter(x=months, y=st["profile"].round(0), mode="lines+markers",
-                                 line=dict(color=C["ink"], width=2.5), marker=dict(size=5),
+                                 line=dict(color=C["gold"], width=2.5), marker=dict(size=5),
                                  showlegend=False,
                                  hovertemplate=f"{name} %{{x}}: %{{y:.0f}}<extra></extra>"),
                       row=row, col=1)
         fig.add_hline(y=100, line_width=1, line_dash="dot", line_color=C["border"], row=row, col=1)
         # After the traces: add_vrect skips a subplot that has none yet.
-        fig.add_vrect(x0=a - 0.5, x1=b + 0.5, fillcolor="rgba(169,165,158,0.22)", opacity=1,
+        fig.add_vrect(x0=a - 0.5, x1=b + 0.5, fillcolor=_GOLD_PEAK, opacity=1,
                       layer="below", line_width=0, row=row, col=1)
-    fig.update_layout(**{**_base(460), "hovermode": "closest"}, showlegend=False,
-                      margin=dict(l=20, r=20, t=30, b=30))
+    avg, band, peak = S["tm_s_leg"]
+    _key(fig, avg, line=dict(color=C["gold"], width=2.5), mode="lines")
+    _key(fig, band, marker=dict(color=_GOLD_BAND, size=12, symbol="square"))
+    _key(fig, peak, marker=dict(color=_GOLD_PEAK, size=12, symbol="square",
+                                line=dict(color=C["gold"], width=1)))
+    fig.update_layout(**{**_base(480), "hovermode": "closest"}, showlegend=True,
+                      legend=_legend(y=1.06), margin=dict(l=20, r=20, t=50, b=30))
     fig.update_annotations(font=dict(size=11, color=C["muted"]), x=0, xanchor="left")
     for row in (1, 2):
         fig.update_xaxes(**_month_axis(S), row=row, col=1)
@@ -589,7 +656,9 @@ def _heatmap(grid, S, rows, height, swing=False):
     labels = [S[rows][k] if ok else f"<span style='color:{C['muted']}'>{S[rows][k]}</span>"
               for k, ok in zip(grid.index, grid["passes"])]
     fig = go.Figure(go.Heatmap(
-        z=z.values, x=list(range(1, 13)), y=labels, colorscale=_RAMP, showscale=False,
+        # The key is HTML under the chart (ui.scale_key): at phone width a
+        # horizontal Plotly colour bar draws no bar and drops the row names.
+        z=z.values, x=list(range(1, 13)), y=labels, colorscale=_SEQ, showscale=False,
         zmin=HEAT_RANGE[0], zmax=HEAT_RANGE[1],
         customdata=[[src] * 12 for src in grid["name"]],
         texttemplate="%{z:.0f}", textfont=dict(size=9), xgap=1, ygap=1,
@@ -614,6 +683,14 @@ def _heatmap(grid, S, rows, height, swing=False):
     return fig
 
 
+def heat_key(S):
+    """The heatmaps' key for ui.scale_key: title, colour scale and the ticks
+    at its two ends and centre."""
+    from .timing import HEAT_RANGE
+    lo, hi = HEAT_RANGE
+    return S["tm_y"], _SEQ, [f"≤{lo}", f"{(lo + hi) / 2:.0f}", f"≥{hi}"]
+
+
 def fig_timing_ship(M, S):
     """The 16 METI lines' seasonal profiles."""
     return _heatmap(M["ship"], S, "tm_rows_ship", 40 + 24 * len(M["ship"]))
@@ -627,8 +704,9 @@ def fig_timing_search(M, S):
 
 def fig_timing_launch(M, S):
     """Core launch releases by month, one line per year, skincare above
-    makeup; the side-year the title names in ink, every other year grey, and
-    each year's count at the line's end."""
+    makeup; each year in its side's colour, lighter for earlier years, the
+    side-year the title names thicker, and each year's count at the line's
+    end. The legend names the years, in the skincare shades."""
     from plotly.subplots import make_subplots
     from .timing import LAUNCH_SIDES
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.14,
@@ -638,12 +716,14 @@ def fig_timing_launch(M, S):
     top = max(int(c.values.max()) for c in M["counts"].values())
     for row, side in enumerate(LAUNCH_SIDES, start=1):
         c = M["counts"][side]
+        shade = dict(zip(sorted(c.index), _YEAR_SHADES[side][-len(c.index):]))
         ends = {}
         for y, vals in c.iterrows():
             ink = (side, y) in odd
             fig.add_trace(go.Scatter(
-                x=list(range(1, 13)), y=vals.values, mode="lines",
-                line=dict(color=C["ink"] if ink else _GREY, width=2.5 if ink else 1.5),
+                x=list(range(1, 13)), y=vals.values, mode="lines", name=str(y),
+                legendgroup=str(y), showlegend=row == 1,
+                line=dict(color=shade[y], width=3.5 if ink else 2),
                 hovertemplate=S["tm_l_hover"].format(y=y) + "<extra></extra>"), row=row, col=1)
             ends[y] = float(vals.values[-1])
         gap, placed = 0.08 * top, {}
@@ -655,7 +735,7 @@ def fig_timing_launch(M, S):
                                text=S["tm_l_end"].format(y=y, n=int(tests.loc[(side, y), "n"])),
                                font=dict(size=10, color=C["ink"] if ink else C["muted"]),
                                row=row, col=1)
-    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=20, r=64, t=30, b=30))
     fig.update_annotations(selector=dict(xanchor="center"), font=dict(size=11, color=C["muted"]))
     for row in (1, 2):
@@ -665,21 +745,26 @@ def fig_timing_launch(M, S):
 
 
 # ── Method ──────────────────────────────────────────────────────────────────
-# Neither title sets skincare against makeup: grey, with the lines the title
-# names in ink.
+# The three skincare lines with the step in blues (the Streamlit app's), the
+# comparison lines grey, one dashed and one dotted; the review-similarity
+# curve in purple.
+_STEP_COLOUR = {"化粧水": C["skin"], "美容液": SKIN_DEEP, "乳液": SKIN_LIGHT}
 
 def fig_method_price_kg(M, S):
-    """METI yen per kg by month: the lines with the January 2022 step in ink,
-    the comparison lines grey, each labelled at its end; log scale."""
+    """METI yen per kg by month: the lines with the January 2022 step in
+    blues, the comparison lines grey and dashed, each labelled at its end;
+    log scale."""
     P = M["price"]
     f = P["frame"].dropna(how="all")
     brk = pd.Timestamp(P["year"], 1, 1) - pd.Timedelta(days=15)
     fig = go.Figure()
+    pattern = dict(zip(P["controls"], ("dash", "dot")))
     for li in P["controls"] + P["lines"]:
         ink = li in P["lines"]
         fig.add_trace(go.Scatter(
-            x=f.index, y=f[li], mode="lines", name=li,
-            line=dict(color=C["ink"] if ink else _GREY_LIGHT, width=2 if ink else 1.2),
+            x=f.index, y=f[li], mode="lines", name=S["me_pk_names"][li],
+            line=dict(color=_STEP_COLOUR.get(li, CONTEXT), width=2.2 if ink else 1.4,
+                      dash=pattern.get(li, "solid")),
             hovertemplate=f"{li} {S['me_pk_hover']}<extra></extra>"))
     # End labels on the log axis: spaced in log10 units.
     last = f.index.max()
@@ -695,7 +780,7 @@ def fig_method_price_kg(M, S):
     fig.add_vline(x=brk, line_width=1, line_dash="dot", line_color=C["muted"])
     fig.add_annotation(x=brk, y=1, yref="paper", text=S["me_pk_brk"], showarrow=False,
                        xanchor="left", yanchor="top", xshift=4, font=dict(size=10, color=C["muted"]))
-    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=False,
+    fig.update_layout(**{**_base(380), "hovermode": "closest"}, showlegend=True, legend=_legend(),
                       margin=dict(l=10, r=118, t=10, b=30),
                       xaxis=_xax(dtick="M24", tickformat="%Y", tickangle=0,
                                  range=[f.index.min(), last]),
@@ -710,9 +795,9 @@ def fig_method_curve(M, S):
     cur = cv["curve"]
     fig = go.Figure(go.Scatter(
         x=cur["sample_size"], y=cur["cosine"], mode="lines+markers",
-        line=dict(color=C["ink"], width=2.5), marker=dict(size=7, color=C["ink"]),
+        line=dict(color=PURPLE, width=2.5), marker=dict(size=7, color=PURPLE),
         hovertemplate=S["me_v_hover"] + "<extra></extra>"))
-    fig.add_hline(y=cv["early"], line_width=1.5, line_dash="dot", line_color=_GREY)
+    fig.add_hline(y=cv["early"], line_width=1.5, line_dash="dot", line_color=CONTEXT)
     fig.add_annotation(x=1, xref="x domain", y=cv["early"], text=S["me_v_dot"], showarrow=False,
                        xanchor="right", yanchor="top", font=dict(size=11, color=C["muted"]))
     fig.update_layout(**{**_base(360), "hovermode": "closest"}, showlegend=False,

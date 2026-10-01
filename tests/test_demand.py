@@ -98,17 +98,31 @@ def test_the_japanese_order_is_gojuon():
     assert got.index("口紅") < got.index("洗顔") < got.index("乳液") < got.index("日焼け止め")
 
 
-def test_each_exhibit_spends_its_one_accent_on_what_its_title_names(M, headline, REG):
+def test_each_term_is_drawn_in_its_own_colour_with_a_legend(M, headline, REG):
+    """Actives green, umbrella terms charcoal, a category word its side's
+    colour; each line its own colour; every chart with two or more series
+    carries a legend."""
     from bp import figures
-    from bp.theme import C
+    from bp.funnel import CATEGORIES
+    from bp.theme import C, CHARCOAL, SIDE
     S = _S("en", headline, M, REG)
-    bars = figures.fig_demand_change(M, S).data[0]
-    assert {t for t, col in zip(bars.customdata[:, 0], bars.marker.color)
-            if col == C["ink"]} == set(M["changes"]["rose"])
-    for fig, named in ((figures.fig_demand_pair(M, S), S["dm_p_names"]["化粧品"]),
-                       (figures.fig_demand_ingredients(M, S), S["dm_term"][demand.LONG_ACTIVE]),
-                       (figures.fig_demand_makeup(M, S), S["dm_m_names"]["口紅"])):
-        assert [t.name for t in fig.data if t.line.color == C["ink"]] == [named]
+    fig = figures.fig_demand_change(M, S)
+    side = {t: g for _, _, t, g in CATEGORIES.values() if t}
+    want = {"active": lambda t: C["ingr"], "umbrella": lambda t: CHARCOAL,
+            "category": lambda t: SIDE[side[t]]}
+    bars = fig.data[0]
+    for t, col in zip(bars.customdata[:, 0], bars.marker.color):
+        assert col == want[M["change"].loc[t, "kind"]](t), t
+    assert fig.layout.showlegend
+    pair = {t.name: t.line.color for t in figures.fig_demand_pair(M, S).data}
+    assert pair == {S["dm_p_names"]["スキンケア"]: C["skin"], S["dm_p_names"]["化粧品"]: CHARCOAL}
+    for fig, named, colour in (
+            (figures.fig_demand_ingredients(M, S), S["dm_term"][demand.LONG_ACTIVE], C["ingr"]),
+            (figures.fig_demand_makeup(M, S), S["dm_m_names"]["口紅"], C["cosm"])):
+        lines = {t.name: t.line.color for t in fig.data}
+        assert lines[named] == colour
+        assert len(set(lines.values())) == len(lines)
+        assert fig.layout.showlegend
 
 
 # ── The edition cut-off ─────────────────────────────────────────────────────

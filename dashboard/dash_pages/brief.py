@@ -9,7 +9,7 @@ from dash import html
 import data_cache
 import ui
 from bp import figures
-from bp.figures import GROUP_COLOUR
+from bp.theme import SIDE
 from bp.strings import BRIEF_LINKS, LAUNCH_CAT
 
 PATH = "/brief"
@@ -49,12 +49,13 @@ def category_table(B, S):
         tag = [html.Span(S["b_t_partial"], className="bp-tag")] if r["join"] == "partial" else []
         body.append(html.Tr([
             html.Td([html.Span(className="bp-swatch",
-                               style={"background": GROUP_COLOUR[r["group"]]}),
+                               style={"background": SIDE[r["group"]]}),
                      LAUNCH_CAT[key][S["b_catix"]]]),
             html.Td([r["meti_line"], *tag], className="bp-jp"),
-            html.Td(ui.cell_bar(r["value_y1"] / vmax, f"{r['value_y1']:,.0f}"),
+            html.Td(ui.cell_bar(r["value_y1"] / vmax, f"{r['value_y1']:,.0f}", SIDE[r["group"]]),
                     className="num barcell"),
-            html.Td(ui.div_bar(r["ship_d"] / dmax, _signed(r["ship_d"])), className="num barcell"),
+            html.Td(ui.div_bar(r["ship_d"] / dmax, _signed(r["ship_d"]), SIDE[r["group"]]),
+                    className="num barcell"),
             html.Td(_signed(r["units_d"]), className="num"),
             html.Td(_signed(r["vpu_d"]), className="num"),
             html.Td(_signed(r["search_d"], ""), className="num"),

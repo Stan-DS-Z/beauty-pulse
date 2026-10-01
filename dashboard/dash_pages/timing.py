@@ -17,9 +17,10 @@ dash.register_page(__name__, path=PATH, name="Timing", order=5,
 D = data_cache.load()
 
 
-def _exhibit(S, key, graph_id, figure, src):
+def _exhibit(S, key, graph_id, figure, src, key_under=None):
     return html.Div([ui.chart_head(S[f"tm_{key}_h"], S[f"tm_{key}_e"]),
-                     ui.graph(graph_id, figure), ui.source(S[src])])
+                     ui.graph(graph_id, figure), *([key_under] if key_under else []),
+                     ui.source(S[src])])
 
 
 def build(lang, d):
@@ -30,8 +31,10 @@ def build(lang, d):
         ui.intro(S["tm_intro"]),
         ui.key_figures(S["tm_figs"]),
         _exhibit(S, "s", "tm-fig-sun", figures.fig_timing_sun(M, S), "tm_src_sun"),
-        ui.row(_exhibit(S, "h1", "tm-fig-ship", figures.fig_timing_ship(M, S), "tm_src_meti"),
-               _exhibit(S, "h2", "tm-fig-search", figures.fig_timing_search(M, S), "tm_src_trends")),
+        ui.row(_exhibit(S, "h1", "tm-fig-ship", figures.fig_timing_ship(M, S), "tm_src_meti",
+                        ui.scale_key(*figures.heat_key(S))),
+               _exhibit(S, "h2", "tm-fig-search", figures.fig_timing_search(M, S), "tm_src_trends",
+                        ui.scale_key(*figures.heat_key(S)))),
         _exhibit(S, "l", "tm-fig-launch", figures.fig_timing_launch(M, S), "tm_src_prtimes"),
     ])
 
