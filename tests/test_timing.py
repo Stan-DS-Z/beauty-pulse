@@ -138,21 +138,26 @@ def test_the_page_has_no_emoji_or_tile(page_json):
 
 def test_each_chart_carries_its_colours_and_a_key():
     """Sunscreen in its gold; each launch year in its side's colour, a
-    different shade per year, with a legend; each heatmap on the blue scale."""
+    different shade per year; each panel with a legend, and the two panels
+    of a pair on one y range; each heatmap on the blue scale."""
     import data_cache
     from bp import figures
     from bp.theme import C, _SEQ
+    from bp.timing import LAUNCH_SIDES
     D = data_cache.load()
     S, T = D.S["en"], D.TIMING
-    sun = figures.fig_timing_sun(T, S)
-    assert {t.line.color for t in sun.data if t.mode == "lines+markers"} == {C["gold"]}
-    assert sun.layout.showlegend
-    launch = figures.fig_timing_launch(T, S)
-    for side, axis in (("skincare", "y"), ("makeup", "y2")):
-        shades = [t.line.color for t in launch.data if t.yaxis == axis]
+    sun = [figures.fig_timing_sun(T, S, k) for k in ("search", "ship")]
+    for fig in sun:
+        assert {t.line.color for t in fig.data if t.mode == "lines+markers"} == {C["gold"]}
+        assert fig.layout.showlegend
+    assert sun[0].layout.yaxis.range == sun[1].layout.yaxis.range
+    launch = {side: figures.fig_timing_launch(T, S, side) for side in LAUNCH_SIDES}
+    for side, fig in launch.items():
+        shades = [t.line.color for t in fig.data if t.x[0] is not None]
         assert len(set(shades)) == len(shades) == len(T["counts"][side]), side
         assert C["skin" if side == "skincare" else "cosm"] in shades, side
-    assert launch.layout.showlegend
+        assert fig.layout.showlegend
+    assert launch["skincare"].layout.yaxis.range == launch["makeup"].layout.yaxis.range
     for fig in (figures.fig_timing_ship(T, S), figures.fig_timing_search(T, S)):
         heat = fig.data[0]
         assert [list(c) for c in heat.colorscale] == [list(c) for c in _SEQ]

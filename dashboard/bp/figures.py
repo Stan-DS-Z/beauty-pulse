@@ -607,42 +607,36 @@ def _month_axis(S, **kw):
                 tickangle=0, range=[0.5, 12.5], **kw)
 
 
-def fig_timing_sun(M, S):
-    """Sunscreen's seasonal ratio by stage, search then shipments, each with
-    its years' range and its 3-month peak run shaded."""
-    from plotly.subplots import make_subplots
-    stages = (("search", S["tm_s_search"]), ("ship", S["tm_s_ship"]))
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.12,
-                        subplot_titles=[name for _, name in stages])
+def fig_timing_sun(M, S, stage):
+    """Sunscreen's seasonal ratio at one stage, "search" or "ship", with its
+    years' range and its 3-month peak run shaded. The page sets the two
+    stages side by side, so both take the same y range."""
+    st = M["sun"][stage]
+    name = S["tm_s_search" if stage == "search" else "tm_s_ship"]
+    top = max(max(float(np.max(M["sun"][k]["band"]["hi"])), float(np.max(M["sun"][k]["profile"])))
+              for k in ("search", "ship"))
     months = list(range(1, 13))
-    for row, (key, name) in enumerate(stages, start=1):
-        st = M["sun"][key]
-        a, b = st["run"]
-        fig.add_trace(go.Scatter(x=months + months[::-1],
-                                 y=list(st["band"]["hi"]) + list(st["band"]["lo"])[::-1],
-                                 fill="toself", fillcolor=_GOLD_BAND,
-                                 line=dict(width=0), hoverinfo="skip", showlegend=False),
-                      row=row, col=1)
-        fig.add_trace(go.Scatter(x=months, y=st["profile"].round(0), mode="lines+markers",
-                                 line=dict(color=C["gold"], width=2.5), marker=dict(size=5),
-                                 showlegend=False,
-                                 hovertemplate=f"{name} %{{x}}: %{{y:.0f}}<extra></extra>"),
-                      row=row, col=1)
-        fig.add_hline(y=100, line_width=1, line_dash="dot", line_color=C["border"], row=row, col=1)
-        # After the traces: add_vrect skips a subplot that has none yet.
-        fig.add_vrect(x0=a - 0.5, x1=b + 0.5, fillcolor=_GOLD_PEAK, opacity=1,
-                      layer="below", line_width=0, row=row, col=1)
+    a, b = st["run"]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=months + months[::-1],
+                             y=list(st["band"]["hi"]) + list(st["band"]["lo"])[::-1],
+                             fill="toself", fillcolor=_GOLD_BAND,
+                             line=dict(width=0), hoverinfo="skip", showlegend=False))
+    fig.add_trace(go.Scatter(x=months, y=st["profile"].round(0), mode="lines+markers",
+                             line=dict(color=C["gold"], width=2.5), marker=dict(size=5),
+                             showlegend=False,
+                             hovertemplate=f"{name} %{{x}}: %{{y:.0f}}<extra></extra>"))
+    fig.add_hline(y=100, line_width=1, line_dash="dot", line_color=C["border"])
+    fig.add_vrect(x0=a - 0.5, x1=b + 0.5, fillcolor=_GOLD_PEAK, opacity=1,
+                  layer="below", line_width=0)
     avg, band, peak = S["tm_s_leg"]
     _key(fig, avg, line=dict(color=C["gold"], width=2.5), mode="lines")
     _key(fig, band, marker=dict(color=_GOLD_BAND, size=12, symbol="square"))
     _key(fig, peak, marker=dict(color=_GOLD_PEAK, size=12, symbol="square",
                                 line=dict(color=C["gold"], width=1)))
-    fig.update_layout(**{**_base(480), "hovermode": "closest"}, showlegend=True,
-                      legend=_legend(y=1.06), margin=dict(l=20, r=20, t=50, b=30))
-    fig.update_annotations(font=dict(size=11, color=C["muted"]), x=0, xanchor="left")
-    for row in (1, 2):
-        fig.update_xaxes(**_month_axis(S), row=row, col=1)
-        fig.update_yaxes(**_yax(S["tm_y"], rangemode="tozero"), row=row, col=1)
+    fig.update_layout(**{**_base(340), "hovermode": "closest"}, showlegend=True, legend=_legend(),
+                      margin=dict(l=20, r=10, t=10, b=30), xaxis=_month_axis(S),
+                      yaxis=_yax(S["tm_y"], range=[0, 1.08 * top]))
     return fig
 
 
@@ -702,45 +696,36 @@ def fig_timing_search(M, S):
     return _heatmap(M["search"], S, "tm_rows_search", 40 + 24 * len(M["search"]), swing=True)
 
 
-def fig_timing_launch(M, S):
-    """Core launch releases by month, one line per year, skincare above
-    makeup; each year in its side's colour, lighter for earlier years, the
-    side-year the title names thicker, and each year's count at the line's
-    end. The legend names the years, in the skincare shades."""
-    from plotly.subplots import make_subplots
-    from .timing import LAUNCH_SIDES
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.14,
-                        subplot_titles=[S["tm_l_side"][s] for s in LAUNCH_SIDES])
+def fig_timing_launch(M, S, side):
+    """Core launch releases by month for one side, one line per year in the
+    side's colour, lighter for earlier years; the year that departs from an
+    even spread thicker, and each year's count at the line's end. The page
+    sets the two sides side by side, so both take the same y range."""
     tests = M["tests"].set_index(["side", "year"])
     odd = set(tests.index[~tests["even"]])
     top = max(int(c.values.max()) for c in M["counts"].values())
-    for row, side in enumerate(LAUNCH_SIDES, start=1):
-        c = M["counts"][side]
-        shade = dict(zip(sorted(c.index), _YEAR_SHADES[side][-len(c.index):]))
-        ends = {}
-        for y, vals in c.iterrows():
-            ink = (side, y) in odd
-            fig.add_trace(go.Scatter(
-                x=list(range(1, 13)), y=vals.values, mode="lines", name=str(y),
-                legendgroup=str(y), showlegend=row == 1,
-                line=dict(color=shade[y], width=3.5 if ink else 2),
-                hovertemplate=S["tm_l_hover"].format(y=y) + "<extra></extra>"), row=row, col=1)
-            ends[y] = float(vals.values[-1])
-        gap, placed = 0.08 * top, {}
-        for y, v in sorted(ends.items(), key=lambda kv: kv[1]):
-            placed[y] = max(v, max(placed.values(), default=-gap) + gap)
-        for y in ends:
-            ink = (side, y) in odd
-            fig.add_annotation(x=12, y=placed[y], showarrow=False, xanchor="left", xshift=6,
-                               text=S["tm_l_end"].format(y=y, n=int(tests.loc[(side, y), "n"])),
-                               font=dict(size=10, color=C["ink"] if ink else C["muted"]),
-                               row=row, col=1)
-    fig.update_layout(**{**_base(520), "hovermode": "closest"}, showlegend=True, legend=_legend(),
-                      margin=dict(l=20, r=64, t=30, b=30))
-    fig.update_annotations(selector=dict(xanchor="center"), font=dict(size=11, color=C["muted"]))
-    for row in (1, 2):
-        fig.update_xaxes(**_month_axis(S), row=row, col=1)
-        fig.update_yaxes(**_yax(S["tm_l_y"], rangemode="tozero"), row=row, col=1)
+    c = M["counts"][side]
+    shade = dict(zip(sorted(c.index), _YEAR_SHADES[side][-len(c.index):]))
+    fig = go.Figure()
+    ends = {}
+    for y, vals in c.iterrows():
+        ink = (side, y) in odd
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 13)), y=vals.values, mode="lines", name=str(y),
+            line=dict(color=shade[y], width=3.5 if ink else 2),
+            hovertemplate=S["tm_l_hover"].format(y=y) + "<extra></extra>"))
+        ends[y] = float(vals.values[-1])
+    gap, placed = 0.08 * top, {}
+    for y, v in sorted(ends.items(), key=lambda kv: kv[1]):
+        placed[y] = max(v, max(placed.values(), default=-gap) + gap)
+    for y in ends:
+        ink = (side, y) in odd
+        fig.add_annotation(x=12, y=placed[y], showarrow=False, xanchor="left", xshift=6,
+                           text=S["tm_l_end"].format(y=y, n=int(tests.loc[(side, y), "n"])),
+                           font=dict(size=10, color=C["ink"] if ink else C["muted"]))
+    fig.update_layout(**{**_base(340), "hovermode": "closest"}, showlegend=True, legend=_legend(),
+                      margin=dict(l=20, r=64, t=10, b=30), xaxis=_month_axis(S),
+                      yaxis=_yax(S["tm_l_y"], range=[0, 1.12 * top]))
     return fig
 
 

@@ -104,6 +104,8 @@ p { margin:0; }
 .bp-swatch { display:inline-block; width:12px; height:12px; border-radius:2px; }
 .bp-swatch.small { width:10px; height:10px; }
 .bp-swatch.dot { width:10px; height:10px; border-radius:50%; opacity:.8; }
+/* one panel's name in a pair of charts under one exhibit title */
+.bp-panel-label { font-size:12px; font-weight:600; color:var(--muted); margin:14px 0 0; }
 /* a heatmap's colour key, under the chart */
 .bp-scalekey { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; margin:2px 0 6px;
                font-size:11px; color:var(--muted); }

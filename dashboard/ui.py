@@ -223,6 +223,11 @@ def legend(items, shape="square"):
         ]) for label, colour in items])
 
 
+def panel_label(text):
+    """The name of one panel in a pair of charts under one exhibit title."""
+    return html.P(text, className="bp-panel-label")
+
+
 def scale_key(title, scale, ticks):
     """A heatmap's colour key: the scale as a gradient strip with its ticks
     under it, the title beside it. scale is Plotly's [[position, colour]]."""

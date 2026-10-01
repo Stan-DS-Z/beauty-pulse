@@ -49,10 +49,11 @@ def cases(f, H, L, lang, S, B=None, M=None, DM=None, SP=None, CS=None, TM=None, 
         "fig_supply_groups": lambda: [figures.fig_supply_groups(SP, S)],
         "fig_supply_ingredients": lambda: [figures.fig_supply_ingredients(SP, S)],
         "fig_consumer_map": lambda: [figures.fig_consumer_map(CS, S)],
-        "fig_timing_sun": lambda: [figures.fig_timing_sun(TM, S)],
+        "fig_timing_sun": lambda: [figures.fig_timing_sun(TM, S, k) for k in ("search", "ship")],
         "fig_timing_ship": lambda: [figures.fig_timing_ship(TM, S)],
         "fig_timing_search": lambda: [figures.fig_timing_search(TM, S)],
-        "fig_timing_launch": lambda: [figures.fig_timing_launch(TM, S)],
+        "fig_timing_launch": lambda: [figures.fig_timing_launch(TM, S, k)
+                                      for k in ("skincare", "makeup")],
         "fig_method_price_kg": lambda: [figures.fig_method_price_kg(MT, S)],
         "fig_method_curve": lambda: [figures.fig_method_curve(MT, S)],
     }
