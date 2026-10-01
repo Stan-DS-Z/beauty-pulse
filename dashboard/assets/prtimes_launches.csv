@@ -3227,3 +3227,46 @@ release_id,company_id,issuer,issuer_group,role,origin,panel,published,month,cate
 000000507.000000263,263,常盤薬品工業株式会社,常盤薬品工業株式会社,brand_owner,JP,present_forward,2026-09-18,2026-09,powder|serum,makeup,,,プチプラ,0,1,0,https://prtimes.jp/main/html/rd/p/000000507.000000263.html
 000000509.000000263,263,常盤薬品工業株式会社,常盤薬品工業株式会社,brand_owner,JP,present_forward,2026-09-18,2026-09,fragrance,other,,,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000509.000000263.html
 000003204.000005794,5794,株式会社資生堂,株式会社資生堂,brand_owner,JP,present_forward,2026-09-18,2026-09,fragrance,other,,SHISEIDO,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000003204.000005794.html
+000000069.000126707,126707,株式会社The Founders JAPAN,株式会社The Founders JAPAN,brand_owner,KR,core,2026-09-24,2026-09,mask,skincare,,Anua,ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000069.000126707.html
+000000160.000024471,24471,日本ロレアル株式会社　タカミ事業部,日本ロレアル株式会社,brand_owner,global,core,2026-09-24,2026-09,,none,アスコルビン酸,タカミ,ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000160.000024471.html
+000000264.000019685,19685,株式会社 井田ラボラトリーズ,株式会社井田ラボラトリーズ,brand_owner,JP,core,2026-09-24,2026-09,lipstick,makeup,,CANMAKE,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000264.000019685.html
+000000265.000019685,19685,株式会社 井田ラボラトリーズ,株式会社井田ラボラトリーズ,brand_owner,JP,core,2026-09-24,2026-09,blush,makeup,,CANMAKE,プチプラ,0,0,1,https://prtimes.jp/main/html/rd/p/000000265.000019685.html
+000000267.000019685,19685,株式会社 井田ラボラトリーズ,株式会社井田ラボラトリーズ,brand_owner,JP,core,2026-09-24,2026-09,fragrance,other,,CANMAKE,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000267.000019685.html
+000000723.000007954,7954,クラシエ株式会社（ホームプロダクツカンパニー）,クラシエ株式会社,brand_owner,JP,core,2026-09-24,2026-09,,none,,,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000723.000007954.html
+000001864.000000987,987,株式会社良品計画,株式会社良品計画,brand_owner,JP,present_forward,2026-09-24,2026-09,serum,skincare,,無印良品,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000001864.000000987.html
+000003206.000005794,5794,株式会社資生堂,株式会社資生堂,brand_owner,JP,present_forward,2026-09-24,2026-09,toner_lotion,skincare,,,mixed,0,0,0,https://prtimes.jp/main/html/rd/p/000003206.000005794.html
+000000102.000056098,56098,株式会社クリオ,株式会社クリオ,brand_owner,KR,core,2026-09-25,2026-09,,none,,peripera,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000102.000056098.html
+000000138.000096821,96821,VT COSMETICS,VT COSMETICS,brand_owner,KR,core,2026-09-25,2026-09,serum|mask,skincare,,VT,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000138.000096821.html
+000000217.000081704,81704,株式会社ファイントゥデイ,ファイントゥデイ株式会社,brand_owner,JP,core,2026-09-25,2026-09,hair,other,,fino,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000217.000081704.html
+000000382.000021350,21350,アモーレパシフィックジャパン株式会社,アモーレパシフィックジャパン株式会社,brand_owner,KR,core,2026-09-25,2026-09,,none,,,mixed,0,0,0,https://prtimes.jp/main/html/rd/p/000000382.000021350.html
+000000078.000127171,127171,株式会社Goodai Global Japan,株式会社Goodai Global Japan,importer,KR,core,2026-09-28,2026-09,,none,,TIRTIR,プチプラ/ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000078.000127171.html
+000000383.000021350,21350,アモーレパシフィックジャパン株式会社,アモーレパシフィックジャパン株式会社,brand_owner,KR,core,2026-09-28,2026-09,foundation|powder,makeup,,,mixed,0,0,0,https://prtimes.jp/main/html/rd/p/000000383.000021350.html
+000000500.000030413,30413,株式会社ディーエイチシー,株式会社ディーエイチシー,brand_owner,JP,core,2026-09-28,2026-09,,none,加水分解コラーゲン,DHC,プチプラ/ミドル,0,1,0,https://prtimes.jp/main/html/rd/p/000000500.000030413.html
+000000597.000085143,85143,アステナホールディングス株式会社,アステナホールディングス株式会社,importer,KR,present_forward,2026-09-28,2026-09,all_in_one,skincare,,,,0,0,0,https://prtimes.jp/main/html/rd/p/000000597.000085143.html
+000000618.000028974,28974,株式会社桃谷順天館,株式会社桃谷順天館,brand_owner,JP,present_forward,2026-09-28,2026-09,serum,skincare,DNA-Na,明色,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000618.000028974.html
+000000384.000021350,21350,アモーレパシフィックジャパン株式会社,アモーレパシフィックジャパン株式会社,brand_owner,KR,core,2026-09-29,2026-09,,none,,,mixed,0,0,0,https://prtimes.jp/main/html/rd/p/000000384.000021350.html
+000000445.000076505,76505,株式会社韓国高麗人蔘社,株式会社韓国高麗人蔘社,importer,KR,core,2026-09-29,2026-09,lipstick,makeup,,rom&nd,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000445.000076505.html
+000000501.000030413,30413,株式会社ディーエイチシー,株式会社ディーエイチシー,brand_owner,JP,core,2026-09-29,2026-09,lip_balm|lipstick,makeup,,DHC,プチプラ/ミドル,1,0,0,https://prtimes.jp/main/html/rd/p/000000501.000030413.html
+000000622.000028974,28974,株式会社桃谷順天館,株式会社桃谷順天館,brand_owner,JP,present_forward,2026-09-29,2026-09,,none,,明色,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000622.000028974.html
+000000724.000007954,7954,クラシエ株式会社（ホームプロダクツカンパニー）,クラシエ株式会社,brand_owner,JP,core,2026-09-29,2026-09,hair,other,,,プチプラ,0,0,1,https://prtimes.jp/main/html/rd/p/000000724.000007954.html
+000000056.000077831,77831,株式会社mimi-Japan,株式会社mimi-Japan,importer,CN,core,2026-09-30,2026-09,eye_makeup,makeup,,,,0,0,0,https://prtimes.jp/main/html/rd/p/000000056.000077831.html
+000000062.000046376,46376,株式会社コーセー（戦略ブランド事業部）,株式会社コーセー,brand_owner,JP,core,2026-09-30,2026-09,toner_lotion,skincare,,ADDICTION,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000062.000046376.html
+000000459.000076505,76505,株式会社韓国高麗人蔘社,株式会社韓国高麗人蔘社,importer,KR,core,2026-09-30,2026-09,,none,,rom&nd,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000459.000076505.html
+000000659.000014810,14810,パルファン・クリスチャン・ディオール・ジャポン株式会社,パルファン・クリスチャン・ディオール・ジャポン株式会社,brand_owner,global,present_forward,2026-09-30,2026-09,,none,,Dior,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000659.000014810.html
+000000725.000007954,7954,クラシエ株式会社（ホームプロダクツカンパニー）,クラシエ株式会社,brand_owner,JP,core,2026-09-30,2026-09,hair|serum,other,,,プチプラ,0,0,1,https://prtimes.jp/main/html/rd/p/000000725.000007954.html
+000000755.000036737,36737,株式会社ポーラ,株式会社ポーラ,brand_owner,JP,core,2026-09-30,2026-09,cream,skincare,,POLA,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000755.000036737.html
+000000027.000108700,108700,株式会社APRJP,株式会社APRJP,brand_owner,KR,core,2026-10-01,2026-10,,none,アゼライン酸,medicube,ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000027.000108700.html
+000000043.000169347,169347,株式会社アルビオン,株式会社アルビオン,brand_owner,JP,core,2026-10-01,2026-10,base_makeup|serum,makeup,,ALBION,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000043.000169347.html
+000000044.000169347,169347,株式会社アルビオン,株式会社アルビオン,brand_owner,JP,core,2026-10-01,2026-10,,none,,ALBION,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000044.000169347.html
+000000047.000169347,169347,株式会社アルビオン,株式会社アルビオン,brand_owner,JP,core,2026-10-01,2026-10,,none,,ALBION,デパコス,0,1,0,https://prtimes.jp/main/html/rd/p/000000047.000169347.html
+000000130.000042040,42040,株式会社セザンヌ化粧品,セザンヌ化粧品株式会社,brand_owner,JP,core,2026-10-01,2026-10,lipstick,makeup,,CEZANNE,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000130.000042040.html
+000000137.000096821,96821,VT COSMETICS,VT COSMETICS,brand_owner,KR,core,2026-10-01,2026-10,,none,,VT,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000137.000096821.html
+000000161.000024471,24471,日本ロレアル株式会社　タカミ事業部,日本ロレアル株式会社,brand_owner,global,core,2026-10-01,2026-10,,none,,タカミ,ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000161.000024471.html
+000000218.000031376,31376,アモーレパシフィックジャパン株式会社,アモーレパシフィックジャパン株式会社,brand_owner,KR,core,2026-10-01,2026-10,cream,skincare,レチノール|DNA-Na,イニスフリー,プチプラ/ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000218.000031376.html
+000000385.000021350,21350,アモーレパシフィックジャパン株式会社,アモーレパシフィックジャパン株式会社,brand_owner,KR,core,2026-10-01,2026-10,lipstick,makeup,,ラネージュ,ミドル,0,0,0,https://prtimes.jp/main/html/rd/p/000000385.000021350.html
+000000623.000028974,28974,株式会社桃谷順天館,株式会社桃谷順天館,brand_owner,JP,present_forward,2026-10-01,2026-10,body,other,,,プチプラ,0,0,0,https://prtimes.jp/main/html/rd/p/000000623.000028974.html
+000000660.000014810,14810,パルファン・クリスチャン・ディオール・ジャポン株式会社,パルファン・クリスチャン・ディオール・ジャポン株式会社,brand_owner,global,present_forward,2026-10-01,2026-10,fragrance,other,,Dior,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000660.000014810.html
+000000661.000014810,14810,パルファン・クリスチャン・ディオール・ジャポン株式会社,パルファン・クリスチャン・ディオール・ジャポン株式会社,brand_owner,global,present_forward,2026-10-01,2026-10,fragrance,other,,Dior,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000661.000014810.html
+000000662.000014810,14810,パルファン・クリスチャン・ディオール・ジャポン株式会社,パルファン・クリスチャン・ディオール・ジャポン株式会社,brand_owner,global,present_forward,2026-10-01,2026-10,fragrance,other,,Dior,デパコス,0,0,0,https://prtimes.jp/main/html/rd/p/000000662.000014810.html
+000000933.000016220,16220,株式会社カネボウ化粧品,株式会社カネボウ化粧品,brand_owner,JP,present_forward,2026-10-01,2026-10,,none,,KATE,プチプラ,0,0,1,https://prtimes.jp/main/html/rd/p/000000933.000016220.html
+000003210.000005794,5794,株式会社資生堂,株式会社資生堂,brand_owner,JP,present_forward,2026-10-01,2026-10,hair|serum,other,,SHISEIDO,デパコス,0,0,1,https://prtimes.jp/main/html/rd/p/000003210.000005794.html
