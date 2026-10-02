@@ -8,7 +8,9 @@ when build_registry() runs, so a refresh moves them with no edit:
   meti            estat_meti_cosmetics.csv: newest month, and the edition it came from
   trade           estat_trade_hs3304.csv: newest year
   trends          the monthly Trends assets: newest month; source_dates.csv: pull date
-  trends_related  nb07_blockc.csv carries no date and no pull was recorded
+  trends_related  trends_related_seeds.csv (ingest_trends_related.py export): the
+                  window and each pull's time. An edition without that file (2026-09
+                  holds nb07_blockc.csv, which records neither) has no date
   prtimes         prtimes_launches.csv: newest release; prtimes_feeds.csv: last fetch
   rakuten, cosme, youtube, amazon
                   source_dates.csv, exported from the database by
@@ -57,9 +59,9 @@ DECLARED = {
                        ("market",)),
     "trends":         ("Google Trends JP", "Googleトレンド（日本）", "series",
                        ("brief", "demand", "timing", "method", "funnel", "categories")),
-    # Collected, and used by no page: the stored pull records no date and no
-    # window, and its seed list sets how many seeds a result can surface from
-    # (METHODOLOGY Revision 17). A re-pull is planned for the next edition.
+    # Used by no page yet. The 2026-09 edition's pull records no date and no
+    # window (METHODOLOGY Revision 17); the October 2026 re-pull records both and
+    # waits for the next edition and the Demand exhibit.
     "trends_related": ("Google Trends related searches", "Googleトレンド 関連キーワード",
                        "snapshot", ()),
     "prtimes":        ("PR TIMES", "PR TIMES", "series",
@@ -160,7 +162,19 @@ def build_registry(ASSETS: Path, cutoff=None) -> dict:
                            cadence=_cadence(tr[0]), first=max(s.min() for s in tr),
                            collected=ts(ex.get(("trends", "collected"))))
 
-    found["trends_related"] = dict(data_to=None, precision=None, cadence=None)
+    # The window's last year is how far the data runs; the pulls are when it was
+    # collected. Absent from an edition that predates the re-pull.
+    rel = ASSETS / "trends_related_seeds.csv"
+    if rel.exists():
+        rs = pd.read_csv(rel, dtype=str)
+        start, end = rs["window"].iloc[0].split()
+        pulled = pd.to_datetime(pd.concat([rs["pulled_at_1"], rs["pulled_at_2"]]), utc=True)
+        found["trends_related"] = dict(
+            data_to=pd.Timestamp(end), precision="year", cadence=None, first=pd.Timestamp(start),
+            collected=pulled.max().tz_convert("Asia/Tokyo").tz_localize(None).normalize(),
+            collections=int(rs[["pull_1", "pull_2"]].nunique().sum()))
+    else:
+        found["trends_related"] = dict(data_to=None, precision=None, cadence=None)
 
     launches = pd.read_csv(ASSETS / "prtimes_launches.csv", usecols=["published"])
     launches = launches[upto(launches["published"].str[:7].str.replace("-", "").astype(int))]

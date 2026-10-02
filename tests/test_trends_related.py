@@ -212,3 +212,78 @@ def test_two_pulls_less_than_a_day_apart_are_refused(tmp_path):
     _write_pull(tmp_path, "p2", "2026-10-01T20:00:00+00:00")
     with pytest.raises(ValueError, match="apart"):
         itr.stable("p1", "p2", tmp_path)
+
+
+# ── The export and its exclusions ───────────────────────────────────────────
+
+def _exclude(tmp_path, monkeypatch, rows):
+    f = tmp_path / "exclusions.csv"
+    pd.DataFrame(rows, columns=["query", "category", "reason"]).to_csv(f, index=False)
+    monkeypatch.setattr(itr, "EXCLUSIONS", f)
+
+
+def test_the_export_keeps_every_stable_query_and_every_seed_with_its_exclusion(tmp_path,
+                                                                                 monkeypatch):
+    raw, assets = tmp_path / "raw", tmp_path / "assets"
+    assets.mkdir()
+    empty = itr.load_seeds()["seed"].iloc[-1]
+    rising = lambda seed: [] if seed == empty else [(f"{seed} 語A", 300)]  # noqa: E731
+    _write_pull(raw, "p1", "2026-10-01T13:00:00+00:00", rising)
+    _write_pull(raw, "p2", "2026-10-02T13:30:00+00:00", rising)
+    first = itr.load_seeds()["seed"].iloc[0]
+    _exclude(tmp_path, monkeypatch, [(f"{first} 語A", "drama", "a drama title")])
+    rows, seeds = itr.export("p1", "p2", assets=assets, raw_root=raw)
+    excluded = rows.set_index(["seed", "kind", "query"])["excluded"]
+    assert excluded[(first, "rising", f"{first} 語A")] == "drama"
+    assert (excluded.drop((first, "rising", f"{first} 語A")) == "").all()
+    # A seed with no rising list on either pull keeps its row in the seeds file.
+    assert list(seeds["seed"]) == list(itr.load_seeds()["seed"])
+    row = seeds.set_index("seed").loc[empty]
+    assert (row["rising_1"], row["rising_2"]) == (0, 0)
+    assert (assets / itr.EXPORT_ROWS).exists() and (assets / itr.EXPORT_SEEDS).exists()
+
+
+def test_an_exclusion_that_names_no_stable_query_fails_the_export(tmp_path, monkeypatch):
+    raw = tmp_path / "raw"
+    _write_pull(raw, "p1", "2026-10-01T13:00:00+00:00")
+    _write_pull(raw, "p2", "2026-10-02T13:30:00+00:00")
+    _exclude(tmp_path, monkeypatch, [("no such query", "game", "a game")])
+    with pytest.raises(ValueError, match="in no stable list"):
+        itr.export("p1", "p2", assets=tmp_path, raw_root=raw)
+
+
+@pytest.mark.parametrize("row, match", [(("q", "weather", "why"), "unknown exclusion category"),
+                                        (("q", "game", " "), "no reason")])
+def test_an_exclusion_needs_a_known_category_and_a_reason(tmp_path, monkeypatch, row, match):
+    _exclude(tmp_path, monkeypatch, [row])
+    with pytest.raises(ValueError, match=match):
+        itr.load_exclusions()
+
+
+def test_the_published_export_carries_the_exclusion_list_exactly():
+    """Every excluded query in config is in the export under its category, and
+    the export excludes nothing config does not list."""
+    ex = itr.load_exclusions().set_index("query")["category"]
+    rows = pd.read_csv(A / itr.EXPORT_ROWS, dtype=str).fillna("")
+    got = rows[rows["excluded"] != ""].drop_duplicates("query").set_index("query")["excluded"]
+    assert got.sort_index().to_dict() == ex.sort_index().to_dict()
+
+
+def test_the_published_seeds_file_lists_every_seed_on_the_window_and_two_pulls_a_day_apart():
+    seeds = pd.read_csv(A / itr.EXPORT_SEEDS, dtype=str)
+    assert list(seeds["seed"]) == list(itr.load_seeds()["seed"])
+    assert set(seeds["window"]) == {itr.TIMEFRAME}
+    assert set(seeds["compare_time"]) == {itr.COMPARE_TIME}
+    gap = (pd.to_datetime(seeds["pulled_at_2"]).min() - pd.to_datetime(seeds["pulled_at_1"]).max())
+    assert gap >= itr.MIN_GAP
+
+
+def test_the_registry_dates_related_searches_from_the_export_and_not_in_the_old_edition():
+    import sys
+    sys.path.insert(0, str(itr.ROOT / "dashboard"))
+    from bp import sources
+    live = sources.build_registry(A)["trends_related"]
+    assert (live.data_to.year, live.precision, live.first.year) == (2025, "year", 2022)
+    assert live.collections == 2
+    old = sources.build_registry(A / "editions" / "2026-09", sources.CUTOFF)["trends_related"]
+    assert old.data_to is None

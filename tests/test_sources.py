@@ -37,13 +37,10 @@ def test_every_declared_source_is_in_the_registry(src, registry):
 
 
 def test_every_source_says_how_current_it_is(registry):
-    """A series has a date and a cadence; a snapshot has a date. The one
-    exception is the related-searches pull, which recorded no date."""
+    """A series has a date and a cadence; a snapshot has a date. Related
+    searches are dated by the October 2026 re-pull's export."""
     for key, s in registry.items():
         assert s.kind in ("series", "snapshot"), key
-        if key == "trends_related":
-            assert s.data_to is None
-            continue
         assert isinstance(s.data_to, pd.Timestamp), key
         assert s.precision in ("day", "month", "year"), key
         if s.kind == "series":
@@ -135,9 +132,12 @@ def test_source_line_lists_each_source_with_its_date(src, registry):
                     "Beauty Pulse analysis")
 
 
-def test_undated_source_says_so(src, registry):
-    assert "(pull date not recorded)" in src.source_line(["trends_related"], registry)
-    assert "取得日の記録なし" in src.source_line(["trends_related"], registry, "ja")
+def test_undated_source_says_so(src, app):
+    """The 2026-09 edition holds the old related-searches file, which records
+    no date: its source line says so."""
+    old = src.build_registry(app.ASSETS / "editions" / "2026-09", src.CUTOFF)
+    assert "(pull date not recorded)" in src.source_line(["trends_related"], old)
+    assert "取得日の記録なし" in src.source_line(["trends_related"], old, "ja")
 
 
 # ── the database export ─────────────────────────────────────────────────────

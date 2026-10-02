@@ -7,6 +7,7 @@ pulls compared seed by seed.
     ./venv/bin/python ingest_trends_related.py load PULL_ID          # dry run: check the pull
     ./venv/bin/python ingest_trends_related.py load PULL_ID --apply  # back up the DB, then replace that pull
     ./venv/bin/python ingest_trends_related.py compare --out FILE    # queries in both of the last two pulls
+    ./venv/bin/python ingest_trends_related.py export                # the page files, from the last two pulls
     ./venv/bin/python ingest_trends_related.py smoke SEED --out DIR  # one request, written to DIR only
 
 The design is recon/2026-09-29_design_trends-related-repull.md as the architect
@@ -22,6 +23,9 @@ amended it on 2026-09-30:
 - Results are per seed. Nothing here counts, sums or normalises across seeds.
 - Two pulls at least MIN_GAP apart. A query is published only if it is in the same
   seed's list on both pulls (compare).
+- A stable query outside beauty (a drama, a game, a clinic, a filler) is kept in the
+  export with its category from config/trends_related_exclusions.csv, and the page
+  shows it only as a count. The categories apply to every seed alike.
 - The client is pytrends; its name and version are stored with every request. A
   request that still fails after RETRIES attempts stops the pull, and the pull waits.
   There is no fallback to scraping.
@@ -47,6 +51,8 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
 SEEDS = ROOT / "config" / "trends_related_seeds.csv"
+EXCLUSIONS = ROOT / "config" / "trends_related_exclusions.csv"
+ASSETS = ROOT / "dashboard" / "assets"
 RAW = ROOT / "data" / "raw" / "trends" / "related"
 DB = ROOT / "data" / "signal_pulse.db"
 
@@ -60,6 +66,12 @@ PAUSE, RETRIES, RETRY_WAIT = 5.0, 3, 60.0
 KINDS = ("top", "rising")          # Google's rankedList order
 # Google marks growth above 5000% as "Breakout" rather than a percentage.
 BREAKOUT_OVER = 5000
+# Why a stable query is left off the page. cosmetic_treatment (fillers, drips,
+# clinic devices, art make) is its own category by Stan's ruling of 2 Oct 2026.
+EXCLUSION_CATEGORIES = ("drama", "game", "sport", "medical", "clinic", "cosmetic_treatment",
+                        "other")
+# The page files: every stable query, and every seed the pulls requested.
+EXPORT_ROWS, EXPORT_SEEDS = "trends_related.csv", "trends_related_seeds.csv"
 
 DDL = """
 CREATE TABLE IF NOT EXISTS trends_related (
@@ -308,6 +320,66 @@ def compare(pull_1=None, pull_2=None, out: Path | None = None, raw_root: Path = 
     return s
 
 
+# ── Export ──────────────────────────────────────────────────────────────────
+
+def load_exclusions(path: Path | None = None) -> pd.DataFrame:
+    """The excluded queries, each with a category from EXCLUSION_CATEGORIES and a
+    reason; a query is listed once. path defaults to EXCLUSIONS, read at call time."""
+    ex = pd.read_csv(path or EXCLUSIONS, dtype=str).fillna("")
+    bad = ex[~ex["category"].isin(EXCLUSION_CATEGORIES)]
+    if len(bad):
+        raise ValueError(f"unknown exclusion category: {sorted(set(bad['category']))}")
+    if (ex["reason"].str.strip() == "").any():
+        raise ValueError("an exclusion has no reason")
+    dup = ex[ex["query"].duplicated()]["query"]
+    if len(dup):
+        raise ValueError(f"excluded twice: {list(dup)}")
+    return ex
+
+
+def export(pull_1=None, pull_2=None, assets: Path = ASSETS, raw_root: Path = RAW):
+    """Write the page files from two pulls.
+
+    EXPORT_ROWS: every stable query, per seed and list, with both pulls' rank and
+    value and its exclusion category ('' where the page shows it). An exclusion
+    that names no stable query fails: the list would describe some other pull.
+    EXPORT_SEEDS: one row per seed from the pulls' requests, with when each pull
+    asked and how many queries each list returned, so a seed Google answered with
+    nothing keeps its row. Query text, ranks and values are published; Google's
+    raw responses and request headers stay in data/raw/."""
+    ids = pull_ids(raw_root)
+    if pull_1 is None:
+        if len(ids) < 2:
+            sys.exit(f"{len(ids)} pull(s) stored; two are needed")
+        pull_1, pull_2 = ids[-2], ids[-1]
+    rows = stable(pull_1, pull_2, raw_root)
+    ex = load_exclusions()
+    stale = sorted(set(ex["query"]) - set(rows["query"]))
+    if stale:
+        raise ValueError(f"excluded but in no stable list: {stale}")
+    rows["excluded"] = rows["query"].map(ex.set_index("query")["category"]).fillna("")
+    rows = rows.drop(columns=["formatted_value_1", "formatted_value_2"])
+
+    seeds = load_seeds()[["seed", "seed_group", "side"]]
+    for n, pid in ((1, pull_1), (2, pull_2)):
+        reqs, got = read_pull(pid, raw_root)
+        counts = got.groupby(["seed", "kind"]).size().unstack(fill_value=0).reindex(
+            columns=list(KINDS), fill_value=0)
+        seeds[f"pull_{n}"] = pid
+        seeds[f"pulled_at_{n}"] = seeds["seed"].map(reqs.set_index("seed")["pulled_at"])
+        for kind in KINDS:
+            seeds[f"{kind}_{n}"] = seeds["seed"].map(counts[kind]).fillna(0).astype(int)
+    seeds.insert(3, "window", TIMEFRAME)
+    seeds.insert(4, "compare_time", COMPARE_TIME)
+
+    rows.to_csv(assets / EXPORT_ROWS, index=False, encoding="utf-8")
+    seeds.to_csv(assets / EXPORT_SEEDS, index=False, encoding="utf-8")
+    shown = rows[rows["excluded"] == ""]
+    print(f"wrote {EXPORT_ROWS}: {len(rows)} stable queries, {len(shown)} shown; "
+          f"{EXPORT_SEEDS}: {len(seeds)} seeds")
+    return rows, seeds
+
+
 # ── Command line ────────────────────────────────────────────────────────────
 
 def main(argv=None) -> None:
@@ -321,6 +393,8 @@ def main(argv=None) -> None:
     p = sub.add_parser("compare")
     p.add_argument("pulls", nargs="*")
     p.add_argument("--out", type=Path)
+    p = sub.add_parser("export")
+    p.add_argument("pulls", nargs="*")
     p = sub.add_parser("smoke")
     p.add_argument("seed")
     p.add_argument("--out", type=Path, required=True)
@@ -335,6 +409,10 @@ def main(argv=None) -> None:
         if len(a.pulls) not in (0, 2):
             sys.exit("compare takes no pull ids or two")
         compare(*(a.pulls or (None, None)), out=a.out)
+    elif a.cmd == "export":
+        if len(a.pulls) not in (0, 2):
+            sys.exit("export takes no pull ids or two")
+        export(*(a.pulls or (None, None)))
     elif a.cmd == "smoke":
         if a.out.resolve().is_relative_to(ROOT / "data"):
             sys.exit("smoke writes outside data/: it is a client check, never a pull")
