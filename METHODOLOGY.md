@@ -183,6 +183,10 @@ The Brief's seasonal index divided each month by its calendar year's mean. A ser
 各ページの見出し行は「2026年9月版」としていたが、要旨・市場・需要・供給の比較は2022→2025年の暦年、季節性は2023〜2025年、消費者はスナップショットであり、9月に属する数値はない。見出し行は各ページが測った期間を、ヘッダーは締め月（2026年8月までのデータ）を示す。凍結フォルダ `editions/2026-09` とマニフェストの名称は変えない。  
 Each page's kicker read "Edition September 2026", but the Brief, Market, Demand and Supply compare the calendar years 2022→2025, Timing 2023–2025, and Consumer is a snapshot; no figure belongs to September. The kicker now states the window each page measures and the header states the cut-off (data to August 2026). The frozen folder `editions/2026-09` and its manifest keep their names.
 
+**改訂23 — 見出し行から期間を外す（2026年10月3日）/ Revision 23 — the window leaves the kickers (3 October 2026)**  
+改訂22で見出し行に置いた期間は、各ページの一部にしか当たらなかった。要旨は2022→2025年のほか2026年上期と2022年上期の比較を、市場は2026年1〜7月と2025年の比較を、需要は2019→2025年の変化を、供給は2026年8月までの12カ月を、季節性は2022年7月〜2026年1月の平均と2022〜2025年の新商品リリースを示す。見出し行はページの種類のみ（要旨は「日本の美容市場」を添える）とし、期間は各見出しと出典行が示し、締め月はヘッダーが示す。消費者の見出し行は収集の日付をそのまま示す。市場の説明と断層の注記は、皮膚用の変化を「2022年以降」で測るとした（2026年1〜7月の比較を含む）。  
+The window Revision 22 put in each kicker described only part of its page. The Brief also compares 2026 H1 with 2022 H1, Market sets January–July 2026 against 2025, Demand measures changes over 2019→2025, Supply counts the 12 months to August 2026, and Timing averages July 2022 – January 2026 and tests launch releases for 2022–2025. The kicker now names only the kind of page (the Brief adds "Japanese beauty market"); each title and source line states its own period, and the header states the cut-off. Consumer's kicker keeps its collection dates. Market's introduction and break note now measure skincare changes "from 2022 on", which includes the January–July 2026 comparison.
+
 ---
 
 ## 情報源の役割 / Source roles

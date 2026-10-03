@@ -204,7 +204,7 @@ def _brief_ja(B, H, REG):
     cj = lambda k: LAUNCH_CAT[k][1]                            # noqa: E731
     out = {}
 
-    out["b_kicker"] = f"レポート · {y0}→{y1}年 · 日本の美容市場"
+    out["b_kicker"] = "レポート · 日本の美容市場"
     out["b_governing"] = (
         f"{y0}年以降、新商品リリースの構成比（以下、リリース構成比）、検索、出荷金額は、それぞれ"
         f"異なるカテゴリで伸びた。リリース構成比が最も伸びたのは{_and_ja(cj(k) for k in P['gainers'])}で、その出荷金額の変化は"
@@ -312,7 +312,7 @@ def _brief_en(B, H, REG):
     top3 = sorted(A.loc[Dm["top3"], "en"])                     # never ranked
     out = {}
 
-    out["b_kicker"] = f"Report · {y0}→{y1} · Japanese beauty market"
+    out["b_kicker"] = "Report · Japanese beauty market"
     out["b_governing"] = (
         f"After {y0}, launch share, search and shipped value rose in different categories: "
         f"launch share rose most in {_and(_cat(k) for k in P['gainers'])}, whose shipped value "
@@ -497,10 +497,10 @@ def _market_en(M, REG):
     ly, lm = M["last_month"]
     out = {}
 
-    out["mk_kicker"] = f"Report · {y0}→{y1}"
+    out["mk_kicker"] = "Report"
     out["mk_intro"] = (
         "経済産業省 生産動態統計: manufacturers' monthly shipments by product line, in yen, units "
-        f"and kilograms. Changes are measured {y0}→{y1}, after the January {y0} break in the "
+        f"and kilograms. Changes are measured from {y0} on, after the January {y0} break in the "
         f"skincare lines; makeup, whose shipped value has no step at the break, is also set "
         f"against {base}.")
     figs = [
@@ -584,10 +584,10 @@ def _market_ja(M, REG):
     ly, lm = M["last_month"]
     out = {}
 
-    out["mk_kicker"] = f"レポート · {y0}→{y1}年"
+    out["mk_kicker"] = "レポート"
     out["mk_intro"] = (
         "経済産業省 生産動態統計：国内の化粧品メーカーによる品目別の月次出荷（金額・個数・重量）。"
-        f"皮膚用の品目に{y0}年1月の断層があるため、変化は{y0}→{y1}年で測る。仕上用は出荷金額に"
+        f"皮膚用の品目に{y0}年1月の断層があるため、変化は{y0}年以降で測る。仕上用は出荷金額に"
         f"断層の段差がないため、{base}年とも比べる。")
     figs = [
         (f"{y1}年の出荷金額", f"{K['total_y1']:,.0f}億円",
@@ -692,7 +692,7 @@ def _break_note_en(M):
         "produce the skincare pattern; METI has published no such change and no link "
         "coefficients for cosmetics. A skincare yen comparison between a year before "
         f"{y0} and a year after includes the drop, so skincare yen changes are measured within "
-        f"{base}–{y0 - 1} or within {y0}–{y1}."
+        f"{base}–{y0 - 1} or from {y0} on."
         + (f" {Y['year']} figures come from METI's monthly 確報 release." if Y else ""))
 
 
@@ -731,7 +731,7 @@ def _break_note_ja(M):
         f"{kg[k2][0]:.0f}%増えた一方で出荷金額の増加は{kg[k1][1]:.0f}%、{kg[k2][1]:.0f}%だった。"
         "集計対象の企業や製品が変わった場合に皮膚用のこの形になるが、経産省はそのような変更も"
         f"化粧品のリンク係数も公表していない。{y0}年より前の年と後の年を比べる皮膚用の金額には"
-        f"この下落が含まれるため、皮膚用の金額変化は{base}〜{y0 - 1}年または{y0}〜{y1}年の内側で"
+        f"この下落が含まれるため、皮膚用の金額変化は{base}〜{y0 - 1}年の内側、または{y0}年以降で"
         "測る。"
         + (f"{Y['year']}年の数値は経産省の月次確報による。" if Y else ""))
 
@@ -798,7 +798,7 @@ def _demand_en(M, REG):
     nm = lambda t, cap=False: _term_name(t, M, "en", cap)  # noqa: E731
     out = {}
 
-    out["dm_kicker"] = f"Report · {y0}→{y1}"
+    out["dm_kicker"] = "Report"
     out["dm_intro"] = (
         "Google Trends, Japan. Each term is requested on its own and scaled to its own peak "
         "(= 100), so a change reads in points of that term's peak and levels are not compared "
@@ -881,7 +881,7 @@ def _demand_ja(M, REG):
     nm = lambda t: _term_name(t, M, "jp")  # noqa: E731
     out = {}
 
-    out["dm_kicker"] = f"レポート · {y0}→{y1}年"
+    out["dm_kicker"] = "レポート"
     out["dm_intro"] = (
         "Googleトレンド（日本）。各語は単独で取得し、その語のピークを100とする指数である。変化はその語"
         "自身のピークに対するポイントで読み、語どうしの水準は比べない。スキンケアと化粧品は2語を1回で"
@@ -1010,7 +1010,7 @@ def _supply_en(M, REG):
     key = rows.loc[KEY_CATEGORY]
     out = {}
 
-    out["sp_kicker"] = f"Report · {y0}→{y1}"
+    out["sp_kicker"] = "Report"
     out["sp_intro"] = (
         f"Product-launch releases from the {M['n_core']} issuers whose PR TIMES history reaches "
         "back to September 2021, by month of release; one release is one count.")
@@ -1107,7 +1107,7 @@ def _supply_ja(M, REG):
     key = rows.loc[KEY_CATEGORY]
     out = {}
 
-    out["sp_kicker"] = f"レポート · {y0}→{y1}年"
+    out["sp_kicker"] = "レポート"
     out["sp_intro"] = (
         f"PR TIMES上の新商品リリース。同サイト上の履歴が2021年9月まで遡る{M['n_core']}社を配信月別に"
         "数え、1リリースを1件とする。")
@@ -1331,7 +1331,7 @@ def _timing_page_en(M, REG):
     rng = lambda a, b: f"{_MON_EN[a]}–{_MON_EN[b]}"  # noqa: E731
     win = f"{_MON_EN[F['w0'].month]} {F['w0'].year} – {_MON_EN[F['w1'].month]} {F['w1'].year}"
     out = {}
-    out["tm_kicker"] = f"Report · {F['y0']}–{F['y1']}"
+    out["tm_kicker"] = "Report"
     out["tm_intro"] = (
         "Seasonal ratio: each month's value divided by the centred 12-month average around it, "
         f"× 100, so 100 is a month on trend. Every series is averaged over {win}. A peak month is "
@@ -1414,7 +1414,7 @@ def _timing_page_ja(M, REG):
     win = f"{F['w0'].year}年{F['w0'].month}月〜{F['w1'].year}年{F['w1'].month}月"
     same = len(set(off.values())) == 1
     out = {}
-    out["tm_kicker"] = f"レポート · {F['y0']}〜{F['y1']}年"
+    out["tm_kicker"] = "レポート"
     out["tm_intro"] = (
         "季節比率：各月の値を、その月を中心とする12カ月移動平均で割り100を掛けたもの。100はトレンド"
         f"どおりの月である。どの系列も{win}で平均する。ピーク月は、{F['y0']}〜{F['y1']}年の各年で最も"

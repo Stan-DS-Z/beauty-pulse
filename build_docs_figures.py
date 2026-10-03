@@ -128,8 +128,6 @@ def site_text() -> dict:
         "skin_search_dir_ja": "上昇" if d.DEMAND["pair"]["skin_d"] >= 0 else "低下",
         "lead_mask_en": _md(en["dm_m_h"]),
         "lead_mask_ja": _md(ja["dm_m_h"]),
-        "edition_en": _md(en["b_kicker"].split(" · ")[1]),
-        "edition_ja": ja["b_kicker"].split(" · ")[1],
     }
     # The Brief: its governing thought and one line per finding, each linking
     # to its page, as the Brief's key findings do.

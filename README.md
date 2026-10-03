@@ -60,7 +60,7 @@ Market measures: Google search, METI shipment statistics, 財務省 trade statis
 
 ## 要旨 / The Brief
 
-**<!--f:edition_ja-->2022→2025年<!--/f-->**（<!--f:cutoff_ja-->2026年8月<!--/f-->までのデータ）の要旨と五つの所見。各所見はそのページにリンクする。
+**<!--f:cutoff_ja-->2026年8月<!--/f-->までのデータ**：要旨と五つの所見。各所見はそのページにリンクする。
 <!--f:brief_ja-->
 
 > 2022年以降、新商品リリースの構成比（以下、リリース構成比）、検索、出荷金額は、それぞれ異なるカテゴリで伸びた。リリース構成比が最も伸びたのは化粧水とクリームで、その出荷金額の変化は-3%〜+2%である。検索が最も伸びたのは、新商品リリースでの言及が少ない成分名である。出荷金額が最も伸びたのはリップクリーム、パウダー、口紅、チーク、クレンジング、日焼け止めである。
@@ -72,7 +72,7 @@ Market measures: Google search, METI shipment statistics, 財務省 trade statis
 - **[季節性](https://beautypulse.web.app/timing?lang=ja)** — 日焼け止めの出荷金額は<b>2〜4月</b>、検索は5〜7月にピークとなり、2023〜2025年の各年で3カ月の差がある。16品目のうち6品目は、毎年同じ月（前後1カ月以内）に出荷金額が最も多い。
 
 <!--/f-->
-**<!--f:edition_en-->2022→2025<!--/f-->** (data to <!--f:cutoff_en-->August 2026<!--/f-->): the governing thought and five findings, each linking to its page.
+**Data to <!--f:cutoff_en-->August 2026<!--/f-->**: the governing thought and five findings, each linking to its page.
 <!--f:brief_en-->
 
 > After 2022, launch share, search and shipped value rose in different categories: launch share rose most in toner and cream, whose shipped value moved -3% to +2%; search rose most for named actives that few launches carry; and shipped value rose most in lip balm, powder, lipstick, blush, cleansing and sunscreen.
