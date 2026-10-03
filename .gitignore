@@ -24,6 +24,8 @@ dashboard/assets/signal_pulse_public.db
 # SQLite WAL artefacts
 data/*.db-shm
 data/*.db-wal
+# A file deleted while a process still holds it open, left by the FUSE mount
+.fuse_hidden*
 
 # ── Notebooks — scraping / reconnaissance (not part of public pipeline) ───
 notebooks/NB01*.ipynb
