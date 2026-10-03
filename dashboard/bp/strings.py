@@ -13,12 +13,12 @@ from .method import COVERAGE_CATEGORY, LATE_CATEGORY
 from .seasonal import FULL_YEARS
 from .supply import HELD_PCT, KEY_CATEGORY
 from .data import LAUNCH_GATE, LAUNCH_WINDOW_START
-from .sources import EDITION
+from .sources import CUTOFF
 
 STRINGS = {
     "en": {
         "tagline":       "Japanese beauty market analytics",
-        "subtitle":      "",   # rebuilt from the edition (sources.EDITION)
+        "subtitle":      "",   # rebuilt from the cut-off (sources.CUTOFF)
         "nav_report": "Report", "nav_brief": "Brief", "nav_market": "Market",
         "nav_demand": "Demand", "nav_supply": "Supply", "nav_consumer": "Consumer",
         "nav_timing": "Timing", "nav_method": "Method",
@@ -28,7 +28,7 @@ STRINGS = {
     },
     "jp": {
         "tagline":        "日本の美容市場分析",
-        "subtitle":       "",  # rebuilt from the edition (sources.EDITION)
+        "subtitle":       "",  # rebuilt from the cut-off (sources.CUTOFF)
         "nav_report": "レポート", "nav_brief": "要旨", "nav_market": "市場", "nav_demand": "需要", "nav_supply": "供給",
         "nav_consumer": "消費者", "nav_timing": "季節性", "nav_method": "手法",
         "launch_empty": "新商品リリースのデータが見つからない：dashboard/assets/prtimes_launches.csv",
@@ -75,9 +75,9 @@ def build_strings(lang, HEADLINE, LAUNCH, ASSETS, BRIEF=None, REGISTRY=None, MAR
     copy when its figures (brief.compute_brief, market.compute_market) and the
     source registry are given."""
     S = dict(STRINGS[lang])
-    _ed = pd.Timestamp(EDITION + "-01")
-    S["subtitle"] = (f"Report: {_MON_EN[_ed.month]} {_ed.year} edition" if lang == "en"
-                     else f"レポート：{_ed.year}年{_ed.month}月版")
+    _cut = pd.Timestamp(CUTOFF + "-01")
+    S["subtitle"] = (f"Data to {_MON_EN[_cut.month]} {_cut.year}" if lang == "en"
+                     else f"{_cut.year}年{_cut.month}月までのデータ")
     if BRIEF is not None and REGISTRY is not None:
         S.update(brief_strings(lang, BRIEF, BRIEF["H"], REGISTRY))
     if MARKET is not None and REGISTRY is not None:
@@ -202,10 +202,9 @@ def _brief_ja(B, H, REG):
     A = B["actives"]
     top3 = sorted(A.loc[Dm["top3"], "ja"])                     # never ranked
     cj = lambda k: LAUNCH_CAT[k][1]                            # noqa: E731
-    ed = pd.Timestamp(EDITION + "-01")
     out = {}
 
-    out["b_kicker"] = f"レポート · {ed.year}年{ed.month}月版 · 日本の美容市場"
+    out["b_kicker"] = f"レポート · {y0}→{y1}年 · 日本の美容市場"
     out["b_governing"] = (
         f"{y0}年以降、新商品リリースの構成比（以下、リリース構成比）、検索、出荷金額は、それぞれ"
         f"異なるカテゴリで伸びた。リリース構成比が最も伸びたのは{_and_ja(cj(k) for k in P['gainers'])}で、その出荷金額の変化は"
@@ -311,10 +310,9 @@ def _brief_en(B, H, REG):
     M, Dm, Sp, P, T = B["market"], B["demand"], B["supply"], B["portfolio"], B["timing"]
     A = B["actives"]
     top3 = sorted(A.loc[Dm["top3"], "en"])                     # never ranked
-    ed = pd.Timestamp(EDITION + "-01")
     out = {}
 
-    out["b_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year} · Japanese beauty market"
+    out["b_kicker"] = f"Report · {y0}→{y1} · Japanese beauty market"
     out["b_governing"] = (
         f"After {y0}, launch share, search and shipped value rose in different categories: "
         f"launch share rose most in {_and(_cat(k) for k in P['gainers'])}, whose shipped value "
@@ -496,11 +494,10 @@ def _market_en(M, REG):
     from .sources import source_line
     y0, y1 = M["window"]
     base, K, Y, I, B = M["base"], M["keys"], M["ytd"], M["imports"], M["brk"]
-    ed = pd.Timestamp(EDITION + "-01")
     ly, lm = M["last_month"]
     out = {}
 
-    out["mk_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["mk_kicker"] = f"Report · {y0}→{y1}"
     out["mk_intro"] = (
         "経済産業省 生産動態統計: manufacturers' monthly shipments by product line, in yen, units "
         f"and kilograms. Changes are measured {y0}→{y1}, after the January {y0} break in the "
@@ -584,11 +581,10 @@ def _market_ja(M, REG):
     from .sources import source_line
     y0, y1 = M["window"]
     base, K, Y, I, B = M["base"], M["keys"], M["ytd"], M["imports"], M["brk"]
-    ed = pd.Timestamp(EDITION + "-01")
     ly, lm = M["last_month"]
     out = {}
 
-    out["mk_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["mk_kicker"] = f"レポート · {y0}→{y1}年"
     out["mk_intro"] = (
         "経済産業省 生産動態統計：国内の化粧品メーカーによる品目別の月次出荷（金額・個数・重量）。"
         f"皮膚用の品目に{y0}年1月の断層があるため、変化は{y0}→{y1}年で測る。仕上用は出荷金額に"
@@ -798,12 +794,11 @@ def _demand_en(M, REG):
     from .sources import source_line
     y0, y1 = M["window"]
     C, P, K, MK = M["changes"], M["pair"], M["keys"], M["makeup"]
-    ed = pd.Timestamp(EDITION + "-01")
     last = M["cross"]["week_start"].max()
     nm = lambda t, cap=False: _term_name(t, M, "en", cap)  # noqa: E731
     out = {}
 
-    out["dm_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["dm_kicker"] = f"Report · {y0}→{y1}"
     out["dm_intro"] = (
         "Google Trends, Japan. Each term is requested on its own and scaled to its own peak "
         "(= 100), so a change reads in points of that term's peak and levels are not compared "
@@ -882,12 +877,11 @@ def _demand_ja(M, REG):
     from .sources import source_line
     y0, y1 = M["window"]
     C, P, K, MK = M["changes"], M["pair"], M["keys"], M["makeup"]
-    ed = pd.Timestamp(EDITION + "-01")
     last = M["cross"]["week_start"].max()
     nm = lambda t: _term_name(t, M, "jp")  # noqa: E731
     out = {}
 
-    out["dm_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["dm_kicker"] = f"レポート · {y0}→{y1}年"
     out["dm_intro"] = (
         "Googleトレンド（日本）。各語は単独で取得し、その語のピークを100とする指数である。変化はその語"
         "自身のピークに対するポイントで読み、語どうしの水準は比べない。スキンケアと化粧品は2語を1回で"
@@ -1006,7 +1000,6 @@ def _supply_en(M, REG):
     y0, y1 = M["window"]
     SH, O, G, I = M["share"], M["origin"], M["groups"], M["ingredients"]
     rows, (n0, n1) = SH["rows"], SH["den"]
-    ed = pd.Timestamp(EDITION + "-01")
     last = _ym(M["last"], "en")
     last_short = f"{_MON_ABBR[int(M['last'][5:7])]} {M['last'][:4]}"
     (k0, t0), (k1, t1) = O["kr_first"], O["kr_last"]
@@ -1017,7 +1010,7 @@ def _supply_en(M, REG):
     key = rows.loc[KEY_CATEGORY]
     out = {}
 
-    out["sp_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["sp_kicker"] = f"Report · {y0}→{y1}"
     out["sp_intro"] = (
         f"Product-launch releases from the {M['n_core']} issuers whose PR TIMES history reaches "
         "back to September 2021, by month of release; one release is one count.")
@@ -1104,7 +1097,6 @@ def _supply_ja(M, REG):
     y0, y1 = M["window"]
     SH, O, G, I = M["share"], M["origin"], M["groups"], M["ingredients"]
     rows, (n0, n1) = SH["rows"], SH["den"]
-    ed = pd.Timestamp(EDITION + "-01")
     last = _ym(M["last"], "jp")
     (k0, t0), (k1, t1) = O["kr_first"], O["kr_last"]
     gl, gp = G["l12"], G["p12"]
@@ -1115,7 +1107,7 @@ def _supply_ja(M, REG):
     key = rows.loc[KEY_CATEGORY]
     out = {}
 
-    out["sp_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["sp_kicker"] = f"レポート · {y0}→{y1}年"
     out["sp_intro"] = (
         f"PR TIMES上の新商品リリース。同サイト上の履歴が2021年9月まで遡る{M['n_core']}社を配信月別に"
         "数え、1リリースを1件とする。")
@@ -1220,9 +1212,10 @@ def consumer_strings(lang, M, REG):
 def _consumer_en(M, REG):
     from .sources import source_line
     vc, ph = M["vocab"], M["phrase"]
-    ed = pd.Timestamp(EDITION + "-01")
     out = {}
-    out["cs_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    _c, _y = REG["cosme"].data_to, REG["youtube"].data_to
+    out["cs_kicker"] = (f"Report · @cosme to {_MON_EN[_c.month]} {_c.year} · "
+                        f"YouTube to {_MON_EN[_y.month]} {_y.year}")
     out["cs_intro"] = ("Skincare vocabulary in @cosme reviews and YouTube comments, and a map of "
                        "@cosme reviews placed by vocabulary.")
 
@@ -1261,9 +1254,9 @@ def _consumer_ja(M, REG):
     closing 。, the site's terms (スキンケアとメイク)."""
     from .sources import source_line
     vc, ph = M["vocab"], M["phrase"]
-    ed = pd.Timestamp(EDITION + "-01")
     out = {}
-    out["cs_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    _c, _y = REG["cosme"].data_to, REG["youtube"].data_to
+    out["cs_kicker"] = f"レポート · @cosme {_c.year}年{_c.month}月まで · YouTube {_y.year}年{_y.month}月まで"
     out["cs_intro"] = "@cosmeレビューとYouTubeコメントのスキンケア語彙、および語彙で配置した@cosmeレビューのマップ。"
 
     out["cs_v_h"] = (f"スキンケアの上位{vc['top']}語のうち{vc['shared']}語が、@cosmeレビューと"
@@ -1333,13 +1326,12 @@ def _tm_facts(M):
 def _timing_page_en(M, REG):
     from .sources import source_line
     F = _tm_facts(M)
-    ed = pd.Timestamp(EDITION + "-01")
     sun, off = F["sun"], F["sun"]["offset"]
     (sa, sb), (ha, hb) = sun["search"]["run"], sun["ship"]["run"]
     rng = lambda a, b: f"{_MON_EN[a]}–{_MON_EN[b]}"  # noqa: E731
     win = f"{_MON_EN[F['w0'].month]} {F['w0'].year} – {_MON_EN[F['w1'].month]} {F['w1'].year}"
     out = {}
-    out["tm_kicker"] = f"Report · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["tm_kicker"] = f"Report · {F['y0']}–{F['y1']}"
     out["tm_intro"] = (
         "Seasonal ratio: each month's value divided by the centred 12-month average around it, "
         f"× 100, so 100 is a month on trend. Every series is averaged over {win}. A peak month is "
@@ -1417,13 +1409,12 @@ def _timing_page_ja(M, REG):
     closing 。."""
     from .sources import source_line
     F = _tm_facts(M)
-    ed = pd.Timestamp(EDITION + "-01")
     sun, off = F["sun"], F["sun"]["offset"]
     (sa, sb), (ha, hb) = sun["search"]["run"], sun["ship"]["run"]
     win = f"{F['w0'].year}年{F['w0'].month}月〜{F['w1'].year}年{F['w1'].month}月"
     same = len(set(off.values())) == 1
     out = {}
-    out["tm_kicker"] = f"レポート · {ed.year}年{ed.month}月版"
+    out["tm_kicker"] = f"レポート · {F['y0']}〜{F['y1']}年"
     out["tm_intro"] = (
         "季節比率：各月の値を、その月を中心とする12カ月移動平均で割り100を掛けたもの。100はトレンド"
         f"どおりの月である。どの系列も{win}で平均する。ピーク月は、{F['y0']}〜{F['y1']}年の各年で最も"
@@ -1622,11 +1613,10 @@ def _me_measures(r, lang):
 def _method_en(M, REG):
     from .sources import date_label, source_line
     F = _me_facts(M)
-    ed = pd.Timestamp(EDITION + "-01")
     cut = pd.Timestamp(M["cutoff"] + "-01")
     nav = STRINGS["en"]
     out = {}
-    out["me_kicker"] = f"Appendix · Edition {_MON_EN[ed.month]} {ed.year}"
+    out["me_kicker"] = "Appendix · sources and checks"
     out["me_intro"] = "What each source measures and covers, and how each measure was checked."
 
     # ── Sources
@@ -1634,7 +1624,7 @@ def _method_en(M, REG):
     out["me_s_h"] = (f"{_NUM_EN[len(F['used'])].capitalize()} of the {_NUM_EN[len(M['sources'])]} sources "
                      f"feed the report's pages; {_and(un)} feed none")
     out["me_s_e"] = (f"Report pages compute on data to {_MON_EN[cut.month]} {cut.year}, the "
-                     "edition's cut-off. A snapshot is dated by its newest record.")
+                     "report's cut-off. A snapshot is dated by its newest record.")
     out["me_s_cols"] = ["Source", "Measures", "Coverage", "Report pages"]
     out["me_s_rows"] = [
         [r["src"].name(), _me_measures(r, "en"), _me_coverage_en(r),
@@ -1784,18 +1774,17 @@ def _method_ja(M, REG):
     closing 。."""
     from .sources import date_label, source_line
     F = _me_facts(M)
-    ed = pd.Timestamp(EDITION + "-01")
     cut = pd.Timestamp(M["cutoff"] + "-01")
     nav = STRINGS["jp"]
     out = {}
-    out["me_kicker"] = f"付録 · {ed.year}年{ed.month}月版"
+    out["me_kicker"] = "付録 · ソースと検証"
     out["me_intro"] = "各ソースが測るものと収録範囲、および各指標の検証方法。"
 
     un = [r["src"].name("ja") for r in F["unused"]]
     out["me_s_h"] = (f"{len(M['sources'])}ソースのうち{len(F['used'])}ソースをレポートの各ページに用い、"
                      f"{_and_ja(un)}はどのページにも用いない")
-    out["me_s_e"] = (f"レポートの各ページは、この版のデータの締め月である{cut.year}年{cut.month}月までの"
-                     "データで計算する。スナップショットは最新の記録の日付で示す。")
+    out["me_s_e"] = (f"レポートの各ページは{cut.year}年{cut.month}月（締め月）までのデータで"
+                     "計算する。スナップショットは最新の記録の日付で示す。")
     out["me_s_cols"] = ["ソース", "測るもの", "収録範囲", "掲載ページ"]
     out["me_s_rows"] = [
         [r["src"].name("ja"), _me_measures(r, "jp"), _me_coverage_ja(r),

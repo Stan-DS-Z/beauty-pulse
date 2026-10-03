@@ -69,6 +69,10 @@ RETIRED = [
      r"(新商品)?リリースは[^。]{0,20}月に多い|リリースのピーク",
      "peak months of launch releases: each year's months are consistent with an even spread "
      "(chi-square, 7 of 8 side-years; Revision 21)"),
+    (r"Edition (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}"
+     r"|(January|February|March|April|May|June|July|August|September|October|November|December) \d{4} edition"
+     r"|\d{4}年\d{1,2}月版",
+     "the edition month as the report's label (Revision 22)", SITE_ONLY),
 ]
 
 # Lines a page carries although a retired pattern matches them, by page path:
